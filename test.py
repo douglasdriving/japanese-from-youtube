@@ -1,5 +1,6 @@
 from youtubeTranscriber import get_japanese_transcript
-from wordExtractor import extract_words_from_japanese_sentence
+from wordExtractor import extract_words_from_sentence
+from youtubeWordExtractor import extract_unique_words_from_youtube
 
 def test_get_japanese_transcript():
 
@@ -17,15 +18,23 @@ def test_get_japanese_transcript():
 def test_extractWordsFromTranscript():
     print("Testing extractWordsFromTranscript()...")
     testSentence = "今日は、部屋のそうじをしました。"
-    words = extract_words_from_japanese_sentence(testSentence)
-    print("Extracted words:")
+    words = extract_words_from_sentence(testSentence)
+    print("tested Extracted words:")
     for word in words:
         print("word:", word)
 
-#problem now: the words are over-segmented, meaning that word components are split.
-#e.g. 'しました' is split into 'し' and 'まし' and 'た'
-#solution(s): (1) use a different dictionary for mecab, (2) use a different tokenizer, (3) use a different api or lib to extract words
+def test_extract_words_from_youtube():
+   
+  print("Testing test_extract_words_from_youtube()...")
+  video_id = 'eXgMsg8WouU'
+  uniqueWords = extract_unique_words_from_youtube(video_id)
 
+  if uniqueWords is not None:
+    print("Successfully extracted unique words. Words:")
+    for word in uniqueWords:
+      print("word: ", word)
 
-# test_get_japanese_transcript()
-test_extractWordsFromTranscript()
+  else:
+    print("FAILED TO EXTRACT UNIQUE WORDS")
+
+test_extract_words_from_youtube()

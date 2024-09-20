@@ -1,7 +1,7 @@
 import subprocess
 import re
 
-def extractJapaneseWordsFromSentence(sentence):
+def extract_words_from_sentence(sentence):
   ichiranCommand = '(ichiran/dict:simple-segment "' + sentence + '")'
   cliCommand = ['ichiran-cli', '-e', ichiranCommand]
   result = subprocess.run(cliCommand, capture_output=True, text=True, encoding='utf-8')
@@ -16,10 +16,4 @@ def extractJapaneseWordsFromSentence(sentence):
   # Filter out empty strings (if any)
   kanji_words = [word for word in kanji_words if word]
 
-  print("Extracted words:")
-  for word in kanji_words:
-    print("- " + word)
-
   return kanji_words
-
-# extractJapaneseWordsFromSentence("今日は、一日中図書館で勉強しました。")
