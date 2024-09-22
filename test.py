@@ -3,6 +3,7 @@ from wordExtractor import extract_words_from_sentence
 from youtubeWordExtractor import extract_unique_words_from_youtube
 from translator import translate_word_array
 from speech_synthesis import save_jp_text_as_audio
+import time
 
 def test_get_japanese_transcript():
 
@@ -72,20 +73,22 @@ def test_save_vocab_audio_from_youtube_video():
   if words is not None:
 
     print("successfully extracted unique words. Translating...")
-    translatedWords = translate_word_array(words)
 
+    #translate the words
+    translatedWords = translate_word_array(words)
     if translatedWords is not None:
       print("successfully extracted translated words:")
       for word in translatedWords:
         print(" - " + word.word + " " + word.translation)
+    else:
+      print("FAILED TO TRANSLATE WORDS")
     
+    #save words as audio files
     print("saving audio files...")
     for word in words:
       audio_file = save_jp_text_as_audio(word)
       print(" - audio file saved: " + audio_file)
 
-    else:
-      print("FAILED TO TRANSLATE WORDS")
   else:
     print("FAILED TO EXTRACT UNIQUE WORDS")
 
