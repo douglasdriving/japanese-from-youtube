@@ -50,5 +50,4 @@ def create_audio_card(deck_name, front, back, audio_file_path):
 def add_card_to_anki_deck(audio_file, translation):
   card = create_audio_card(deck_name, "", translation, audio_file)
   response = requests.post(anki_connect_url, json=card)
-  print(response.json())
   return response.json()

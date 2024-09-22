@@ -24,8 +24,6 @@ def save_jp_text_as_audio(kana_text):
   file_name = "./audios/" + romanized_text + ".wav"
 
   if not os.path.exists(file_name):
-    print("synthesizing audio for: " + kana_text)
-    print("saving it as audio file: " + file_name)
     speech_config.speech_synthesis_voice_name=get_random_japanese_voice_name()
     audio_config = speechsdk.audio.AudioOutputConfig(filename=file_name)
     speech_synthesizer = speechsdk.SpeechSynthesizer(speech_config=speech_config, audio_config=audio_config)
