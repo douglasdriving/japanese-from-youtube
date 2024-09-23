@@ -50,13 +50,18 @@ def add_new_vocab_from_youtube_to_anki_deck():
     #ask the user if they know the word
     print("do you know this word? (y/n)")
     user_input = input()
+    while user_input != "y" and user_input != "n":
+      print("invalid input. please enter 'y' or 'n'")
+      user_input = input()
     if user_input == "y":
       print("skipped word: " + word.word + " (" + word.reading + ")")
-    else:
+    elif user_input == "n":
       print("adding word to anki deck")
       result = add_card_to_anki_deck(audio, word.translation)
       if(result["error"]):
         print("ERROR: Failed to add word to anki deck with file path: " + audio)
+    else:
+      print("error: invalid input")
       
     print("-------------")
   
