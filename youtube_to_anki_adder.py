@@ -1,21 +1,27 @@
 ## allows the user to add all new vocab to their anki deck
 from youtubeWordExtractor import extract_unique_words_from_youtube
-from translator import translate_word_array
 from speech_synthesis import save_jp_text_as_audio
 import os
 from anki_word_adder import add_card_to_anki_deck
 from audio_player import play_audio
 import time
-from romaziner import romanize_with_spaces
+
+def get_valid_youtube_id_from_user():
+  print("enter a youtube video id")
+  video_id = ""
+  while len(video_id) != 11:
+    print("Invalid video id. please enter a valid youtube video id (11 characters)")
+    video_id = input()
+  return video_id
+
+def save_and_play_word_audio(reading):
+    audio = save_jp_text_as_audio(reading)
+    play_audio(audio)
+    return audio
 
 def add_new_vocab_from_youtube_to_anki_deck():
 
-  #ask for a valid youtube video id
-  print("please enter a youtube video id")
-  video_id = ""
-  while len(video_id) != 11:
-    print("Invalid video id. please enter a valid youtube video id")
-    video_id = input()
+  video_id = get_valid_youtube_id_from_user()
 
   #extract unique words from the video
   print("extracting unique words from youtube video...")
@@ -23,21 +29,19 @@ def add_new_vocab_from_youtube_to_anki_deck():
   if words is None:
     print("Failed to extract unique words from youtube video. exiting")
     return
-
-  #translate the words
-  words_with_translations = translate_word_array(words)
-  if words_with_translations is None:
-    print("Failed to translate words. exiting")
-    return
   
   #for each word, check if the user knows it
-  for word in words_with_translations:
+  for word in words:
+    
+    if(word.word == None or word.reading == None or word.translation == None):
+      print("skipped word since it contained non type: ")
+      print(word)
+      continue
 
     #save and play the audio
     print("")
     print("listen to the audio...")
-    audio = save_jp_text_as_audio(word.word)
-    play_audio(audio)
+    audio = save_and_play_word_audio(word.reading)
 
     #show the translation after a delay
     time.sleep(1.5)
@@ -47,7 +51,7 @@ def add_new_vocab_from_youtube_to_anki_deck():
     print("do you know this word? (y/n)")
     user_input = input()
     if user_input == "y":
-      print("skipped word: " + romanize_with_spaces(word.word))
+      print("skipped word: " + word.word + " (" + word.reading + ")")
       os.remove(audio)
     else:
       print("adding word to anki deck")
