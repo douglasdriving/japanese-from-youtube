@@ -25,6 +25,7 @@ def open_anki():
 def open_anki_if_not_running():
     if not is_anki_running():
         open_anki()
+        time.sleep(3)
 
 def get_card_options(deck_name):
   options = {
@@ -70,10 +71,10 @@ def create_audio_card(deck_name, front, back, audio_file_path):
 
 def add_card_to_anki_deck(audio_file, translation):
   open_anki_if_not_running()
-  time.sleep(3) #just to make sure it gets time to open. not ideal but works for now
   card = create_audio_card(deck_name, "", translation, audio_file)
   response = requests.post(anki_connect_url, json=card)
   print(response.json())
   return response.json()
 
-add_card_to_anki_deck("./audios/arubamy.wav", "album")
+#test
+# add_card_to_anki_deck("./audios/arubamu.wav", "album")

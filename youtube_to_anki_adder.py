@@ -2,7 +2,7 @@
 from youtubeWordExtractor import extract_unique_words_from_youtube
 from speech_synthesis import save_jp_text_as_audio
 import os
-from anki_word_adder import add_card_to_anki_deck
+from anki_word_adder import add_card_to_anki_deck, open_anki_if_not_running
 from audio_player import play_audio
 import time
 
@@ -21,6 +21,7 @@ def save_and_play_word_audio(reading):
 
 def add_new_vocab_from_youtube_to_anki_deck():
 
+  open_anki_if_not_running()
   video_id = get_valid_youtube_id_from_user()
 
   #extract unique words from the video
