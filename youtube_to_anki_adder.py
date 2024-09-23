@@ -1,7 +1,6 @@
 ## allows the user to add all new vocab to their anki deck
-from youtubeWordExtractor import extract_unique_words_from_youtube
+from youtubeWordExtractor import extract_words_from_youtube
 from speech_synthesis import save_jp_text_as_audio
-import os
 from anki_word_adder import add_card_to_anki_deck, open_anki_if_not_running
 from audio_player import play_audio
 import time
@@ -26,7 +25,7 @@ def add_new_vocab_from_youtube_to_anki_deck():
 
   #extract unique words from the video
   print("extracting unique words from youtube video...")
-  words = extract_unique_words_from_youtube(video_id)
+  words = extract_words_from_youtube(video_id)
   if words is None:
     print("Failed to extract unique words from youtube video. exiting")
     return
@@ -53,7 +52,6 @@ def add_new_vocab_from_youtube_to_anki_deck():
     user_input = input()
     if user_input == "y":
       print("skipped word: " + word.word + " (" + word.reading + ")")
-      os.remove(audio)
     else:
       print("adding word to anki deck")
       result = add_card_to_anki_deck(audio, word.translation)

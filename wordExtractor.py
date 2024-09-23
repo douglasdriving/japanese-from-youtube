@@ -43,7 +43,7 @@ def get_word_from_token(token):
     return japanese_word
 
 def extract_japanese_words(sentence):
-  japanese_words = []
+  japanese_words: list[JapaneseWord] = []
   tokens = get_tokens_from_text(sentence)
   if(tokens != None):
     for token in tokens:

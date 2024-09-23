@@ -1,6 +1,6 @@
 from youtubeTranscriber import get_japanese_transcript
 from wordExtractor import extract_words_from_sentence
-from youtubeWordExtractor import extract_unique_words_from_youtube
+from youtubeWordExtractor import extract_words_from_youtube
 from translator import translate_word_array
 from speech_synthesis import save_jp_text_as_audio
 import time
@@ -30,7 +30,7 @@ def test_extract_words_from_youtube():
    
   print("Testing test_extract_words_from_youtube()...")
   video_id = 'eXgMsg8WouU'
-  uniqueWords = extract_unique_words_from_youtube(video_id)
+  uniqueWords = extract_words_from_youtube(video_id)
 
   if uniqueWords is not None:
     print("Successfully extracted unique words. Words:")
@@ -52,7 +52,7 @@ def test_extract_translated_words_from_youtube():
 
   print("Testing test_extract_translated_words_from_youtube()...")
   video_id = 'eXgMsg8WouU'
-  words = extract_unique_words_from_youtube(video_id)
+  words = extract_words_from_youtube(video_id)
   if words is not None:
     print("successfully extracted unique words. Translating...")
     translatedWords = translate_word_array(words)
@@ -68,7 +68,7 @@ def test_extract_translated_words_from_youtube():
 def test_save_vocab_audio_from_youtube_video():
   print("Testing save_audio_from_youtube_video()...")
   video_id = 'eXgMsg8WouU'
-  words = extract_unique_words_from_youtube(video_id)
+  words = extract_words_from_youtube(video_id)
 
   if words is not None:
 
