@@ -4,48 +4,53 @@ from jisho_api.tokenize import Tokens
 from jisho_api.word import Word
 from japanese_word import JapaneseWord
 
-def extract_japanese_words(sentence):
-  
-  japanese_words = []
-  tokens_result = Tokens.request(sentence)
-  
+def get_tokens_from_text(text):
+  tokens_result = Tokens.request(text)
   if(tokens_result == None):
-    print("Failed to extract tokens from sentence: " + sentence)
-    return japanese_words
-  
+    print("Failed to extract tokens from text: " + text)
+    return None
   tokens = tokens_result.data
-  
-  for token in tokens:
+  return tokens
+
+def cleanup_word(word):
+  word = word.replace('.', '')
+  word = word.replace('。', '')
+  word = word.replace('、', '')
+  word = word.replace('.', '')
+  return word
+
+def get_word_from_token(token):
     if(token.pos_tag.name == "unk"):
-      continue
+      return None
     
     word_in_sentence = token.token
-    
-    word_in_sentence.replace('.', '')
-    word_in_sentence.replace('。', '')
-    word_in_sentence.replace('、', '')
-    word_in_sentence.replace('.', '')
+    word_in_sentence = cleanup_word(word_in_sentence)
     
     base_word_result = Word.request(word_in_sentence)
     if(base_word_result == None):
-      continue
+      return None
+    
     base_word_data = base_word_result.data[0]
     base_word = base_word_data.japanese[0].word
     most_common_reading = base_word_data.japanese[0].reading
+    
     if(base_word == None):
       base_word = most_common_reading
+      
     definitions_of_most_common_reading = base_word_data.senses[0].english_definitions
     definitions_as_string = '; '.join(definitions_of_most_common_reading)
     japanese_word = JapaneseWord(base_word, most_common_reading, definitions_as_string)
-    japanese_words.append(japanese_word)
-    
+    return japanese_word
+
+def extract_japanese_words(sentence):
+  japanese_words = []
+  tokens = get_tokens_from_text(sentence)
+  if(tokens != None):
+    for token in tokens:
+      japanese_word = get_word_from_token(token)
+      if(japanese_word != None):
+        japanese_words.append(japanese_word)
   return japanese_words
-  
-# #test
-# sentence = "私は日本語を勉強しています。smaljj"
-# extracted_words = extract_japanese_words(sentence)
-# for word in extracted_words:
-#   print(word.word, word.reading, word.translation)
 
 
 # def extract_words_from_sentence(sentence):
