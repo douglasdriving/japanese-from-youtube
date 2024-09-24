@@ -73,8 +73,8 @@ def add_card_to_anki_deck(audio_file, translation):
   open_anki_if_not_running()
   card = create_audio_card(deck_name, "", translation, audio_file)
   response = requests.post(anki_connect_url, json=card)
-  print(response.json())
+  if response.status_code != 200:
+      print(f"Failed to add card to Anki deck. Error: {response.error}")
+  else:
+      print("Card added to Anki deck: " + audio_file + " (" + translation + ")")
   return response.json()
-
-#test
-# add_card_to_anki_deck("./audios/arubamu.wav", "album")
