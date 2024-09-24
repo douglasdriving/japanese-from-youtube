@@ -20,11 +20,11 @@ def cleanup_word(word):
   return word
 
 def get_word_from_token(token):
-    if(token.pos_tag.name == "unk"):
-      return None
+    # if(token.pos_tag.name == "unk"):
+    #   return None
     
     word_in_sentence = token.token
-    word_in_sentence = cleanup_word(word_in_sentence)
+    # word_in_sentence = cleanup_word(word_in_sentence)
     
     base_word_result = Word.request(word_in_sentence)
     if(base_word_result == None):
@@ -42,26 +42,40 @@ def get_word_from_token(token):
     japanese_word = JapaneseWord(base_word, most_common_reading, definitions_as_string)
     return japanese_word
 
-def extract_japanese_words(sentence):
+def cleanup_tokens(list_of_tokens):
+    
+  cleaned_up_list = []
+  
+  for token in list_of_tokens:
+    
+    is_duplicate = False
+    is_valid = True
+    
+    for saved_token in cleaned_up_list:
+      if(token.token == saved_token.token):
+        is_duplicate = True
+        break
+      
+    if(token.pos_tag.name == "unk"):
+        is_valid = False
+      
+    if(not is_duplicate and is_valid):
+      token.token = cleanup_word(token.token)
+      cleaned_up_list.append(token)
+    
+  return cleaned_up_list
+
+def extract_japanese_words(text):
   japanese_words: list[JapaneseWord] = []
-  tokens = get_tokens_from_text(sentence)
+  tokens = get_tokens_from_text(text)
+  tokens = cleanup_tokens(tokens)
+  print("Extracted " + str(len(tokens)) + " tokens from text.")
+  words_extracted = 0
   if(tokens != None):
     for token in tokens:
-      japanese_word = get_word_from_token(token)
+      japanese_word = get_word_from_token(token) #would it be possible to make a single call instead?
       if(japanese_word != None):
         japanese_words.append(japanese_word)
+        words_extracted += 1
+        print("Extracted word " + str(words_extracted) + ": " + japanese_word.word)
   return japanese_words
-
-
-# def extract_words_from_sentence(sentence):
-#   ichiranCommand = '(ichiran/dict:simple-segment "' + sentence + '")'
-#   cliCommand = ['ichiran-cli', '-e', ichiranCommand]
-#   result = subprocess.run(cliCommand, capture_output=True, text=True, encoding='utf-8')
-#   output_string = result.stdout
-#   # Use regex to find all kanji characters
-#   kanji_matches = re.findall(r'\w+\[', output_string)
-#   # Extract the kanji (remove the brackets)
-#   kanji_words = [match[:-1] for match in kanji_matches]
-#   # Filter out empty strings (if any)
-#   kanji_words = [word for word in kanji_words if word]
-#   return kanji_words

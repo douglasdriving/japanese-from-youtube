@@ -1,5 +1,5 @@
 ## allows the user to add all new vocab to their anki deck
-from youtubeWordExtractor import extract_words_from_youtube
+from youtube_word_extractor import extract_words_from_youtube
 from speech_synthesis import save_jp_text_as_audio
 from anki_word_adder import add_card_to_anki_deck, open_anki_if_not_running
 from audio_player import play_audio

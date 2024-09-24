@@ -1,6 +1,6 @@
 from youtubeTranscriber import get_japanese_transcript
-from wordExtractor import extract_words_from_sentence
-from youtubeWordExtractor import extract_words_from_youtube
+from word_extractor import extract_words_from_sentence
+from youtube_word_extractor import extract_words_from_youtube
 from translator import translate_word_array
 from speech_synthesis import save_jp_text_as_audio
 import time
