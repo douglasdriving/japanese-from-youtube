@@ -23,13 +23,3 @@ def extract_words_from_youtube(video_id):
   else:
     print("EXTRACT UNIQUE WORDS ERROR: Failed to retrieve Japanese transcript.")
     return None
-  
-#test to see if we can get tokens from a really long text
-from youtubeTranscriber import get_japanese_transcript
-video_id = 'eXgMsg8WouU'
-transcript = get_japanese_transcript(video_id)
-words = extract_words_from_transcript(transcript)
-for word in words:
-  print(word)
-  
-#ok, this is a lot better, but it would be nicer if we could make a single call to get info for all words
