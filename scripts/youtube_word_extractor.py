@@ -1,6 +1,6 @@
-from youtubeTranscriber import get_japanese_transcript
-from word_extractor import extract_japanese_words
-from japanese_word import JapaneseWord
+from .youtube_transcriber import get_japanese_transcript
+from .text_handling.word_extractor import extract_japanese_words
+from .text_handling.japanese_word import JapaneseWord
 
 def combine_transcript_into_single_text(transcript):
   transcript_as_single_string = ""

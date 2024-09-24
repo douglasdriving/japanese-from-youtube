@@ -1,5 +1,5 @@
 from googletrans import Translator
-from japanese_word import JapaneseWord
+from .japanese_word import JapaneseWord
 
 translator = Translator()
 

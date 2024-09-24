@@ -1,7 +1,7 @@
 import os
 import azure.cognitiveservices.speech as speechsdk
 import random
-from romaziner import romanize_with_underscore
+from .romaziner import romanize_with_underscore
 
 speech_config = speechsdk.SpeechConfig(subscription=os.environ.get('SPEECH_KEY'), region=os.environ.get('SPEECH_REGION'))
 

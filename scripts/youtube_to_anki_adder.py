@@ -1,9 +1,11 @@
 ## allows the user to add all new vocab to their anki deck
-from youtube_word_extractor import extract_words_from_youtube
-from speech_synthesis import save_jp_text_as_audio
-from anki_word_adder import add_card_to_anki_deck, open_anki_if_not_running
-from audio_player import play_audio
+from .youtube_word_extractor import extract_words_from_youtube
+from .text_handling.speech_synthesis import save_jp_text_as_audio
+from .anki.anki_word_adder import add_card_to_anki_deck, open_anki_if_not_running
+from .audio.audio_player import AudioPlayer
 import time
+
+audioPlayer = AudioPlayer("")
 
 def get_valid_youtube_id_from_user():
   print("enter a youtube video id")
@@ -15,7 +17,7 @@ def get_valid_youtube_id_from_user():
 
 def save_and_play_word_audio(reading):
     audio = save_jp_text_as_audio(reading)
-    play_audio(audio)
+    audioPlayer.play_audio_file(audio)
     return audio
 
 def add_new_vocab_from_youtube_to_anki_deck():

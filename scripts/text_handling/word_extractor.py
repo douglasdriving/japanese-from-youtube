@@ -2,7 +2,7 @@
 # import re
 from jisho_api.tokenize import Tokens
 from jisho_api.word import Word
-from japanese_word import JapaneseWord
+from .japanese_word import JapaneseWord
 
 def get_tokens_from_text(text):
   tokens_result = Tokens.request(text)
