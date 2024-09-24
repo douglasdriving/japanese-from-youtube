@@ -57,9 +57,7 @@ def add_new_vocab_from_youtube_to_anki_deck():
       print("skipped word: " + word.word + " (" + word.reading + ")")
     elif user_input == "n":
       print("adding word to anki deck")
-      result = add_card_to_anki_deck(audio, word.translation)
-      if(result["error"]):
-        print("ERROR: Failed to add word to anki deck with file path: " + audio)
+      add_card_to_anki_deck(audio, word.translation)
     else:
       print("error: invalid input")
       
