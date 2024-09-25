@@ -5,6 +5,7 @@ from .anki.anki_word_adder import add_card_to_anki_deck, open_anki_if_not_runnin
 from .audio.audio_player import AudioPlayer
 from .database.vocabulary_connector import VocabularyConnector
 import time
+from .text_handling.sentence_data_extractor import SentenceDataExtractor
 
 audioPlayer = AudioPlayer("")
 
@@ -84,5 +85,11 @@ def add_new_vocab_from_youtube_to_anki_deck():
             print("error: invalid input")
 
         print("-------------")
+
+    # add all SENTENCES to the anki deck
+    # maybe break down into sentences first? unclear.
+    sentece_data_extractor = SentenceDataExtractor(
+        "私は学生です"
+    )  # fuck, we only have the words, but we need the whole transcript
 
     print("finished adding words to anki deck")
