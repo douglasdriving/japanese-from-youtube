@@ -23,7 +23,7 @@ def cleanup_word(word):
     return word
 
 
-def get_word_from_token(kana_word: str):
+def get_word_data(kana_word: str):
 
     base_word_result = Word.request(kana_word)
     if base_word_result == None:
@@ -75,21 +75,18 @@ def extract_new_words_from_text(text):
     words_checked = 0
     if tokens != None:
         for token in tokens:
-
             words_checked += 1
-
-            kana_word = token.token
-
-            word_already_in_db = vocabulary_connector.check_if_word_exists(kana_word)
+            word: JapaneseWord = get_word_data(token.token)
+            word_already_in_db = vocabulary_connector.check_if_word_exists(word.word)
+            word_in_kana = word.word
             if word_already_in_db:
-                print(str(words_checked) + ". Word already in database: " + kana_word)
+                print(
+                    str(words_checked) + ". Word already in database: " + word_in_kana
+                )
                 continue
-
-            word = get_word_from_token(kana_word)
             if word == None:
-                print(str(words_checked) + ". Failed to extract word: " + kana_word)
+                print(str(words_checked) + ". Failed to extract word: " + word_in_kana)
                 continue
-
             japanese_words.append(word)
-            print(str(words_checked) + ". Extracted word : " + word.word)
+            print(str(words_checked) + ". Extracted word : " + word_in_kana)
     return japanese_words

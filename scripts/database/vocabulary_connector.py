@@ -1,5 +1,6 @@
 import sqlite3
 from ..text_handling.japanese_word import JapaneseWord
+from ..text_handling.sentence import JapaneseSentence
 
 
 class VocabularyConnector:
@@ -32,11 +33,51 @@ class VocabularyConnector:
         )
         self.connection.commit()
 
-    def check_if_word_exists(self, word_in_kanji):
+    def check_if_word_exists(self, word_in_kanji: str):
         self.cursor.execute(
             """
     SELECT * FROM vocabulary WHERE word = (?)
     """,
             (word_in_kanji,),
+        )
+        word_exists = self.cursor.fetchone() is not None
+        return word_exists
+
+    def add_sentence(self, sentence: JapaneseSentence):
+        if not sentence.is_fully_defined():
+            print("ERROR: Sentence is not fully defined. Not adding to database.")
+            print(sentence)
+            return
+
+        if self.check_if_sentence_exists(sentence.sentence):
+            print(
+                "skipping adding sentence to db since it already exists: ",
+                sentence.sentence,
+            )
+            return
+
+        try:
+            self.cursor.execute(
+                """
+      INSERT INTO sentences (sentence, reading, definition, audio_file_path)
+      VALUES (?, ?, ?, ?)
+      """,
+                (
+                    sentence.sentence,
+                    sentence.reading,
+                    sentence.definition,
+                    sentence.audio_file,
+                ),
+            )
+            self.connection.commit()
+        except sqlite3.Error as error:
+            print("ERROR INSERTING SENTENCE: ", error)
+
+    def check_if_sentence_exists(self, sentence):
+        self.cursor.execute(
+            """
+    SELECT * FROM sentences WHERE sentence = (?)
+    """,
+            (sentence,),
         )
         return self.cursor.fetchone() is not None
