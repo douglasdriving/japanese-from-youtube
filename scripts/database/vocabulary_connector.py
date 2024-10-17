@@ -48,23 +48,23 @@ class VocabularyConnector:
             print("ERROR: Sentence is not fully defined. Not adding to database.")
             print(sentence)
             return
-
         if self.check_if_sentence_exists(sentence.sentence):
             print(
                 "skipping adding sentence to db since it already exists: ",
                 sentence.sentence,
             )
             return
+        self._insert_sentence_in_db(sentence)
 
+    def _insert_sentence_in_db(self, sentence):
         try:
             self.cursor.execute(
                 """
-      INSERT INTO sentences (sentence, reading, definition, audio_file_path)
+      INSERT INTO sentences (sentence, definition, audio_file_path)
       VALUES (?, ?, ?, ?)
       """,
                 (
                     sentence.sentence,
-                    sentence.reading,
                     sentence.definition,
                     sentence.audio_file,
                 ),

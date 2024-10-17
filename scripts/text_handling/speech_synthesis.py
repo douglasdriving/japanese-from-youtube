@@ -24,8 +24,12 @@ def get_random_japanese_voice_name():
 
 def save_jp_text_as_audio(kana_text):
 
+    print("saving audio for: " + kana_text)
+
     romanized_text = romanize_with_underscore(kana_text)
+    print("romanized text: " + romanized_text)
     audio_file_path = "./audios/" + romanized_text + ".wav"
+    print("audio file path: " + audio_file_path)
 
     if not os.path.exists(audio_file_path):
         speech_config.speech_synthesis_voice_name = get_random_japanese_voice_name()
