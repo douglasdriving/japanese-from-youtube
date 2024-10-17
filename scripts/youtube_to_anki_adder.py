@@ -35,12 +35,6 @@ def get_valid_youtube_id_from_user():
     return video_id
 
 
-def save_and_play_word_audio(reading):
-    audio = save_jp_text_as_audio(reading)
-    audioPlayer.play_audio_file(audio)
-    return audio
-
-
 def save_sentence_to_anki_if_user_doesnt_know(sentence: JapaneseSentence):
     print("playing audio for sentence...")
     audioPlayer.play_audio_file(sentence.audio_file_path)
@@ -64,7 +58,7 @@ def save_sentences_and_add_unknowns_to_anki_from_transcript(transcript: str):
             print(sentence.sentence)
 
 
-def add_word_from_transcript_to_db_and_anki_if_user_says_its_new(word: JapaneseWord):
+def add_word_to_db_and_anki_if_new(word: JapaneseWord):
     if not word.is_fully_defined():
         print(
             "skipped word since it is not fully defined: ",
@@ -72,46 +66,19 @@ def add_word_from_transcript_to_db_and_anki_if_user_says_its_new(word: JapaneseW
             ", ",
             word.definition,
         )
-        return
-
-    if vocabulary_connector.check_if_word_exists(
-        word.word
-    ):  # but, we should also do this earlier...
-        print("skipped word since it already exists in the database: ")
-        print(word.word, "(", word.reading, ")")
-        return
-
-    # save and play the audio
-    print("")
-    print("listen to the audio...")
-    audio = save_and_play_word_audio(word.reading)
-
-    # save word in db
-    try:
-        vocabulary_connector.add_word(word, audio)
-    except Exception as e:
-        print("error adding word to database. error: ", e, " word: ", word)
-        return
-
-    # show the translation after a delay
-    time.sleep(1.5)
-    print("translation: " + word.definition)
-
-    # ask the user if they know the word
-    print("do you know this word? (y/n)")
-    user_input = input()
-    while user_input != "y" and user_input != "n":
-        print("invalid input. please enter 'y' or 'n'")
-        user_input = input()
-    if user_input == "y":
-        print("skipped word: " + word.word + " (" + word.reading + ")")
-    elif user_input == "n":
-        print("adding word to anki deck")
-        add_card_to_anki_deck(audio, word.definition)
+    elif vocabulary_connector.check_if_word_exists(word.word):
+        print(
+            "skipped word since it already exists in the database: ",
+            word.word,
+            "(",
+            word.reading,
+            ")",
+        )
     else:
-        print("error: invalid input")
-
-    print("-------------")
+        audio_path = save_jp_text_as_audio(word.reading)
+        vocabulary_connector.save_word_in_db(word, audio_path)
+        add_card_to_anki_deck(audio_path, word.definition)
+        print("added word: " + word.word + " (" + word.reading + ")")
 
 
 def add_new_words(transcript: str):
@@ -120,7 +87,7 @@ def add_new_words(transcript: str):
         print("Failed to extract unique words from youtube video. exiting")
         return
     for word in words:
-        add_word_from_transcript_to_db_and_anki_if_user_says_its_new(word)
+        add_word_to_db_and_anki_if_new(word)
 
 
 def add_new_vocab_from_youtube_to_anki_deck():

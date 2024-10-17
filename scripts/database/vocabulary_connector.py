@@ -8,7 +8,7 @@ class VocabularyConnector:
         self.connection = sqlite3.connect("vocabulary.db")
         self.cursor = self.connection.cursor()
 
-    def add_word(self, word: JapaneseWord, audio_file_path: str):
+    def save_word_in_db(self, word: JapaneseWord, audio_file_path: str):
         if not word.is_fully_defined():
             print("ERROR: Word is not fully defined. Not adding to database.")
             print(word)
