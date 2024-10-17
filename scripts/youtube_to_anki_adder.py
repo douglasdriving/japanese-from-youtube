@@ -35,24 +35,13 @@ def get_valid_youtube_id_from_user():
     return video_id
 
 
-def save_sentence_to_anki_if_user_doesnt_know(sentence: JapaneseSentence):
-    print("playing audio for sentence...")
-    audioPlayer.play_audio_file(sentence.audio_file_path)
-    user_knows_sentence = get_yes_or_no_input_from_user(
-        "do you know the meaning of this sentence sentence? (y/n)"
-    )
-    if not user_knows_sentence:
-        print("adding sentence to anki deck")
-        add_card_to_anki_deck(sentence.audio_file_path, sentence.definition)
-
-
 def save_sentences_and_add_unknowns_to_anki_from_transcript(transcript: str):
     sentece_data_extractor = SentenceDataExtractor(transcript)
     sentences = sentece_data_extractor.extract_sentences_not_in_db()
     for sentence in sentences:
         if sentence.is_fully_defined():
             vocabulary_connector.add_sentence(sentence)
-            save_sentence_to_anki_if_user_doesnt_know(sentence)
+            add_card_to_anki_deck(sentence.audio_file_path, sentence.definition)
         else:
             print("skipped sentence since it is not fully defined: ")
             print(sentence.sentence)
