@@ -1,7 +1,9 @@
-# hold data for a japanese sentence
-
-
 class JapaneseSentence:
+
+    sentence: str
+    definition: str
+    audio_file_path: str
+
     def __init__(
         self,
         sentence,
@@ -10,7 +12,7 @@ class JapaneseSentence:
     ):
         self.sentence = sentence
         self.definition = definition
-        self.audio_file = audio_file
+        self.audio_file_path = audio_file
 
     def is_fully_defined(self):
-        return self.definition is not None and self.audio_file is not None
+        return self.definition is not None and self.audio_file_path is not None

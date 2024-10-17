@@ -56,17 +56,17 @@ class VocabularyConnector:
             return
         self._insert_sentence_in_db(sentence)
 
-    def _insert_sentence_in_db(self, sentence):
+    def _insert_sentence_in_db(self, sentence: JapaneseSentence):
         try:
             self.cursor.execute(
                 """
       INSERT INTO sentences (sentence, definition, audio_file_path)
-      VALUES (?, ?, ?, ?)
+      VALUES (?, ?, ?)
       """,
                 (
                     sentence.sentence,
                     sentence.definition,
-                    sentence.audio_file,
+                    sentence.audio_file_path,
                 ),
             )
             self.connection.commit()

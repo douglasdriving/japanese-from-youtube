@@ -77,6 +77,9 @@ def extract_new_words_from_text(text):
         for token in tokens:
             words_checked += 1
             word: JapaneseWord = get_word_data(token.token)
+            if word == None:
+                print(str(words_checked) + ". Failed to extract word: " + token.token)
+                continue
             word_already_in_db = vocabulary_connector.check_if_word_exists(word.word)
             word_in_kana = word.word
             if word_already_in_db:

@@ -54,4 +54,4 @@ class SentenceDataExtractor:
             audio_file_path = save_jp_text_as_audio(
                 sentence.sentence
             )  # apparently, sentence is with pronunciation in parenthesis here
-            sentence.audio_file = audio_file_path
+            sentence.audio_file_path = audio_file_path
