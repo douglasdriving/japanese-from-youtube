@@ -4,7 +4,6 @@ from .text_handling.japanese_word import JapaneseWord
 
 
 def extract_words_from_transcript(japanese_transcript):
-    print("Successfully retrieved Japanese transcript")
     allWords: list[JapaneseWord] = extract_new_words_from_text(japanese_transcript)
     return allWords
 

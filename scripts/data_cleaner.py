@@ -13,8 +13,10 @@ class DataCleaner:
         self.connection = sqlite3.connect("vocabulary.db")
         self.cursor = self.connection.cursor()
 
-    def clean_database(self):
+    def clean_data(self):
+        print("Cleaning data...")
         self._clean_audio_file_names()
+        print("Data cleaning finished")
 
     def _clean_audio_file_names(self):
         self._clean_audio_file_names_in_table("vocabulary")

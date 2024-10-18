@@ -1,5 +1,5 @@
 # import subprocess
-# import re
+import re
 from jisho_api.tokenize import Tokens
 from jisho_api.word import Word
 from .japanese_word import JapaneseWord
@@ -7,10 +7,8 @@ from ..database.vocabulary_connector import VocabularyConnector
 
 
 def get_tokens_from_text(text):
-    tokens_result = Tokens.request(text)
-    if tokens_result == None:
-        print("Failed to extract tokens from text: " + text)
-        return None
+    cleaned_text = re.sub(r"[、。]", " ", text)
+    tokens_result = Tokens.request(cleaned_text)
     tokens = tokens_result.data
     return tokens
 
