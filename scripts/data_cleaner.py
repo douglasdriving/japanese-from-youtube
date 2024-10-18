@@ -19,6 +19,7 @@ class DataCleaner:
     def _clean_audio_file_names(self):
         self._clean_audio_file_names_in_table("vocabulary")
         self._clean_audio_file_names_in_table("sentences")
+        self._delete_all_audio_files_with_wrong_pattern()
 
     def _clean_audio_file_names_in_table(self, table="vocabulary"):
 
@@ -65,6 +66,17 @@ class DataCleaner:
                 self.connection.commit()
                 os.rename(audio_file_path, new_file_path)
                 print(f"Renamed {audio_file_path} to {new_file_path}")
+
+    def _delete_all_audio_files_with_wrong_pattern(self):
+        audio_files = os.listdir("./audios")
+        for audio_file in audio_files:
+            if not re.match(r"s\d+\.wav", audio_file) and not re.match(
+                r"w\d+\.wav", audio_file
+            ):
+                os.remove(f"./audios/{audio_file}")
+                print(
+                    f"Deleted {audio_file} from audios folder since it is not in correct format"
+                )
 
     def _get_all_words_from_db(self):
         self.cursor.execute(
