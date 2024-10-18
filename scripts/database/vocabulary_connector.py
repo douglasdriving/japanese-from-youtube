@@ -81,3 +81,12 @@ class VocabularyConnector:
             (sentence,),
         )
         return self.cursor.fetchone() is not None
+
+    def get_highest_sentence_id(self):
+        self.cursor.execute(
+            """
+    SELECT MAX(id) FROM sentences
+    """
+        )
+        max_id = self.cursor.fetchone()[0]
+        return max_id

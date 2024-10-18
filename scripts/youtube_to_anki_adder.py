@@ -84,6 +84,7 @@ def add_new_vocab_from_youtube_to_anki_deck():
     video_id = get_valid_youtube_id_from_user()
     print("extracting unique words from youtube video...")
     transcript = get_japanese_transcript_as_single_text(video_id)
-    add_new_words(transcript)
+    # add_new_words(transcript) ADD THIS BACK
+    print("WARNING: SKIPPED ADDING WORDS; ADD THIS BACK")
     save_sentences_and_add_unknowns_to_anki_from_transcript(transcript)
     print("finished adding vocab to anki deck")
