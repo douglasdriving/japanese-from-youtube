@@ -25,6 +25,14 @@ def cleanup_word(word):
 
 def get_word_data(kana_word: str):
 
+    def get_definitions_as_string(base_word_data):
+        definitions_of_most_common_reading = base_word_data.senses[
+            0
+        ].english_definitions
+        definitions_limited_to_3 = definitions_of_most_common_reading[:3]
+        definitions_as_string = "; ".join(definitions_limited_to_3)
+        return definitions_as_string
+
     base_word_result = Word.request(kana_word)
     if base_word_result == None:
         return None
@@ -36,8 +44,7 @@ def get_word_data(kana_word: str):
     if base_word == None:
         base_word = most_common_reading
 
-    definitions_of_most_common_reading = base_word_data.senses[0].english_definitions
-    definitions_as_string = "; ".join(definitions_of_most_common_reading)
+    definitions_as_string = get_definitions_as_string(base_word_data)
     japanese_word = JapaneseWord(base_word, most_common_reading, definitions_as_string)
     return japanese_word
 
