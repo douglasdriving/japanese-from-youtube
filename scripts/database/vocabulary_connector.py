@@ -90,3 +90,12 @@ class VocabularyConnector:
         )
         max_id = self.cursor.fetchone()[0]
         return max_id
+
+    def get_highest_word_id(self):
+        self.cursor.execute(
+            """
+            SELECT MAX(id) FROM vocabulary
+            """
+        )
+        max_id = self.cursor.fetchone()[0]
+        return max_id

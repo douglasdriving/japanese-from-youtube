@@ -64,7 +64,8 @@ def add_word_to_db_and_anki_if_new(word: JapaneseWord):
             ")",
         )
     else:
-        audio_path = save_jp_text_as_audio(word.reading)
+        next_db_id = vocabulary_connector.get_highest_word_id() + 1
+        audio_path = save_jp_text_as_audio(word.reading, next_db_id, is_sentence=False)
         vocabulary_connector.save_word_in_db(word, audio_path)
         add_card_to_anki_deck(audio_path, word.definition)
         print("added word: " + word.word + " (" + word.reading + ")")

@@ -65,7 +65,7 @@ class SentenceDataExtractor:
                 sentences_with_definition.append(sentence_obj)
                 database_id = current_highest_id + idx + 1
                 sentence_obj.audio_file_path = save_jp_text_as_audio(
-                    sentence_obj.sentence, database_id
+                    sentence_obj.sentence, database_id, is_sentence=True
                 )
                 print(idx + 1, ". added sentence: ", sentence, " (", translation, ")")
         return sentences_with_definition
