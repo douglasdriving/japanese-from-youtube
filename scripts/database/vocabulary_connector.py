@@ -99,3 +99,29 @@ class VocabularyConnector:
         )
         max_id = self.cursor.fetchone()[0]
         return max_id
+
+    def get_all_words(self):
+        self.cursor.execute(
+            """
+            SELECT * FROM vocabulary
+            """
+        )
+        data = self.cursor.fetchall()
+        words: list[JapaneseWord] = []
+        for row in data:
+            word = JapaneseWord(row[1], row[2], row[3], row[4], row[0])
+            words.append(word)
+        return words
+
+    def get_all_sentences(self):
+        self.cursor.execute(
+            """
+            SELECT * FROM sentences
+            """
+        )
+        data = self.cursor.fetchall()
+        sentences: list[JapaneseSentence] = []
+        for row in data:
+            sentence = JapaneseSentence(row[1], row[2], row[3], row[0])
+            sentences.append(sentence)
+        return sentences

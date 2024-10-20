@@ -2,6 +2,7 @@ import sqlite3
 import re
 import os
 from scripts.text_handling.speech_synthesis import save_jp_text_as_audio
+from .anki_cleaner import AnkiCleaner
 
 
 class DataCleaner:
@@ -16,6 +17,8 @@ class DataCleaner:
     def clean_data(self):
         print("Cleaning data...")
         self._clean_audio_file_names()
+        anki_cleaner = AnkiCleaner()
+        anki_cleaner.clean_data()
         print("Data cleaning finished")
 
     def _clean_audio_file_names(self):
