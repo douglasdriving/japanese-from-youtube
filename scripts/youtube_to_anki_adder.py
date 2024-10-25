@@ -6,7 +6,7 @@ from .audio.audio_player import AudioPlayer
 from .database.vocabulary_connector import VocabularyConnector
 import time
 from .text_handling.sentence_data_extractor import SentenceDataExtractor
-from .youtube_transcriber import get_youtube_transcript
+from .youtube_transcriber import get_transcript
 from .text_handling.sentence import JapaneseSentence
 from .text_handling.japanese_word import JapaneseWord
 
@@ -84,7 +84,7 @@ def add_new_vocab_from_youtube_to_anki_deck():
     open_anki_if_not_running()
     video_id = get_valid_youtube_id_from_user()
     print("extracting unique words from youtube video...")
-    transcript = get_youtube_transcript(video_id)
+    transcript = get_transcript(video_id)
     add_new_words(transcript)
     add_sentences_to_db_and_anki(transcript)  # same here, ignor english
     print("finished adding vocab to anki deck")

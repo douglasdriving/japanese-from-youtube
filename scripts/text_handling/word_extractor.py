@@ -65,8 +65,14 @@ def cleanup_tokens(list_of_tokens):
     return cleaned_up_list
 
 
+def cleanup_text(text):
+    jp_text = re.sub(r"[a-zA-Z]", "", text)
+    cleaned_jp_text = re.sub(r"[、。]", " ", jp_text)
+    return cleaned_jp_text
+
+
 def get_tokens_from_text(text):
-    cleaned_text = re.sub(r"[、。]", " ", text)
+    cleaned_text = cleanup_text(text)
     tokens_result = Tokens.request(cleaned_text)
     tokens = tokens_result.data
     clean_tokens = cleanup_tokens(tokens)
