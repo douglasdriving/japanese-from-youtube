@@ -1,7 +1,7 @@
 ## allows the user to add all new vocab to their anki deck
 from .youtube_word_extractor import extract_jp_words_from_transcript
 from .text_handling.speech_synthesis import save_jp_text_as_audio
-from .anki.anki_word_adder import add_card_to_anki_deck, open_anki_if_not_running
+from .anki.anki_word_adder import add_card_to_anki, open_anki_if_not_running
 from .audio.audio_player import AudioPlayer
 from .database.vocabulary_connector import VocabularyConnector
 import time
@@ -41,7 +41,7 @@ def add_sentences_to_db_and_anki(transcript: str):
     for sentence in sentences:
         if sentence.is_fully_defined():
             vocabulary_connector.add_sentence(sentence)
-            add_card_to_anki_deck(sentence.audio_file_path, sentence.definition)
+            add_card_to_anki(sentence.audio_file_path, sentence.definition)
         else:
             print("skipped sentence since it is not fully defined: ")
             print(sentence.sentence)
@@ -67,7 +67,7 @@ def add_word_to_db_and_anki_if_new(word: JapaneseWord):
         next_db_id = vocabulary_connector.get_highest_word_id() + 1
         audio_path = save_jp_text_as_audio(word.reading, next_db_id, is_sentence=False)
         vocabulary_connector.save_word_in_db(word, audio_path)
-        add_card_to_anki_deck(audio_path, word.definition)
+        add_card_to_anki(audio_path, word.definition)
         print("added word: " + word.word + " (" + word.reading + ")")
 
 
