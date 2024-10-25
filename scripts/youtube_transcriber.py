@@ -19,9 +19,7 @@ def combine_transcript_into_single_text(transcript):
 
 def get_transcript(video_id):
     try:
-        transcript = YouTubeTranscriptApi.get_transcript(
-            video_id, languages=["en", "ja"]
-        )
+        transcript = YouTubeTranscriptApi.get_transcript(video_id, languages=["ja"])
         transcript_as_single_text = combine_transcript_into_single_text(transcript)
         return transcript_as_single_text
     except Exception as e:
