@@ -71,37 +71,45 @@ def cleanup_text(text):
     return cleaned_jp_text
 
 
-def get_tokens_from_text(text):
+def get_words_from_text(text):
     cleaned_text = cleanup_text(text)
     tokens_result = Tokens.request(cleaned_text)
     tokens = tokens_result.data
     clean_tokens = cleanup_tokens(tokens)
-    return clean_tokens
+    words = [token.token for token in clean_tokens]
+    return words
 
 
 def extract_new_words_from_text(text):
-    vocabulary_connector = VocabularyConnector()
+
+    def filter_out_words_that_are_already_in_db(words_to_filter):
+        vocabulary_connector = VocabularyConnector()
+        words_in_db = vocabulary_connector.get_all_words()
+        words_in_db_kana = [word.word for word in words_in_db]
+        filtered_words = []
+        for word in words_to_filter:
+            if word not in words_in_db_kana:
+                filtered_words.append(word)
+        return filtered_words
+
     japanese_words: list[JapaneseWord] = []
-    tokens = get_tokens_from_text(text)
-    print("Extracted " + str(len(tokens)) + " tokens from text.")
+    all_words = get_words_from_text(text)
+    print("Extracted " + str(len(all_words)) + " words from text.")
+    new_words = filter_out_words_that_are_already_in_db(all_words)
+    print(str(len(new_words)) + " new words.")
+
+    # extract data for new words
     words_checked = 0
-    if tokens != None:
-        for token in tokens:
-            words_checked += 1
-            word: JapaneseWord = get_word_data(token.token)
-            if word == None:
-                print(str(words_checked) + ". Failed to extract word: " + token.token)
-                continue
-            word_already_in_db = vocabulary_connector.check_if_word_exists(word.word)
-            word_in_kana = word.word
-            if word_already_in_db:
-                print(
-                    str(words_checked) + ". Word already in database: " + word_in_kana
-                )
-                continue
-            if word == None:
-                print(str(words_checked) + ". Failed to extract word: " + word_in_kana)
-                continue
-            japanese_words.append(word)
-            print(str(words_checked) + ". Extracted word : " + word_in_kana)
+    for word_kana in new_words:
+        words_checked += 1
+        word: JapaneseWord = get_word_data(word_kana)
+        if word == None:
+            print(str(words_checked) + ". Failed to extract word: " + word_kana)
+            continue
+        if word == None:
+            print(str(words_checked) + ". Failed to extract word: " + word_kana)
+            continue
+        japanese_words.append(word)
+        print(str(words_checked) + ". Extracted word: " + word_kana)
+
     return japanese_words
