@@ -1,12 +1,12 @@
 ## allows the user to add all new vocab to their anki deck
-from .youtube_word_extractor import extract_words_from_transcript
+from .youtube_word_extractor import extract_jp_words_from_transcript
 from .text_handling.speech_synthesis import save_jp_text_as_audio
 from .anki.anki_word_adder import add_card_to_anki_deck, open_anki_if_not_running
 from .audio.audio_player import AudioPlayer
 from .database.vocabulary_connector import VocabularyConnector
 import time
 from .text_handling.sentence_data_extractor import SentenceDataExtractor
-from .youtube_transcriber import get_japanese_transcript_as_single_text
+from .youtube_transcriber import get_youtube_transcript
 from .text_handling.sentence import JapaneseSentence
 from .text_handling.japanese_word import JapaneseWord
 
@@ -72,7 +72,7 @@ def add_word_to_db_and_anki_if_new(word: JapaneseWord):
 
 
 def add_new_words(transcript: str):
-    words = extract_words_from_transcript(transcript)
+    words = extract_jp_words_from_transcript(transcript)
     if words is None:
         print("Failed to extract unique words from youtube video. exiting")
         return
@@ -84,7 +84,11 @@ def add_new_vocab_from_youtube_to_anki_deck():
     open_anki_if_not_running()
     video_id = get_valid_youtube_id_from_user()
     print("extracting unique words from youtube video...")
-    transcript = get_japanese_transcript_as_single_text(video_id)
-    add_new_words(transcript)
-    save_sentences_and_add_unknowns_to_anki_from_transcript(transcript)
+    transcript = get_youtube_transcript(video_id)
+    add_new_words(
+        transcript
+    )  # edit this to only add japanese words. ignore english words
+    save_sentences_and_add_unknowns_to_anki_from_transcript(
+        transcript
+    )  # same here, ignor english
     print("finished adding vocab to anki deck")
