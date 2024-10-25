@@ -26,10 +26,11 @@ def get_japanese_transcript(video_id):
         return None
 
 
-def get_japanese_transcript_as_single_text(video_id):
+def get_youtube_transcript(video_id):
     transcript = get_japanese_transcript(video_id)
     if transcript is not None:
         transcript_as_single_text = combine_transcript_into_single_text(transcript)
         return transcript_as_single_text
     else:
+        raise Exception("Failed to get transcript")
         return None

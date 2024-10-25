@@ -1,10 +1,10 @@
 from .youtube_transcriber import get_youtube_transcript
-from .text_handling.word_extractor import extract_new_jp_words_from_text
+from .text_handling.word_extractor import extract_new_words_from_text
 from .text_handling.japanese_word import JapaneseWord
 
 
 def extract_jp_words_from_transcript(japanese_transcript):
-    allWords: list[JapaneseWord] = extract_new_jp_words_from_text(japanese_transcript)
+    allWords: list[JapaneseWord] = extract_new_words_from_text(japanese_transcript)
     return allWords
 
 

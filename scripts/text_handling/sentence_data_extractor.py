@@ -16,6 +16,7 @@ class SentenceDataExtractor:
         if self.kana_text is None:
             print("ERROR: No text to extract sentences from")
             return None
+        self.remove_latin_characters()
         all_sentences_in_text_str = self._split_text_into_sentences()
         new_sentences_str = self._get_sentences_from_list_that_are_not_in_db(
             all_sentences_in_text_str
@@ -25,6 +26,9 @@ class SentenceDataExtractor:
             self._make_sentence_objects_from_strings(new_sentences_str)
         )
         return sentences_with_data
+
+    def remove_latin_characters(self):
+        self.kana_text = "".join([char for char in self.kana_text if ord(char) >= 128])
 
     def _turn_string_list_into_sentence_list(self, sentences_str: list[str]):
         sentences: list[JapaneseSentence] = []
@@ -67,5 +71,5 @@ class SentenceDataExtractor:
                 sentence_obj.audio_file_path = save_jp_text_as_audio(
                     sentence_obj.sentence, database_id, is_sentence=True
                 )
-                print(idx + 1, ". added sentence: ", sentence, " (", translation, ")")
+                print(idx + 1, ". made sentence: ", sentence, " (", translation, ")")
         return sentences_with_definition
