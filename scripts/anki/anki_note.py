@@ -1,4 +1,4 @@
-class AnkiCardData:
+class AnkiNote:
 
     audio_file_path = None
     translation = None

@@ -2,7 +2,10 @@ import requests
 import os
 import subprocess
 import time
-from .anki_card_data import AnkiCardData
+import warnings
+from .anki_note import AnkiNote
+from ..text_handling.japanese_word import JapaneseWord
+from ..text_handling.sentence import JapaneseSentence
 
 # could move this into env vars
 deck_name = "jp_audio_cards"
@@ -81,6 +84,7 @@ def create_add_note_request(deck_name, front, back, audio_file_path):
 def add_card_to_anki(audio_file, translation):
     open_anki_if_not_running()
     card = create_add_note_request(deck_name, "", translation, audio_file)
+
     response = requests.post(anki_connect_url, json=card)
     response_json = response.json()
     if response_json["result"] is None:
@@ -90,7 +94,24 @@ def add_card_to_anki(audio_file, translation):
     return response.json()
 
 
-def add_cards_to_anki(cards: list[AnkiCardData]):
+def check_which_notes_can_be_added(notes: list):
+    request_json = {
+        "action": "canAddNotesWithErrorDetail",
+        "version": 6,
+        "params": {
+            "notes": notes,
+        },
+    }
+    response = requests.post(anki_connect_url, json=request_json)
+    response_json = response.json()
+    if response_json["result"] is None:
+        print(
+            f"Failed to check which notes can be added. Error: {response_json['error']}"
+        )
+    return response_json["result"]
+
+
+def add_notes_to_anki(cards: list[AnkiNote]):
     open_anki_if_not_running()
 
     notes = []
@@ -104,11 +125,31 @@ def add_cards_to_anki(cards: list[AnkiCardData]):
         }
         notes.append(note)
 
+    which_ones_can_be_added = check_which_notes_can_be_added(notes)
+
+    # filter out those that cant, and print why
+    valid_notes = []
+    for idx, add_check in enumerate(which_ones_can_be_added):
+        note = notes[idx]
+        if add_check["canAdd"] == False:
+            print(
+                "Unable to add note: ",
+                " (",
+                note["fields"]["Front"],
+                "), (",
+                note["fields"]["Back"],
+                ")",
+                " Reason: ",
+                add_check["error"],
+            )
+        else:
+            valid_notes.append(note)
+
     request_json = {
         "action": "addNotes",
-        "version": 7,
+        "version": 6,
         "params": {
-            "notes": notes,
+            "notes": valid_notes,
         },
     }
 
@@ -118,5 +159,16 @@ def add_cards_to_anki(cards: list[AnkiCardData]):
     if response_json["result"] is None:
         print(f"Failed to add card to Anki deck. Error: {response_json['error']}")
     else:
-        print(len(cards), " cards added to Anki deck")
+        print(len(valid_notes), " cards added to Anki deck")
     return response.json()
+
+
+def add_words_and_sentences_to_anki(
+    words: list[JapaneseWord], sentences: list[JapaneseSentence]
+):
+    notes: list[AnkiNote] = []
+    for word in words:
+        notes.append(AnkiNote(word.audio_file_path, word.definition))
+    for sentence in sentences:
+        notes.append(AnkiNote(sentence.audio_file_path, sentence.definition))
+    add_notes_to_anki(notes)

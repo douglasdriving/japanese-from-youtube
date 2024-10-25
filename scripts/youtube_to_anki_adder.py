@@ -1,7 +1,10 @@
 ## allows the user to add all new vocab to their anki deck
-from .youtube_word_extractor import extract_jp_words_from_transcript
+from .youtube_word_extractor import extract_new_words_from_transcript
 from .text_handling.speech_synthesis import save_jp_text_as_audio
-from .anki.anki_word_adder import add_card_to_anki, open_anki_if_not_running
+from .anki.anki_word_adder import (
+    add_words_and_sentences_to_anki,
+    open_anki_if_not_running,
+)
 from .audio.audio_player import AudioPlayer
 from .database.vocabulary_connector import VocabularyConnector
 import time
@@ -9,6 +12,7 @@ from .text_handling.sentence_data_extractor import SentenceDataExtractor
 from .youtube_transcriber import get_transcript
 from .text_handling.sentence import JapaneseSentence
 from .text_handling.japanese_word import JapaneseWord
+from .anki.anki_note import AnkiNote
 
 audioPlayer = AudioPlayer("")
 vocabulary_connector = VocabularyConnector()
@@ -35,19 +39,21 @@ def get_valid_youtube_id_from_user():
     return video_id
 
 
-def add_sentences_to_db_and_anki(transcript: str):
+def add_sentences_to_db(transcript: str):
     sentece_data_extractor = SentenceDataExtractor(transcript)
     sentences = sentece_data_extractor.extract_sentences_not_in_db()
+    sentences_added: list[JapaneseSentence] = []
     for sentence in sentences:
         if sentence.is_fully_defined():
             vocabulary_connector.add_sentence(sentence)
-            add_card_to_anki(sentence.audio_file_path, sentence.definition)
+            sentences_added.append(sentence)
         else:
             print("skipped sentence since it is not fully defined: ")
             print(sentence.sentence)
+    return sentences_added
 
 
-def add_word_to_db_and_anki_if_new(word: JapaneseWord):
+def add_word_to_db_if_new(word: JapaneseWord):
     if not word.is_fully_defined():
         print(
             "skipped word since it is not fully defined: ",
@@ -67,17 +73,23 @@ def add_word_to_db_and_anki_if_new(word: JapaneseWord):
         next_db_id = vocabulary_connector.get_highest_word_id() + 1
         audio_path = save_jp_text_as_audio(word.reading, next_db_id, is_sentence=False)
         vocabulary_connector.save_word_in_db(word, audio_path)
-        add_card_to_anki(audio_path, word.definition)
-        print("added word: " + word.word + " (" + word.reading + ")")
+        word.database_id = next_db_id
+        word.audio_file_path = audio_path
+        print("added word to db: " + word.word + " (" + word.reading + ")")
+        return word
 
 
-def add_new_words(transcript: str):
-    words = extract_jp_words_from_transcript(transcript)
+def add_new_words_to_db(transcript: str):
+    words = extract_new_words_from_transcript(transcript)
+    words_added: list[JapaneseWord] = []
     if words is None:
         print("Failed to extract unique words from youtube video. exiting")
         return
     for word in words:
-        add_word_to_db_and_anki_if_new(word)
+        word = add_word_to_db_if_new(word)
+        if type(word) is JapaneseWord:
+            words_added.append(word)
+    return words_added
 
 
 def add_new_vocab_from_youtube_to_anki_deck():
@@ -85,6 +97,7 @@ def add_new_vocab_from_youtube_to_anki_deck():
     video_id = get_valid_youtube_id_from_user()
     print("extracting unique words from youtube video...")
     transcript = get_transcript(video_id)
-    add_new_words(transcript)
-    add_sentences_to_db_and_anki(transcript)  # same here, ignor english
+    words_added: list[JapaneseWord] = add_new_words_to_db(transcript)
+    sentences_added: list[JapaneseSentence] = add_sentences_to_db(transcript)
+    add_words_and_sentences_to_anki(words_added, sentences_added)
     print("finished adding vocab to anki deck")
