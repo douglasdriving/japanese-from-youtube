@@ -8,7 +8,7 @@ class VocabularyConnector:
         self.connection = sqlite3.connect("vocabulary.db")
         self.cursor = self.connection.cursor()
 
-    def save_word_in_db(self, word: JapaneseWord, audio_file_path: str):
+    def save_word_in_db(self, word: JapaneseWord):
         if not word.is_fully_defined():
             print("ERROR: Word is not fully defined. Not adding to database.")
             print(word)
@@ -16,10 +16,10 @@ class VocabularyConnector:
         try:
             self.cursor.execute(
                 """
-      INSERT INTO vocabulary (word, reading, definition, audio_file_path)
-      VALUES (?, ?, ?, ?)
-      """,
-                (word.word, word.reading, word.definition, audio_file_path),
+                    INSERT INTO vocabulary (word, reading, definition, audio_file_path)
+                    VALUES (?, ?, ?, ?)
+                """,
+                (word.word, word.reading, word.definition, word.audio_file_path),
             )
             self.connection.commit()
         except sqlite3.Error as error:
@@ -125,3 +125,19 @@ class VocabularyConnector:
             sentence = JapaneseSentence(row[1], row[2], row[3], row[0])
             sentences.append(sentence)
         return sentences
+
+    def get_word_if_exists(self, word_in_kana: str):
+        self.cursor.execute(
+            """
+                SELECT * FROM vocabulary WHERE word = (?)
+            """,
+            (word_in_kana,),
+        )
+        word_data = self.cursor.fetchone()
+        if word_data is None:
+            return None
+        else:
+            word = JapaneseWord(
+                word_data[1], word_data[2], word_data[3], word_data[4], word_data[0]
+            )
+            return word

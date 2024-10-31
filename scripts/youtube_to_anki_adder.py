@@ -39,18 +39,12 @@ def get_valid_youtube_id_from_user():
     return video_id
 
 
-def add_sentences_to_db(transcript: str):
-    sentece_data_extractor = SentenceDataExtractor(transcript)
-    sentences = sentece_data_extractor.extract_sentences_not_in_db()
-    sentences_added: list[JapaneseSentence] = []
-    for sentence in sentences:
-        if sentence.is_fully_defined():
-            vocabulary_connector.add_sentence(sentence)
-            sentences_added.append(sentence)
-        else:
-            print("skipped sentence since it is not fully defined: ")
-            print(sentence.sentence)
-    return sentences_added
+def add_sentence_to_db(sentence: JapaneseSentence):
+    if sentence.is_fully_defined():
+        vocabulary_connector.add_sentence(sentence)
+    else:
+        print("skipped adding sentence to db since it is not fully defined: ")
+        print(sentence.sentence)
 
 
 def add_word_to_db_if_new(word: JapaneseWord):
@@ -70,13 +64,8 @@ def add_word_to_db_if_new(word: JapaneseWord):
             ")",
         )
     else:
-        next_db_id = vocabulary_connector.get_highest_word_id() + 1
-        audio_path = save_jp_text_as_audio(word.reading, next_db_id, is_sentence=False)
-        vocabulary_connector.save_word_in_db(word, audio_path)
-        word.database_id = next_db_id
-        word.audio_file_path = audio_path
+        vocabulary_connector.save_word_in_db(word)
         print("added word to db: " + word.word + " (" + word.reading + ")")
-        return word
 
 
 def add_new_words_to_db(transcript: str):
@@ -92,12 +81,20 @@ def add_new_words_to_db(transcript: str):
     return words_added
 
 
+def add_words_and_sentences_to_db(sentences: list[JapaneseSentence]):
+    for sentence in sentences:
+        for word in sentence.words:
+            add_word_to_db_if_new(word)
+        add_sentence_to_db(sentence)
+
+
 def add_new_vocab_from_youtube_to_anki_deck():
     open_anki_if_not_running()
     video_id = get_valid_youtube_id_from_user()
     print("extracting unique words from youtube video...")
     transcript = get_transcript(video_id)
-    words_added: list[JapaneseWord] = add_new_words_to_db(transcript)
-    sentences_added: list[JapaneseSentence] = add_sentences_to_db(transcript)
-    add_words_and_sentences_to_anki(words_added, sentences_added)
+    sentence_data_extractor = SentenceDataExtractor(transcript)
+    sentences = sentence_data_extractor.extract_sentences_not_in_db()
+    add_words_and_sentences_to_db(sentences)
+    add_words_and_sentences_to_anki(sentences)
     print("finished adding vocab to anki deck")

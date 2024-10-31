@@ -1,13 +1,18 @@
 class JapaneseWord:
 
     word: str
-    reading: str
-    definition: str
-    audio_file_path: str
-    database_id: int
+    reading: str | None
+    definition: str | None
+    audio_file_path: str | None
+    database_id: int | None
 
     def __init__(
-        self, word, reading, definition, audio_file_path=None, database_id=None
+        self,
+        word: str,
+        reading: str = None,
+        definition: str = None,
+        audio_file_path: str = None,
+        database_id: int = None,
     ):
         self.word = word
         self.reading = reading
@@ -23,4 +28,9 @@ class JapaneseWord:
         return is_exact_same_word
 
     def is_fully_defined(self):
-        return self.word != None and self.reading != None and self.definition != None
+        return (
+            self.word != None
+            and self.reading != None
+            and self.definition != None
+            and self.audio_file_path != None
+        )

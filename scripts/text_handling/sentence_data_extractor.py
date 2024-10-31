@@ -3,13 +3,21 @@ from .sentence import JapaneseSentence
 from .speech_synthesis import save_jp_text_as_audio
 from ..database.vocabulary_connector import VocabularyConnector
 from .translator import translate_jp_to_en
+from .word_extractor_new import WordExtractor
 
 
 class SentenceDataExtractor:
+
+    kana_text: str
+    sentences: list[JapaneseSentence]
+    vocabulary_connector: VocabularyConnector
+    word_extractor: WordExtractor
+
     def __init__(self, kana_text: str):
         self.kana_text: str = kana_text
         self.sentences: list[JapaneseSentence] = []
         self.vocabulary_connector = VocabularyConnector()
+        self.word_extractor = WordExtractor()
 
     def extract_sentences_not_in_db(self):
         print("Extracting sentences...")
@@ -23,7 +31,7 @@ class SentenceDataExtractor:
         )
         print("Found ", len(new_sentences_str), " new sentences")
         sentences_with_data: list[JapaneseSentence] = (
-            self._make_sentence_objects_from_strings(new_sentences_str)
+            self._make_new_sentences_into_objects(new_sentences_str)
         )
         return sentences_with_data
 
@@ -49,10 +57,9 @@ class SentenceDataExtractor:
         ]
         return sentences
 
-    def _make_sentence_objects_from_strings(self, kana_sentences: list[str]):
+    def _make_new_sentences_into_objects(self, kana_sentences: list[str]):
         print("making ", len(kana_sentences), " sentences")
         sentences_with_definition: list[JapaneseSentence] = []
-        current_highest_id = self.vocabulary_connector.get_highest_sentence_id()
         for idx, sentence in enumerate(kana_sentences):
             sentence_exists = self.vocabulary_connector.check_if_sentence_exists(
                 sentence
@@ -64,12 +71,27 @@ class SentenceDataExtractor:
                     sentence,
                 )
             else:
-                translation = translate_jp_to_en(sentence)
-                sentence_obj = JapaneseSentence(sentence, translation)
-                sentences_with_definition.append(sentence_obj)
-                database_id = current_highest_id + idx + 1
-                sentence_obj.audio_file_path = save_jp_text_as_audio(
-                    sentence_obj.sentence, database_id, is_sentence=True
+                sentence_obj = self._make_sentence_object(sentence)
+                print(
+                    idx + 1,
+                    ". made sentence: ",
+                    sentence,
+                    " (",
+                    sentence_obj.definition,
+                    ")",
                 )
-                print(idx + 1, ". made sentence: ", sentence, " (", translation, ")")
+                sentences_with_definition.append(sentence_obj)
         return sentences_with_definition
+
+    def _make_sentence_object(self, sentence):
+        translation = translate_jp_to_en(sentence)
+        sentence_obj = JapaneseSentence(sentence, translation)
+        sentence_obj.audio_file_path = save_jp_text_as_audio(
+            sentence_obj.sentence, is_sentence=True
+        )
+        sentence_obj.words = self._extract_words_for_sentence(sentence_obj)
+        return sentence_obj
+
+    def _extract_words_for_sentence(self, sentence: JapaneseSentence):
+        words = self.word_extractor.extract_words_from_text(sentence.sentence)
+        return words

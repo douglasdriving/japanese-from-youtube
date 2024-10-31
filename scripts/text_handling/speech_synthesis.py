@@ -26,7 +26,34 @@ def get_random_japanese_voice_name():
     return japanese_voice_names[random_voice_index]
 
 
-def save_jp_text_as_audio(kana_text: str, database_id: int, is_sentence: bool):
+def get_highest_word_audio_id():
+    highest_id = 0
+    for filename in os.listdir("./audios"):
+        if filename.endswith(".wav") and os.path.basename(filename).startswith("w"):
+            id = int(re.search(r"\d+", filename).group())
+            if id > highest_id:
+                highest_id = id
+    return highest_id
+
+
+def get_highest_sentence_audio_id():
+    highest_id = 0
+    for filename in os.listdir("./audios"):
+        if filename.endswith(".wav") and os.path.basename(filename).startswith("s"):
+            id = int(re.search(r"\d+", filename).group())
+            if id > highest_id:
+                highest_id = id
+    return highest_id
+
+
+def get_highest_audio_id(is_sentence: bool):
+    if is_sentence:
+        return get_highest_sentence_audio_id()
+    else:
+        return get_highest_word_audio_id()
+
+
+def save_jp_text_as_audio(kana_text: str, is_sentence: bool):
 
     def create_and_save_new_audio(kana_text, audio_file_path):
         speech_config.speech_synthesis_voice_name = get_random_japanese_voice_name()
@@ -41,9 +68,11 @@ def save_jp_text_as_audio(kana_text: str, database_id: int, is_sentence: bool):
             if cancellation_details.reason == speechsdk.CancellationReason.Error:
                 print(f"Error details: {cancellation_details.error_details}")
 
-    audio_file_path = f"./audios/w{database_id}.wav"
+    highest_id = get_highest_audio_id(is_sentence)
+
+    audio_file_path = f"./audios/w{highest_id+1}.wav"
     if is_sentence:
-        audio_file_path = f"./audios/s{database_id}.wav"
+        audio_file_path = f"./audios/s{highest_id+1}.wav"
     if not os.path.exists(audio_file_path):
         create_and_save_new_audio(kana_text, audio_file_path)
     return audio_file_path

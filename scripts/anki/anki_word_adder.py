@@ -6,6 +6,7 @@ import warnings
 from .anki_note import AnkiNote
 from ..text_handling.japanese_word import JapaneseWord
 from ..text_handling.sentence import JapaneseSentence
+from ..text_handling.romaziner import romanize_with_spaces
 
 # could move this into env vars
 deck_name = "jp_audio_cards"
@@ -163,12 +164,20 @@ def add_notes_to_anki(cards: list[AnkiNote]):
     return response.json()
 
 
-def add_words_and_sentences_to_anki(
-    words: list[JapaneseWord], sentences: list[JapaneseSentence]
-):
+def make_sentence_note(sentence: JapaneseSentence):
+    note_back = sentence.definition + "<br><br>Words:"
+    for word in sentence.words:
+        romaji = romanize_with_spaces(word.reading)
+        note_back += f"<br>{romaji} - {word.definition}"
+    note = AnkiNote(sentence.audio_file_path, note_back)
+    return note
+
+
+def add_words_and_sentences_to_anki(sentences: list[JapaneseSentence]):
     notes: list[AnkiNote] = []
-    for word in words:
-        notes.append(AnkiNote(word.audio_file_path, word.definition))
     for sentence in sentences:
-        notes.append(AnkiNote(sentence.audio_file_path, sentence.definition))
+        for word in sentence.words:
+            notes.append(AnkiNote(word.audio_file_path, word.definition))
+        sentence_note = make_sentence_note(sentence)
+        notes.append(sentence_note)
     add_notes_to_anki(notes)
