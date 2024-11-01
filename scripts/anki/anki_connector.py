@@ -79,8 +79,8 @@ class AnkiConnector:
         response = requests.post(os.environ["ANKI_CONNECT_URL"], json=anki_request_json)
         response_json = response.json()
         result = response_json["result"]
-        if result is None:
-            print(f"Failed to update card. Error: {response_json['error']}")
+        if response_json["error"] is not None:
+            print(f"Failed to update card. Error: {response_json["error"]}")
         return result
 
 

@@ -64,23 +64,31 @@ class AnkiCleaner:
 
     def _correct_poor_card_backs(self):
         cards = self.anki_connector.get_all_anki_cards()
-        for card in cards:
-            self._correct_card_if_bad(card)
+        bad_sentence_cards = self._get_bad_sentence_cards(cards)
+        for idx, card in enumerate(bad_sentence_cards):
+            print(
+                "Updating bad sentence card ", idx + 1, " of ", len(bad_sentence_cards)
+            )
+            self._update_sentence_card_back(card)
 
-    def _correct_card_if_bad(self, card):
+    def _get_bad_sentence_cards(self, cards):
+        return [card for card in cards if self._is_bad_sentence_card(card)]
 
-        def _sentence_back_has_right_format(back: str):
-            has_two_double_line_breaks = back.count("<br><br>") == 2
-            contains_words = "Words:" in back
-            has_right_format = has_two_double_line_breaks and contains_words
-            return has_right_format
-
+    def _is_bad_sentence_card(self, card):
         back = card["fields"]["Back"]["value"]
         is_sentence = self._is_sentence_card(card)
+        is_bad = False
         if is_sentence:
-            has_right_format = _sentence_back_has_right_format(back)
+            has_right_format = self._sentence_back_has_right_format(back)
             if not has_right_format:
-                self._update_sentence_card_back(card)
+                is_bad = True
+        return is_bad
+
+    def _sentence_back_has_right_format(self, back: str):
+        has_two_double_line_breaks = back.count("<br><br>") == 2
+        contains_words = "Words:" in back
+        has_right_format = has_two_double_line_breaks and contains_words
+        return has_right_format
 
     def _is_sentence_card(self, card):
 
@@ -94,13 +102,14 @@ class AnkiCleaner:
         if card_uses_new_front_pattern:
             is_sentence = ":s" in front
         else:
-            is_sentence = "_" in front
+            is_sentence = False
+            # for now, we are just ignoring the cards with the old structure. its too hard to determine what they are.
 
         return is_sentence
 
     def _update_sentence_card_back(self, card):
         back = card["fields"]["Back"]["value"]
-        english_sentence = back.split("<br><br>")[0]
+        english_sentence = re.split(r"<br\s*/?>|\n", back)[0]
         japanese_sentence = self.sentence_extractor.extract_db_data_for_sentence(
             english_sentence
         )

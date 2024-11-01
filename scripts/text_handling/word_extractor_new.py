@@ -18,15 +18,19 @@ class WordExtractor:
         cleaned_text = self._clean_text(text)
         word_texts = self._get_unique_words_from_text(cleaned_text)
         japanese_words = []
-        for word in word_texts:
-            japanese_word = self._get_japanese_word(word)
-            if japanese_word is not None:
-                japanese_words.append(japanese_word)
+        if word_texts is not None:
+            for word in word_texts:
+                japanese_word = self._get_japanese_word(word)
+                if japanese_word is not None:
+                    japanese_words.append(japanese_word)
         return japanese_words
 
     def _get_unique_words_from_text(self, text):
         cleaned_text = self._clean_text(text)
         tokens_result = Tokens.request(cleaned_text)
+        if not tokens_result or not tokens_result.data:
+            warnings.warn(f"Could not find tokens in Jisho API: {cleaned_text}")
+            return None
         tokens = tokens_result.data
         clean_tokens = self._cleanup_tokens(tokens)
         words = [token.token for token in clean_tokens]
