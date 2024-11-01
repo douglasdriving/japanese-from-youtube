@@ -13,7 +13,7 @@ class SentenceDataExtractor:
     vocabulary_connector: VocabularyConnector
     word_extractor: WordExtractor
 
-    def __init__(self, kana_text: str):
+    def __init__(self, kana_text: str = None):
         self.kana_text: str = kana_text
         self.sentences: list[JapaneseSentence] = []
         self.vocabulary_connector = VocabularyConnector()
@@ -34,6 +34,17 @@ class SentenceDataExtractor:
             self._make_new_sentences_into_objects(new_sentences_str)
         )
         return sentences_with_data
+
+    def extract_db_data_for_sentence(self, enlish_sentence: str):
+        japanese_sentence = self.vocabulary_connector.get_sentence(enlish_sentence)
+        if japanese_sentence is None:
+            print("ERROR: Sentence not found in db: ", enlish_sentence)
+            return None
+        else:
+            japanese_sentence.words = self._extract_words_for_sentence(
+                japanese_sentence
+            )
+            return japanese_sentence
 
     def remove_latin_characters(self):
         self.kana_text = "".join([char for char in self.kana_text if ord(char) >= 128])

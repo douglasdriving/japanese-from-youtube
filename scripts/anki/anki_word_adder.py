@@ -120,7 +120,7 @@ def add_notes_to_anki(cards: list[AnkiNote]):
         note = {
             "deckName": deck_name,
             "modelName": "Basic",
-            "fields": {"Front": "", "Back": card.translation},
+            "fields": {"Front": "", "Back": card.back},
             "options": get_card_options(deck_name),
             "audio": create_anki_audio(card.audio_file_path),
         }
@@ -165,10 +165,16 @@ def add_notes_to_anki(cards: list[AnkiNote]):
 
 
 def make_sentence_note(sentence: JapaneseSentence):
-    note_back = sentence.definition + "<br><br>Words:"
+    sentence_romaji = romanize_with_spaces(sentence.sentence)
+    note_back = sentence.definition + "<br><br>" + sentence_romaji + "<br><br>Words:"
     for word in sentence.words:
-        romaji = romanize_with_spaces(word.reading)
-        note_back += f"<br>{romaji} - {word.definition}"
+        if word.reading is not None:
+            word_romaji = romanize_with_spaces(word.reading)
+            note_back += f"<br>{word_romaji} - {word.definition}"
+        else:
+            print(
+                f"Warning: Word {word.word} has no reading. This will be skipped in the Anki note."
+            )
     note = AnkiNote(sentence.audio_file_path, note_back)
     return note
 
@@ -177,7 +183,9 @@ def add_words_and_sentences_to_anki(sentences: list[JapaneseSentence]):
     notes: list[AnkiNote] = []
     for sentence in sentences:
         for word in sentence.words:
-            notes.append(AnkiNote(word.audio_file_path, word.definition))
+            notes.append(
+                AnkiNote(word.audio_file_path, word.definition)
+            )  # should NOT duplicate notes here
         sentence_note = make_sentence_note(sentence)
         notes.append(sentence_note)
     add_notes_to_anki(notes)

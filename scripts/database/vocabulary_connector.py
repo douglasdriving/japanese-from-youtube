@@ -141,3 +141,19 @@ class VocabularyConnector:
                 word_data[1], word_data[2], word_data[3], word_data[4], word_data[0]
             )
             return word
+
+    def get_sentence(self, english_sentence: str):
+        self.cursor.execute(
+            """
+                SELECT * FROM sentences WHERE definition = (?)
+            """,
+            (english_sentence,),
+        )
+        sentence_data = self.cursor.fetchone()
+        if sentence_data is None:
+            return None
+        else:
+            sentence = JapaneseSentence(
+                sentence_data[1], sentence_data[2], sentence_data[3], sentence_data[0]
+            )
+            return sentence

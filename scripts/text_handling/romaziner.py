@@ -1,7 +1,7 @@
 import subprocess
 
 
-def romanize_with_spaces(kana_text):
+def romanize_with_spaces(kana_text: str):
     ichiranCommand = '(ichiran:romanize "' + kana_text + '")'
     cliCommand = ["ichiran-cli", "-e", ichiranCommand]
     result = subprocess.run(

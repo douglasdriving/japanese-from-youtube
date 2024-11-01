@@ -91,7 +91,7 @@ def add_words_and_sentences_to_db(sentences: list[JapaneseSentence]):
 def add_new_vocab_from_youtube_to_anki_deck():
     open_anki_if_not_running()
     video_id = get_valid_youtube_id_from_user()
-    print("extracting unique words from youtube video...")
+    print("extracting sentences and words from youtube video...")
     transcript = get_transcript(video_id)
     sentence_data_extractor = SentenceDataExtractor(transcript)
     sentences = sentence_data_extractor.extract_sentences_not_in_db()
