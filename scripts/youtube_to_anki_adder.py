@@ -92,5 +92,3 @@ def add_new_vocab_from_youtube_to_anki_deck():
     sentences_added_to_db = _add_words_and_sentences_to_db(sentences)
     add_words_and_sentences_to_anki(sentences_added_to_db)
     print("finished adding vocab to anki deck")
-
-    # now check to make sure this works! :)
