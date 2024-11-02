@@ -5,7 +5,7 @@ from scripts.youtube_scraper import YoutubeScraper
 # cleaner = DataCleaner()
 # cleaner.clean_data()
 youtube_scraper = YoutubeScraper()
-youtube_scraper.extract_youtube_vocab()
+youtube_scraper.scrape_video()
 
 
 # from scripts.youtube_transcriber import get_transcript

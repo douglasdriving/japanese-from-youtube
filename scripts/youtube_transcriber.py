@@ -2,30 +2,19 @@ from youtube_transcript_api import YouTubeTranscriptApi
 from scripts.transcript_line import TranscriptLine
 
 
-# def remove_parenthesis_and_text_inside_it(text):
-#     while "(" in text:
-#         start = text.index("(")
-#         end = text.index(")")
-#         text = text[:start] + text[end + 1 :]
-#     return text
+class YoutubeTranscriber:
 
+    def __init__(self):
+        pass
 
-# def combine_transcript_into_single_text(transcript):
-#     transcript_as_single_string = ""
-#     for line in transcript:
-#         line_without_readings = remove_parenthesis_and_text_inside_it(line["text"])
-#         transcript_as_single_string += line_without_readings
-#     return transcript_as_single_string
-
-
-def get_transcript(video_id):
-    try:
-        transcript = YouTubeTranscriptApi.get_transcript(video_id, languages=["ja"])
-        transcript_lines = [
-            TranscriptLine(line["text"], line["start"], line["duration"])
-            for line in transcript
-        ]
-        return transcript_lines
-    except Exception as e:
-        print(f"Failed to get transcript. Error: {e}")
-        return None
+    def get_transcript(video_id):
+        try:
+            transcript = YouTubeTranscriptApi.get_transcript(video_id, languages=["ja"])
+            transcript_lines = [
+                TranscriptLine(line["text"], line["start"], line["duration"])
+                for line in transcript
+            ]
+            return transcript_lines
+        except Exception as e:
+            print(f"Failed to get transcript. Error: {e}")
+            return None
