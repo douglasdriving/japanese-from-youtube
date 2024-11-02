@@ -4,34 +4,32 @@ from .speech_synthesis import save_jp_text_as_audio
 from ..database.vocabulary_connector import VocabularyConnector
 from .translator import translate_jp_to_en
 from .word_extractor_new import WordExtractor
+from ..transcript_line import TranscriptLine
 
 
 class SentenceDataExtractor:
 
-    kana_text: str
+    transcript: list[TranscriptLine]
     sentences: list[JapaneseSentence]
     vocabulary_connector: VocabularyConnector
     word_extractor: WordExtractor
 
-    def __init__(self, kana_text: str = None):
-        self.kana_text: str = kana_text
-        self.sentences: list[JapaneseSentence] = []
+    def __init__(self, transcript: list[TranscriptLine]):
+        self.transcript = transcript
+        self.sentences = []
         self.vocabulary_connector = VocabularyConnector()
         self.word_extractor = WordExtractor()
 
     def extract_sentences_not_in_db(self):
         print("Extracting sentences...")
-        if self.kana_text is None:
+        if self.transcript is None:
             print("ERROR: No text to extract sentences from")
             return None
         self.remove_latin_characters()
-        all_sentences_in_text_str = self._split_text_into_sentences()
-        new_sentences_str = self._get_sentences_from_list_that_are_not_in_db(
-            all_sentences_in_text_str
-        )
-        print("Found ", len(new_sentences_str), " new sentences")
+        self._remove_lines_already_in_db()
+        print("Found ", len(self.transcript), " new sentences")
         sentences_with_data: list[JapaneseSentence] = (
-            self._make_new_sentences_into_objects(new_sentences_str)
+            self._make_transcript_into_sentence_objects()
         )
         return sentences_with_data
 
@@ -47,7 +45,8 @@ class SentenceDataExtractor:
             return japanese_sentence
 
     def remove_latin_characters(self):
-        self.kana_text = "".join([char for char in self.kana_text if ord(char) >= 128])
+        for line in self.transcript:
+            line.text = "".join([char for char in line.text if ord(char) >= 128])
 
     def _turn_string_list_into_sentence_list(self, sentences_str: list[str]):
         sentences: list[JapaneseSentence] = []
@@ -55,38 +54,37 @@ class SentenceDataExtractor:
             sentences.append(JapaneseSentence(sentence))
         return sentences
 
-    def _split_text_into_sentences(self):
-        sentences = self.kana_text.split("。")
-        sentences = [sentence for sentence in sentences if sentence != ""]
-        return sentences
+    # def _split_text_into_sentences(self):
+    #     sentences = self.transcript.replace("。", " ").split(" ")
+    #     sentences = [sentence for sentence in sentences if sentence != ""]
+    #     return sentences
 
-    def _get_sentences_from_list_that_are_not_in_db(self, sentences: list[str]):
-        sentences = [
-            sentence
-            for sentence in sentences
-            if not self.vocabulary_connector.check_if_sentence_exists(sentence)
+    def _remove_lines_already_in_db(self):
+        self.transcript = [
+            line
+            for line in self.transcript
+            if not self.vocabulary_connector.check_if_sentence_exists(line.text)
         ]
-        return sentences
 
-    def _make_new_sentences_into_objects(self, kana_sentences: list[str]):
-        print("making ", len(kana_sentences), " sentences")
+    def _make_transcript_into_sentence_objects(self):
+        print("making ", len(self.transcript), " sentences")
         sentences_with_definition: list[JapaneseSentence] = []
-        for idx, sentence in enumerate(kana_sentences):
+        for idx, line in enumerate(self.transcript):
             sentence_exists = self.vocabulary_connector.check_if_sentence_exists(
-                sentence
+                line.text
             )
             if sentence_exists:
                 print(
                     idx + 1,
                     ". skipping sentence since it already exists: ",
-                    sentence,
+                    line.text,
                 )
             else:
-                sentence_obj = self._make_sentence_object(sentence)
+                sentence_obj = self._make_sentence_object(line.text)
                 print(
                     idx + 1,
                     ". made sentence: ",
-                    sentence,
+                    line.text,
                     " (",
                     sentence_obj.definition,
                     ")",

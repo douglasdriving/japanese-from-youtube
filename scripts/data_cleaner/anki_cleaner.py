@@ -13,12 +13,10 @@ class AnkiCleaner:
 
     anki_connector: AnkiConnector
     vocab_connector: VocabularyConnector
-    sentence_extractor: SentenceDataExtractor
 
     def __init__(self):
         self.anki_connector = AnkiConnector()
         self.vocab_connector = VocabularyConnector()
-        self.sentence_extractor = SentenceDataExtractor()
 
     def clean_data(self):
         print("Cleaning anki data...")

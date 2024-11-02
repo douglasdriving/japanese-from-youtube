@@ -6,6 +6,7 @@ from .text_handling.sentence_data_extractor import SentenceDataExtractor
 from .youtube_transcriber import get_transcript
 from .text_handling.sentence import JapaneseSentence
 from .text_handling.japanese_word import JapaneseWord
+from .transcript_line import TranscriptLine
 
 audioPlayer = AudioPlayer("")
 vocabulary_connector = VocabularyConnector()
@@ -78,7 +79,7 @@ def _add_words_and_sentences_to_db(sentences: list[JapaneseSentence]):
 def add_new_vocab_from_youtube_to_anki_deck():
     video_id = _get_valid_youtube_id_from_user()
     print("extracting sentences and words from youtube video...")
-    transcript = get_transcript(video_id)
+    transcript: list[TranscriptLine] = get_transcript(video_id)
     sentence_data_extractor = SentenceDataExtractor(transcript)
     sentences = sentence_data_extractor.extract_sentences_not_in_db()
     sentences_added_to_db = _add_words_and_sentences_to_db(sentences)
