@@ -2,7 +2,7 @@ import requests
 import os
 from .anki_note import AnkiNote
 from ..text_handling.sentence import JapaneseSentence
-from ..text_handling.romaziner import romanize_with_spaces
+from ..text_handling.romaziner import Romanizer
 from .anki_connector import AnkiConnector
 from ..database.vocabulary_connector import VocabularyConnector
 
@@ -23,13 +23,14 @@ class AnkiWordAdder:
         self.vocabulary_connector = VocabularyConnector()
 
     def make_sentence_note(self, sentence: JapaneseSentence):
-        sentence_romaji = romanize_with_spaces(sentence.sentence)
+        romanizer = Romanizer()
+        sentence_romaji = romanizer.romanize_with_spaces(sentence.sentence)
         note_back = (
             sentence.definition + "<br><br>" + sentence_romaji + "<br><br>Words:"
         )
         for word in sentence.words:
             if word.reading is not None:
-                word_romaji = romanize_with_spaces(word.reading)
+                word_romaji = romanizer.romanize_with_spaces(word.reading)
                 note_back += f"<br>{word_romaji} - {word.definition}"
             else:
                 print(
