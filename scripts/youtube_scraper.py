@@ -1,4 +1,4 @@
-from .anki.anki_word_adder import add_words_and_sentences_to_anki
+from .anki.anki_word_adder import AnkiWordAdder
 from .database.vocabulary_connector import VocabularyConnector
 from .text_handling.sentence_data_extractor import SentenceDataExtractor
 from .youtube_transcriber import YoutubeTranscriber
@@ -11,10 +11,12 @@ class YoutubeScraper:
 
     vocabulary_connector: VocabularyConnector
     youtube_transcriber: YoutubeTranscriber
+    anki_word_adder: AnkiWordAdder
 
     def __init__(self):
         self.vocabulary_connector = VocabularyConnector()
         self.youtube_transcriber = YoutubeTranscriber()
+        self.anki_word_adder = AnkiWordAdder()
 
     def scrape_video(self):
         video_id = self._get_valid_youtube_id_from_user()
@@ -25,7 +27,7 @@ class YoutubeScraper:
         sentence_data_extractor = SentenceDataExtractor(transcript)
         sentences = sentence_data_extractor.extract_sentences_not_in_db()
         sentences_added_to_db = self._add_words_and_sentences_to_db(sentences)
-        add_words_and_sentences_to_anki(sentences_added_to_db)
+        self.anki_word_adder.add_words_and_sentences_to_anki(sentences_added_to_db)
         print("finished adding vocab to anki deck")
 
     def _get_valid_youtube_id_from_user(self):

@@ -2,7 +2,6 @@ import time
 import subprocess
 import requests
 import os
-import json
 
 
 class AnkiConnector:

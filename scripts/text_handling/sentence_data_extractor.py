@@ -58,11 +58,6 @@ class SentenceDataExtractor:
             sentences.append(JapaneseSentence(sentence))
         return sentences
 
-    # def _split_text_into_sentences(self):
-    #     sentences = self.transcript.replace("。", " ").split(" ")
-    #     sentences = [sentence for sentence in sentences if sentence != ""]
-    #     return sentences
-
     def _remove_lines_already_in_db(self):
         self.transcript = [
             line
