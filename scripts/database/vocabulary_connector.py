@@ -8,10 +8,13 @@ class VocabularyConnector:
         self.connection = sqlite3.connect("vocabulary.db")
         self.cursor = self.connection.cursor()
 
-    def save_word_in_db(self, word: JapaneseWord):
+    def add_word_if_new(self, word: JapaneseWord):
         if not word.is_fully_defined():
             print("ERROR: Word is not fully defined. Not adding to database.")
             print(word)
+            return None
+        if self.check_if_word_exists(word.word):
+            print("skipping adding word to db since it already exists: ", word.word)
             return None
         try:
             self.cursor.execute(
@@ -47,7 +50,7 @@ class VocabularyConnector:
         word_exists = self.cursor.fetchone() is not None
         return word_exists
 
-    def add_sentence(self, sentence: JapaneseSentence):
+    def add_sentence_if_new(self, sentence: JapaneseSentence):
         if not sentence.is_fully_defined():
             print("ERROR: Sentence is not fully defined. Not adding to database.")
             print(sentence)
