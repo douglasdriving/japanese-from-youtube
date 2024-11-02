@@ -1,6 +1,6 @@
 # extracts sentence data from a given japanese text
 from .sentence import JapaneseSentence
-from .speech_synthesis import save_jp_text_as_audio
+from .speech_synthesizer import SpeechSynthesizer
 from ..database.vocabulary_connector import VocabularyConnector
 from .translator import Translator
 from .word_extractor_new import WordExtractor
@@ -13,12 +13,14 @@ class SentenceDataExtractor:
     sentences: list[JapaneseSentence]
     vocabulary_connector: VocabularyConnector
     word_extractor: WordExtractor
+    speech_synthesizer: SpeechSynthesizer
 
     def __init__(self, transcript: list[TranscriptLine]):
         self.transcript = transcript
         self.sentences = []
         self.vocabulary_connector = VocabularyConnector()
         self.word_extractor = WordExtractor()
+        self.speech_synthesizer = SpeechSynthesizer()
 
     def extract_sentences_not_in_db(self):
         print("Extracting sentences...")
@@ -97,7 +99,7 @@ class SentenceDataExtractor:
             sentence
         )  # deepl can translate an array of sentences
         sentence_obj = JapaneseSentence(sentence, translation)
-        sentence_obj.audio_file_path = save_jp_text_as_audio(  # although, unclear if the azure api can do batch call. can we make parralel calls?
+        sentence_obj.audio_file_path = self.speech_synthesizer.save_jp_text_as_audio(  # although, unclear if the azure api can do batch call. can we make parralel calls?
             sentence_obj.sentence, is_sentence=True
         )
         sentence_obj.words = self._extract_words_for_sentence(

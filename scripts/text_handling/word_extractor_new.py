@@ -2,7 +2,7 @@ from .japanese_word import JapaneseWord
 from jisho_api.tokenize import Tokens
 from jisho_api.word import Word
 from ..database.vocabulary_connector import VocabularyConnector
-from .speech_synthesis import save_jp_text_as_audio
+from .speech_synthesizer import SpeechSynthesizer
 import re
 import warnings
 
@@ -10,9 +10,11 @@ import warnings
 class WordExtractor:
 
     vocabulary_connector: VocabularyConnector
+    speech_synthesizer: SpeechSynthesizer
 
     def __init__(self):
         self.vocabulary_connector = VocabularyConnector()
+        self.speech_synthesizer = SpeechSynthesizer()
 
     def extract_words_from_text(self, text: str):
         cleaned_text = self._clean_text(text)
@@ -92,7 +94,9 @@ class WordExtractor:
         japanese_info = base_word_data.japanese[0]
         base_word = japanese_info.word or japanese_info.reading
         definitions_as_string = get_definitions_as_string(base_word_data.senses)
-        audio_file_path = save_jp_text_as_audio(base_word, is_sentence=False)
+        audio_file_path = self.speech_synthesizer.save_jp_text_as_audio(
+            base_word, is_sentence=False
+        )
 
         japanese_word = JapaneseWord(
             base_word, japanese_info.reading, definitions_as_string, audio_file_path

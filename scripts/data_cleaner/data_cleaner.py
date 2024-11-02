@@ -1,7 +1,7 @@
 import sqlite3
 import re
 import os
-from scripts.text_handling.speech_synthesis import save_jp_text_as_audio
+from scripts.text_handling.speech_synthesizer import SpeechSynthesizer
 from .anki_cleaner import AnkiCleaner
 from ..database.vocabulary_connector import VocabularyConnector
 from ..anki.anki_connector import AnkiConnector
@@ -52,7 +52,10 @@ class DataCleaner:
             text = entry[1]
             audio_file_path = entry[4] if table == "vocabulary" else entry[3]
             if not os.path.exists(audio_file_path):
-                new_audio_file = save_jp_text_as_audio(text, id, table == "sentences")
+                synthesizer = SpeechSynthesizer()
+                new_audio_file = synthesizer.save_jp_text_as_audio(
+                    text, id, table == "sentences"
+                )
                 self.cursor.execute(
                     f"""
                     UPDATE {table}
