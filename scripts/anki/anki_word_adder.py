@@ -133,6 +133,13 @@ def add_words_and_sentences_to_anki(sentences: list[JapaneseSentence]):
     for sentence in sentences:
         for word in sentence.words:
             notes.append(AnkiNote(word.audio_file_path, word.definition, ["word"]))
+            # this is gonna contain a lot of duplicates
+            # what we could do is: when retrieving words, get their anki ID if there is one
+            # if there is an ID here, it means the word is already in anki, so we dont add it
+            # hmm... well the problem is probably that when we get the word, we dont get it from anki, we get it from the db
+            # and we havent stored the anki ID in the db yet
+            # so we kinda need to do that first
+            # that is up to the cleaner to do though! grab all anki ids and store them in the DB for crossref
         sentence_note = make_sentence_note(sentence)
         notes.append(sentence_note)
     add_notes_to_anki(notes)
