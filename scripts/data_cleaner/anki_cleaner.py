@@ -115,7 +115,6 @@ class AnkiCleaner:
         has_right_format = has_two_double_line_breaks and contains_words
         return has_right_format
 
-    # warning: this function is not perfect. we cant know for sure with the old cards...
     def _is_probably_sentence(self, note):
 
         has_sentence_tag = "sentence" in note["tags"]

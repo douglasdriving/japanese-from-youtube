@@ -3,25 +3,32 @@ import re
 import os
 from scripts.text_handling.speech_synthesis import save_jp_text_as_audio
 from .anki_cleaner import AnkiCleaner
+from ..database.vocabulary_connector import VocabularyConnector
+from ..anki.anki_connector import AnkiConnector
 
 
 class DataCleaner:
 
     connection: sqlite3.Connection
     cursor: sqlite3.Cursor
+    vocabulary_connector: VocabularyConnector
+    anki_connector: AnkiConnector
 
     def __init__(self):
         self.connection = sqlite3.connect("vocabulary.db")
         self.cursor = self.connection.cursor()
+        self.vocabulary_connector = VocabularyConnector()
+        self.anki_connector = AnkiConnector()
 
     def clean_data(self):
         print("Cleaning data...")
         self._clean_audio_file_names()
+        self._add_missing_anki_ids()
         anki_cleaner = AnkiCleaner()
         anki_cleaner.clean_data()
-        print("Data cleaning finished")
 
     def _clean_audio_file_names(self):
+        print("Cleaning audio file names...")
         self._clean_audio_file_names_in_table("vocabulary")
         self._clean_audio_file_names_in_table("sentences")
         self._delete_all_audio_files_with_wrong_pattern()
@@ -98,3 +105,59 @@ class DataCleaner:
             """
         )
         return self.cursor.fetchall()
+
+    def _add_missing_anki_ids(self):
+
+        def update_words(all_anki_notes):
+            print("Updating words...")
+            words_to_update = self.vocabulary_connector.get_words_without_anki_note_id()
+            for word in words_to_update:
+                anki_note = next(
+                    (
+                        note
+                        for note in all_anki_notes
+                        if note["fields"]["Back"]["value"] == word.definition
+                    ),
+                    None,
+                )
+                if anki_note is None:
+                    print(
+                        f"Could not find anki note for word: {word.definition}, unable to update anki id"
+                    )
+                else:
+                    anki_id = anki_note["noteId"]
+                    self.vocabulary_connector.update_anki_note_id(
+                        "vocabulary", word.database_id, anki_id
+                    )
+
+        def update_sentences(all_anki_notes):
+            print("Updating sentences...")
+            sentences_to_update = (
+                self.vocabulary_connector.get_sentences_without_anki_note_id()
+            )
+            for sentence in sentences_to_update:
+                anki_note = next(
+                    (
+                        note
+                        for note in all_anki_notes
+                        if note["fields"]["Back"]["value"]
+                        .split("\n")[0]
+                        .split("<br>")[0]
+                        == sentence.definition
+                    ),
+                    None,
+                )
+                if anki_note is None:
+                    print(
+                        f"Could not find anki note for sentence: {sentence.definition}, unable to update anki id"
+                    )
+                else:
+                    anki_id = anki_note["noteId"]
+                    self.vocabulary_connector.update_anki_note_id(
+                        "sentences", sentence.database_id, anki_id
+                    )
+
+        print("Adding missing anki ids...")
+        anki_notes = self.anki_connector.get_all_notes()
+        update_words(anki_notes)
+        update_sentences(anki_notes)

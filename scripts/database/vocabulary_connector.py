@@ -113,6 +113,19 @@ class VocabularyConnector:
             words.append(word)
         return words
 
+    def get_words_without_anki_note_id(self):
+        self.cursor.execute(
+            """
+            SELECT * FROM vocabulary WHERE anki_note_id IS NULL
+            """
+        )
+        data = self.cursor.fetchall()
+        words: list[JapaneseWord] = []
+        for row in data:
+            word = JapaneseWord(row[1], row[2], row[3], row[4], row[0])
+            words.append(word)
+        return words
+
     def get_all_sentences(self):
         self.cursor.execute(
             """
@@ -157,3 +170,28 @@ class VocabularyConnector:
                 sentence_data[1], sentence_data[2], sentence_data[3], sentence_data[0]
             )
             return sentence
+
+    def get_sentences_without_anki_note_id(self):
+        self.cursor.execute(
+            """
+            SELECT * FROM sentences WHERE anki_note_id IS NULL
+            """
+        )
+        data = self.cursor.fetchall()
+        sentences: list[JapaneseSentence] = []
+        for row in data:
+            sentence = JapaneseSentence(row[1], row[2], row[3], row[0])
+            sentences.append(sentence)
+        return sentences
+
+    def update_anki_note_id(self, table_name: str, id: int, anki_id: int):
+        self.cursor.execute(
+            f"""
+            UPDATE {table_name}
+            SET anki_note_id = ?
+            WHERE id = ?
+            """,
+            (anki_id, id),
+        )
+        self.connection.commit()
+        print(f"Updated anki_note_id for {id} to {anki_id} in {table_name}")
