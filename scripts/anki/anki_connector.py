@@ -87,6 +87,55 @@ class AnkiConnector:
             print("Card updated successfully: ", note_id)
             return result
 
+    def get_all_notes_info(self):
+        self._open_anki_if_not_running()
+        ids = self.get_all_note_ids()
+        anki_request_json = {
+            "action": "notesInfo",
+            "version": 6,
+            "params": {"notes": ids},
+        }
+        response = requests.post(os.environ["ANKI_CONNECT_URL"], json=anki_request_json)
+        response_json = response.json()
+        result = response_json["result"]
+        if result is None:
+            print(f"Failed to retrieve all notes. Error: {response_json['error']}")
+        return result
+
+    def get_all_note_ids(self):
+        self._open_anki_if_not_running()
+        anki_request_json = {
+            "action": "findNotes",
+            "version": 6,
+            "params": {"query": "deck:" + os.environ["ANKI_DECK_NAME"]},
+        }
+        response = requests.post(os.environ["ANKI_CONNECT_URL"], json=anki_request_json)
+        response_json = response.json()
+        result = response_json["result"]
+        if result is None:
+            print(f"Failed to retrieve all note ID's. Error: {response_json['error']}")
+        return result
+
+    def add_tag_to_notes(self, note_ids: list[int], tag: str):
+        print("Adding tag ", tag, " to notes: ", len(note_ids), "...")
+        self._open_anki_if_not_running()
+        anki_request_json = {
+            "action": "addTags",
+            "version": 6,
+            "params": {
+                "notes": note_ids,
+                "tags": tag,
+            },
+        }
+        response = requests.post(os.environ["ANKI_CONNECT_URL"], json=anki_request_json)
+        response_json = response.json()
+        result = response_json["result"]
+        if response_json["error"] is not None:
+            print(f"Failed to add tags to notes. Error: {response_json['error']}")
+        else:
+            print("Tags ", tag, " added successfully to notes: ", len(note_ids))
+        return result
+
 
 # Example of card info:
 # {

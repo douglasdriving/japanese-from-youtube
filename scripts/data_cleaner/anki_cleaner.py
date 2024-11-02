@@ -21,8 +21,10 @@ class AnkiCleaner:
         self.sentence_extractor = SentenceDataExtractor()
 
     def clean_data(self):
-        self._add_missing_cards()
-        self._correct_poor_card_backs()
+        # TURN THESE BACK ON WHEN READY
+        # self._add_missing_cards()
+        # self._correct_poor_card_backs()
+        self._add_missing_card_tags()
         print("Anki cleaning finished")
 
     def _add_missing_cards(self):
@@ -93,7 +95,7 @@ class AnkiCleaner:
 
     def _is_bad_sentence_card(self, card):
         back = card["fields"]["Back"]["value"]
-        is_sentence = self._is_sentence_card(card)
+        is_sentence = self._is_probably_sentence_card(card)
         is_bad = False
         if is_sentence:
             has_right_format = self._sentence_back_has_right_format(back)
@@ -107,7 +109,8 @@ class AnkiCleaner:
         has_right_format = has_two_double_line_breaks and contains_words
         return has_right_format
 
-    def _is_sentence_card(self, card):
+    # warning: this function is not perfect. we cant know for sure with the old cards...
+    def _is_probably_sentence_card(self, card):
 
         front = card["fields"]["Front"]["value"]
         back = card["fields"]["Back"]["value"]
@@ -119,8 +122,14 @@ class AnkiCleaner:
         if card_uses_new_front_pattern:
             is_sentence = ":s" in front
         else:
-            is_sentence = False
-            # for now, we are just ignoring the cards with the old structure. its too hard to determine what they are.
+            contains_words = "Words:" in back
+            contains_line_breaks = "<br>" in back or "\n" in back
+            audio_file_name_contains_underscores = front.count("_") > 1
+            is_sentence = (
+                contains_words
+                or contains_line_breaks
+                or audio_file_name_contains_underscores
+            )
 
         return is_sentence
 
@@ -137,3 +146,25 @@ class AnkiCleaner:
         else:
             note: AnkiNote = make_sentence_note(japanese_sentence)
             self.anki_connector.update_card_back(card["note"], note.back)
+
+    def _add_missing_card_tags(self):
+
+        def _is_tagged(note):
+            tags = note["tags"]
+            is_tagged_as_word_or_sentence = "word" in tags or "sentence" in tags
+            return is_tagged_as_word_or_sentence
+
+        print("Checking if there are any missing card tags...")
+        notes = self.anki_connector.get_all_notes_info()
+        id_of_notes_to_tag_as_word = []
+        if_of_notes_to_tag_as_sentence = []
+        for idx, note in enumerate(notes):
+            if not _is_tagged(note):
+                is_probably_sentence = self._is_probably_sentence_card(note)
+                note_id = note["noteId"]
+                if is_probably_sentence:
+                    if_of_notes_to_tag_as_sentence.append(note_id)
+                else:
+                    id_of_notes_to_tag_as_word.append(note_id)
+        self.anki_connector.add_tag_to_notes(id_of_notes_to_tag_as_word, "word")
+        self.anki_connector.add_tag_to_notes(if_of_notes_to_tag_as_sentence, "sentence")
