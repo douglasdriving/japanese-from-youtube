@@ -2,9 +2,7 @@ import requests
 import os
 import subprocess
 import time
-import warnings
 from .anki_note import AnkiNote
-from ..text_handling.japanese_word import JapaneseWord
 from ..text_handling.sentence import JapaneseSentence
 from ..text_handling.romaziner import romanize_with_spaces
 
@@ -63,36 +61,6 @@ def create_anki_audio(audio_file_path):
         }
     ]
     return audio
-
-
-def create_add_note_request(deck_name, front, back, audio_file_path):
-    card = {
-        "action": "addNote",
-        "version": 6,
-        "params": {
-            "note": {
-                "deckName": deck_name,
-                "modelName": "Basic",
-                "fields": {"Front": front, "Back": back},
-                "options": get_card_options(deck_name),
-                "audio": create_anki_audio(audio_file_path),
-            }
-        },
-    }
-    return card
-
-
-def add_card_to_anki(audio_file, translation):
-    open_anki_if_not_running()
-    card = create_add_note_request(deck_name, "", translation, audio_file)
-
-    response = requests.post(anki_connect_url, json=card)
-    response_json = response.json()
-    if response_json["result"] is None:
-        print(f"Failed to add card to Anki deck. Error: {response_json['error']}")
-    else:
-        print("Card added to Anki deck: " + audio_file + " (" + translation + ")")
-    return response.json()
 
 
 def check_which_notes_can_be_added(notes: list):
