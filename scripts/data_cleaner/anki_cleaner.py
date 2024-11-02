@@ -21,9 +21,9 @@ class AnkiCleaner:
         self.sentence_extractor = SentenceDataExtractor()
 
     def clean_data(self):
-        # TURN THESE BACK ON WHEN READY
-        # self._add_missing_cards()
-        # self._correct_poor_card_backs()
+        print("Cleaning anki data...")
+        self._add_missing_cards()
+        self._correct_poor_card_backs()
         self._add_missing_card_tags()
         print("Anki cleaning finished")
 
@@ -79,6 +79,9 @@ class AnkiCleaner:
     def _correct_poor_card_backs(self):
         print("Checking if there are any poorly formatted card backs to update...")
         bad_sentence_notes = self._get_bad_sentence_notes()
+        if len(bad_sentence_notes) == 0:
+            print("No bad sentence cards found")
+            return
         for idx, note in enumerate(bad_sentence_notes):
             print(
                 "Updating bad sentence card ",
@@ -88,6 +91,7 @@ class AnkiCleaner:
                 "...",
             )
             self._update_sentence_card_back(note)
+        print("All bad sentence cards updated")
 
     def _get_bad_sentence_notes(self):
         all_notes = self.anki_connector.get_all_notes()
@@ -153,9 +157,10 @@ class AnkiCleaner:
                 "ERROR: Could not extract data to update card back: ", english_sentence
             )
         else:
-            note: AnkiNote = make_sentence_note(japanese_sentence)
+            anki_note: AnkiNote = make_sentence_note(japanese_sentence)
+            new_back = anki_note.back
             note_id = note["noteId"]
-            self.anki_connector.update_card_back(note_id, note.back)
+            self.anki_connector.update_card_back(note_id, new_back)
 
     def _add_missing_card_tags(self):
 
@@ -176,5 +181,15 @@ class AnkiCleaner:
                     if_of_notes_to_tag_as_sentence.append(note_id)
                 else:
                     id_of_notes_to_tag_as_word.append(note_id)
-        self.anki_connector.tag_notes(id_of_notes_to_tag_as_word, "word")
-        self.anki_connector.tag_notes(if_of_notes_to_tag_as_sentence, "sentence")
+        if len(id_of_notes_to_tag_as_word) > 0:
+            print("Adding word tag to notes: ", len(id_of_notes_to_tag_as_word))
+            self.anki_connector.tag_notes(id_of_notes_to_tag_as_word, "word")
+        if len(if_of_notes_to_tag_as_sentence) > 0:
+            print("Adding sentence tag to notes: ", len(if_of_notes_to_tag_as_sentence))
+            self.anki_connector.tag_notes(if_of_notes_to_tag_as_sentence, "sentence")
+        if (
+            len(id_of_notes_to_tag_as_word) == 0
+            and len(if_of_notes_to_tag_as_sentence) == 0
+        ):
+            print("No missing tags found")
+        print("All missing tags added")

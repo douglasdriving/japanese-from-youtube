@@ -1,18 +1,11 @@
-## allows the user to add all new vocab to their anki deck
 from .youtube_word_extractor import extract_new_words_from_transcript
-from .text_handling.speech_synthesis import save_jp_text_as_audio
-from .anki.anki_word_adder import (
-    add_words_and_sentences_to_anki,
-    open_anki_if_not_running,
-)
+from .anki.anki_word_adder import add_words_and_sentences_to_anki
 from .audio.audio_player import AudioPlayer
 from .database.vocabulary_connector import VocabularyConnector
-import time
 from .text_handling.sentence_data_extractor import SentenceDataExtractor
 from .youtube_transcriber import get_transcript
 from .text_handling.sentence import JapaneseSentence
 from .text_handling.japanese_word import JapaneseWord
-from .anki.anki_note import AnkiNote
 
 audioPlayer = AudioPlayer("")
 vocabulary_connector = VocabularyConnector()
@@ -89,7 +82,6 @@ def add_words_and_sentences_to_db(sentences: list[JapaneseSentence]):
 
 
 def add_new_vocab_from_youtube_to_anki_deck():
-    open_anki_if_not_running()
     video_id = get_valid_youtube_id_from_user()
     print("extracting sentences and words from youtube video...")
     transcript = get_transcript(video_id)

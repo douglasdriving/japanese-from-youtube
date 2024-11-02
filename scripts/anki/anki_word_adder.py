@@ -129,6 +129,7 @@ def make_sentence_note(sentence: JapaneseSentence):
 
 
 def add_words_and_sentences_to_anki(sentences: list[JapaneseSentence]):
+    anki_connector._open_anki_if_not_running()
     notes: list[AnkiNote] = []
     for sentence in sentences:
         for word in sentence.words:
