@@ -80,7 +80,11 @@ class AnkiCleaner:
         bad_sentence_cards = self._get_bad_sentence_cards(cards)
         for idx, card in enumerate(bad_sentence_cards):
             print(
-                "Updating bad sentence card ", idx + 1, " of ", len(bad_sentence_cards)
+                "Updating bad sentence card ",
+                idx + 1,
+                " of ",
+                len(bad_sentence_cards),
+                "...",
             )
             self._update_sentence_card_back(card)
 
@@ -132,5 +136,4 @@ class AnkiCleaner:
             )
         else:
             note: AnkiNote = make_sentence_note(japanese_sentence)
-            self.anki_connector.update_card_back(card["cardId"], note.back)
-            print("Updated card back: ", english_sentence)
+            self.anki_connector.update_card_back(card["note"], note.back)

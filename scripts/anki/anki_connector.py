@@ -64,14 +64,14 @@ class AnkiConnector:
             print(f"Failed to retrieve data for cards. Error: {response_json['error']}")
         return result
 
-    def update_card_back(self, card_id, new_back):
+    def update_card_back(self, note_id, new_back):
         self._open_anki_if_not_running()
         anki_request_json = {
             "action": "updateNoteFields",
             "version": 6,
             "params": {
                 "note": {
-                    "id": card_id,
+                    "id": note_id,
                     "fields": {"Back": new_back},
                 }
             },
@@ -81,8 +81,11 @@ class AnkiConnector:
         result = response_json["result"]
         if response_json["error"] is not None:
             error = response_json["error"]
-            print(f"Failed to update card. Error: {error}")
-        return result
+            print(f"Failed to update card with back: {new_back}. Error: {error}")
+            return None
+        else:
+            print("Card updated successfully: ", note_id)
+            return result
 
 
 # Example of card info:
