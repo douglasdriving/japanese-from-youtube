@@ -26,6 +26,13 @@ def _get_valid_youtube_id_from_user():
 def _add_sentence_to_db(sentence: JapaneseSentence):
     if sentence.is_fully_defined():
         added_sentence = vocabulary_connector.add_sentence(sentence)
+        print(
+            "added sentence to db: "
+            + added_sentence.sentence
+            + " ("
+            + added_sentence.definition
+            + ")"
+        )
         return added_sentence
     else:
         print("skipped adding sentence to db since it is not fully defined: ")
@@ -48,14 +55,14 @@ def _add_word_to_db_if_new(word: JapaneseWord):
             "skipped word since it already exists in the database: ",
             word.word,
             "(",
-            word.reading,
+            word.definition,
             ")",
         )
         return None
 
     added_word = vocabulary_connector.save_word_in_db(word)
     if added_word:
-        print("added word to db: " + word.word + " (" + word.reading + ")")
+        print("added word to db: " + word.word + " (" + word.definition + ")")
     else:
         print("failed to add word to db: " + word.word + " (" + word.definition + ")")
     return added_word

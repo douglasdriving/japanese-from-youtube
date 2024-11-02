@@ -25,8 +25,9 @@ class SentenceDataExtractor:
         if self.transcript is None:
             print("ERROR: No text to extract sentences from")
             return None
-        self.remove_latin_characters()
+        self._remove_latin_characters()
         self._remove_lines_already_in_db()
+        self._remove_empty_lines()
         print("Found ", len(self.transcript), " new sentences")
         sentences_with_data: list[JapaneseSentence] = (
             self._make_transcript_into_sentence_objects()
@@ -44,9 +45,12 @@ class SentenceDataExtractor:
             )
             return japanese_sentence
 
-    def remove_latin_characters(self):
+    def _remove_latin_characters(self):
         for line in self.transcript:
             line.text = "".join([char for char in line.text if ord(char) >= 128])
+
+    def _remove_empty_lines(self):
+        self.transcript = [line for line in self.transcript if line.text.strip() != ""]
 
     def _turn_string_list_into_sentence_list(self, sentences_str: list[str]):
         sentences: list[JapaneseSentence] = []
@@ -92,13 +96,17 @@ class SentenceDataExtractor:
                 sentences_with_definition.append(sentence_obj)
         return sentences_with_definition
 
-    def _make_sentence_object(self, sentence):
-        translation = translate_jp_to_en(sentence)
+    def _make_sentence_object(self, sentence):  # this could be done as a batch
+        translation = translate_jp_to_en(
+            sentence
+        )  # deepl can translate an array of sentences
         sentence_obj = JapaneseSentence(sentence, translation)
-        sentence_obj.audio_file_path = save_jp_text_as_audio(
+        sentence_obj.audio_file_path = save_jp_text_as_audio(  # although, unclear if the azure api can do batch call. can we make parralel calls?
             sentence_obj.sentence, is_sentence=True
         )
-        sentence_obj.words = self._extract_words_for_sentence(sentence_obj)
+        sentence_obj.words = self._extract_words_for_sentence(
+            sentence_obj
+        )  # and then this would be quite complicated to do as a batch as well.
         return sentence_obj
 
     def _extract_words_for_sentence(self, sentence: JapaneseSentence):

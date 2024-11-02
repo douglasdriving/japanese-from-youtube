@@ -9,7 +9,7 @@ translator = deepl.Translator(DEEPL_API_KEY)
 
 
 def translate_jp_to_en(text: str):
-    result = translator.translate_text(text, target_lang="EN-US")
+    result = translator.translate_text(text, source_lang="ja", target_lang="EN-US")
     return result.text
 
 
