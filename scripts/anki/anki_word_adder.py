@@ -5,6 +5,7 @@ from ..text_handling.sentence import JapaneseSentence
 from ..text_handling.romaziner import Romanizer
 from .anki_connector import AnkiConnector
 from ..database.vocabulary_connector import VocabularyConnector
+from dotenv import load_dotenv
 
 
 class AnkiWordAdder:
@@ -16,6 +17,7 @@ class AnkiWordAdder:
     vocabulary_connector: VocabularyConnector
 
     def __init__(self):
+        load_dotenv()
         self.deck_name = os.environ["ANKI_DECK_NAME"]
         self.anki_connect_url = os.environ["ANKI_CONNECT_URL"]
         self.anki_path = os.environ["ANKI_PATH"]
@@ -122,7 +124,7 @@ class AnkiWordAdder:
         notes = []
         for note_to_add in notes_to_add:
             note = {
-                "deckName": deck_name,
+                "deckName": self.deck_name,
                 "modelName": "Basic",
                 "fields": {"Front": "", "Back": note_to_add.back},
                 "tags": note_to_add.tags,

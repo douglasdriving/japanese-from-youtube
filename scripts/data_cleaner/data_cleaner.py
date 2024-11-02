@@ -23,9 +23,9 @@ class DataCleaner:
     def clean_data(self):
         print("Cleaning data...")
         self._clean_audio_file_names()
-        self._add_missing_anki_ids()
         anki_cleaner = AnkiCleaner()
         anki_cleaner.clean_data()
+        self._add_missing_anki_ids()
 
     def _clean_audio_file_names(self):
         print("Cleaning audio file names...")

@@ -5,7 +5,7 @@ from ..text_handling.japanese_word import JapaneseWord
 from ..text_handling.sentence import JapaneseSentence
 from ..anki.anki_word_adder import AnkiWordAdder
 from ..anki.anki_note import AnkiNote
-from ..text_handling.sentence_data_extractor import SentenceDataExtractor
+from ..text_handling.sentence_extractor import SentenceExtractor
 import re
 
 
@@ -14,11 +14,13 @@ class AnkiCleaner:
     anki_connector: AnkiConnector
     vocab_connector: VocabularyConnector
     anki_word_adder: AnkiWordAdder
+    sentence_extractor: SentenceExtractor
 
     def __init__(self):
         self.anki_connector = AnkiConnector()
         self.vocab_connector = VocabularyConnector()
         self.anki_word_adder = AnkiWordAdder()
+        self.sentence_extractor = SentenceExtractor(None)
 
     def clean_data(self):
         print("Cleaning anki data...")
@@ -146,8 +148,10 @@ class AnkiCleaner:
         return is_sentence
 
     def _update_sentence_card_back(self, note):
+        # wish for a bulk update method
         back = note["fields"]["Back"]["value"]
         english_sentence = re.split(r"<br\s*/?>|\n", back)[0]
+        # requires bulk sentence extraction
         japanese_sentence = self.sentence_extractor.extract_db_data_for_sentence(
             english_sentence
         )
@@ -156,11 +160,13 @@ class AnkiCleaner:
                 "ERROR: Could not extract data to update card back: ", english_sentence
             )
         else:
+            # bulk note maker
             anki_note: AnkiNote = self.anki_word_adder.make_sentence_note(
                 japanese_sentence
             )
             new_back = anki_note.back
             note_id = note["noteId"]
+            # and bulk card back updater
             self.anki_connector.update_card_back(note_id, new_back)
 
     def _add_missing_card_tags(self):

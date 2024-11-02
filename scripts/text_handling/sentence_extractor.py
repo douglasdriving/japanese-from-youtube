@@ -7,7 +7,7 @@ from .word_extractor_new import WordExtractor
 from .transcript_line import TranscriptLine
 
 
-class SentenceDataExtractor:
+class SentenceExtractor:
 
     transcript: list[TranscriptLine]
     sentences: list[JapaneseSentence]
@@ -27,7 +27,7 @@ class SentenceDataExtractor:
         if self.transcript is None:
             print("ERROR: No text to extract sentences from")
             return None
-        self._remove_latin_characters()
+        self._clean_lines()
         self._remove_lines_already_in_db()
         self._remove_empty_lines()
         print("Found ", len(self.transcript), " new sentences")
@@ -37,19 +37,24 @@ class SentenceDataExtractor:
         return sentences_with_data
 
     def extract_db_data_for_sentence(self, enlish_sentence: str):
+        # want a bulk version of this
+        # requires bulk retrieval of sentences from db
         japanese_sentence = self.vocabulary_connector.get_sentence(enlish_sentence)
         if japanese_sentence is None:
             print("ERROR: Sentence not found in db: ", enlish_sentence)
             return None
         else:
+            # want a bulk version
+            # what i need is a cross ref table for words and sentences
             japanese_sentence.words = self._extract_words_for_sentence(
                 japanese_sentence
             )
             return japanese_sentence
 
-    def _remove_latin_characters(self):
+    def _clean_lines(self):
         for line in self.transcript:
             line.text = "".join([char for char in line.text if ord(char) >= 128])
+            line.text = line.text.replace("。", "")  # also do this in data cleaner!
 
     def _remove_empty_lines(self):
         self.transcript = [line for line in self.transcript if line.text.strip() != ""]
@@ -61,11 +66,13 @@ class SentenceDataExtractor:
         return sentences
 
     def _remove_lines_already_in_db(self):
-        self.transcript = [
-            line
-            for line in self.transcript
-            if not self.vocabulary_connector.check_if_sentence_exists(line.text)
-        ]
+        new_lines = []
+        for line in self.transcript:
+            print("checking if sentence exists: ", line.text, "...")
+            if not self.vocabulary_connector.check_if_sentence_exists(line.text):
+                print("sentence does not exist - adding it!")
+                new_lines.append(line)
+        self.transcript = new_lines
 
     def _make_transcript_into_sentence_objects(self):
         print("making ", len(self.transcript), " sentences")
