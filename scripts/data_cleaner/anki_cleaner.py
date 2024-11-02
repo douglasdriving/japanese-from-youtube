@@ -176,5 +176,5 @@ class AnkiCleaner:
                     if_of_notes_to_tag_as_sentence.append(note_id)
                 else:
                     id_of_notes_to_tag_as_word.append(note_id)
-        self.anki_connector.add_tag_to_notes(id_of_notes_to_tag_as_word, "word")
-        self.anki_connector.add_tag_to_notes(if_of_notes_to_tag_as_sentence, "sentence")
+        self.anki_connector.tag_notes(id_of_notes_to_tag_as_word, "word")
+        self.anki_connector.tag_notes(if_of_notes_to_tag_as_sentence, "sentence")

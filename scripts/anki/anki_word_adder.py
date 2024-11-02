@@ -5,33 +5,13 @@ import time
 from .anki_note import AnkiNote
 from ..text_handling.sentence import JapaneseSentence
 from ..text_handling.romaziner import romanize_with_spaces
+from .anki_connector import AnkiConnector
 
 # could move this into env vars
 deck_name = "jp_audio_cards"
 anki_connect_url = "http://localhost:8765"
 anki_path = r"C:\Users\dougl\AppData\Local\Programs\Anki\anki.exe"
-
-
-def is_anki_running():
-    try:
-        response = requests.get("http://localhost:8765")
-        return response.status_code == 200
-    except requests.exceptions.ConnectionError:
-        return False
-
-
-def open_anki():
-    try:
-        subprocess.Popen([anki_path])
-        print("Opening Anki...")
-    except Exception as e:
-        print(f"Failed to open Anki: {e}")
-
-
-def open_anki_if_not_running():
-    if not is_anki_running():
-        open_anki()
-        time.sleep(3)
+anki_connector: AnkiConnector = AnkiConnector()
 
 
 def get_card_options(deck_name):
@@ -81,7 +61,7 @@ def check_which_notes_can_be_added(notes: list):
 
 
 def add_notes_to_anki(notes_to_add: list[AnkiNote]):
-    open_anki_if_not_running()
+    anki_connector._open_anki_if_not_running()
 
     notes = []
     for note_to_add in notes_to_add:
