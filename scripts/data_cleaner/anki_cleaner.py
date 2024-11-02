@@ -78,24 +78,26 @@ class AnkiCleaner:
 
     def _correct_poor_card_backs(self):
         print("Checking if there are any poorly formatted card backs to update...")
-        cards = self.anki_connector.get_all_anki_cards()
-        bad_sentence_cards = self._get_bad_sentence_cards(cards)
-        for idx, card in enumerate(bad_sentence_cards):
+        bad_sentence_notes = self._get_bad_sentence_notes()
+        for idx, note in enumerate(bad_sentence_notes):
             print(
                 "Updating bad sentence card ",
                 idx + 1,
                 " of ",
-                len(bad_sentence_cards),
+                len(bad_sentence_notes),
                 "...",
             )
-            self._update_sentence_card_back(card)
+            self._update_sentence_card_back(note)
 
-    def _get_bad_sentence_cards(self, cards):
-        return [card for card in cards if self._is_bad_sentence_card(card)]
+    def _get_bad_sentence_notes(self):
+        all_notes = self.anki_connector.get_all_notes()
+        return [note for note in all_notes if self._is_bad_sentence_note(note)]
 
-    def _is_bad_sentence_card(self, card):
-        back = card["fields"]["Back"]["value"]
-        is_sentence = self._is_probably_sentence_card(card)
+    def _is_bad_sentence_note(self, note):
+        back = note["fields"]["Back"]["value"]
+        is_sentence = self._is_probably_sentence(
+            note
+        )  # ideally, we should use a note here instead.
         is_bad = False
         if is_sentence:
             has_right_format = self._sentence_back_has_right_format(back)
@@ -110,10 +112,17 @@ class AnkiCleaner:
         return has_right_format
 
     # warning: this function is not perfect. we cant know for sure with the old cards...
-    def _is_probably_sentence_card(self, card):
+    def _is_probably_sentence(self, note):
 
-        front = card["fields"]["Front"]["value"]
-        back = card["fields"]["Back"]["value"]
+        has_sentence_tag = "sentence" in note["tags"]
+        has_word_tag = "word" in note["tags"]
+        if has_sentence_tag:
+            return True
+        if has_word_tag:
+            return False
+
+        front = note["fields"]["Front"]["value"]
+        back = note["fields"]["Back"]["value"]
 
         new_front_pattern = re.compile(r"\[sound:[sw]\d+\.wav\]")
         card_uses_new_front_pattern = new_front_pattern.match(front) is not None
@@ -133,8 +142,8 @@ class AnkiCleaner:
 
         return is_sentence
 
-    def _update_sentence_card_back(self, card):
-        back = card["fields"]["Back"]["value"]
+    def _update_sentence_card_back(self, note):
+        back = note["fields"]["Back"]["value"]
         english_sentence = re.split(r"<br\s*/?>|\n", back)[0]
         japanese_sentence = self.sentence_extractor.extract_db_data_for_sentence(
             english_sentence
@@ -145,7 +154,8 @@ class AnkiCleaner:
             )
         else:
             note: AnkiNote = make_sentence_note(japanese_sentence)
-            self.anki_connector.update_card_back(card["note"], note.back)
+            note_id = note["noteId"]
+            self.anki_connector.update_card_back(note_id, note.back)
 
     def _add_missing_card_tags(self):
 
@@ -155,12 +165,12 @@ class AnkiCleaner:
             return is_tagged_as_word_or_sentence
 
         print("Checking if there are any missing card tags...")
-        notes = self.anki_connector.get_all_notes_info()
+        notes = self.anki_connector.get_all_notes()
         id_of_notes_to_tag_as_word = []
         if_of_notes_to_tag_as_sentence = []
         for idx, note in enumerate(notes):
             if not _is_tagged(note):
-                is_probably_sentence = self._is_probably_sentence_card(note)
+                is_probably_sentence = self._is_probably_sentence(note)
                 note_id = note["noteId"]
                 if is_probably_sentence:
                     if_of_notes_to_tag_as_sentence.append(note_id)

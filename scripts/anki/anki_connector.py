@@ -87,7 +87,7 @@ class AnkiConnector:
             print("Card updated successfully: ", note_id)
             return result
 
-    def get_all_notes_info(self):
+    def get_all_notes(self):
         self._open_anki_if_not_running()
         ids = self.get_all_note_ids()
         anki_request_json = {
