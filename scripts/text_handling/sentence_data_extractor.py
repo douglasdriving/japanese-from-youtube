@@ -2,7 +2,7 @@
 from .sentence import JapaneseSentence
 from .speech_synthesis import save_jp_text_as_audio
 from ..database.vocabulary_connector import VocabularyConnector
-from .translator import translate_jp_to_en
+from .translator import Translator
 from .word_extractor_new import WordExtractor
 from .transcript_line import TranscriptLine
 
@@ -92,7 +92,8 @@ class SentenceDataExtractor:
         return sentences_with_definition
 
     def _make_sentence_object(self, sentence):  # this could be done as a batch
-        translation = translate_jp_to_en(
+        translator = Translator()
+        translation = translator.translate_jp_to_en(
             sentence
         )  # deepl can translate an array of sentences
         sentence_obj = JapaneseSentence(sentence, translation)
