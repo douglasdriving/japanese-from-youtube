@@ -7,7 +7,7 @@ class YoutubeTranscriber:
     def __init__(self):
         pass
 
-    def transcribe(video_id):
+    def transcribe(self, video_id):
         try:
             transcript = YouTubeTranscriptApi.get_transcript(video_id, languages=["ja"])
             transcript_lines = [

@@ -1,9 +1,9 @@
 from scripts.youtube_scraper import YoutubeScraper
 
-# from scripts.data_cleaner.data_cleaner import DataCleaner
+from scripts.data_cleaner.data_cleaner import DataCleaner
 
-# cleaner = DataCleaner()
-# cleaner.clean_data()
+cleaner = DataCleaner()
+cleaner.clean_data()
 youtube_scraper = YoutubeScraper()
 youtube_scraper.scrape_video()
 
