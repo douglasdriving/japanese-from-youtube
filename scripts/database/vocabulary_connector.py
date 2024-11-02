@@ -12,7 +12,7 @@ class VocabularyConnector:
         if not word.is_fully_defined():
             print("ERROR: Word is not fully defined. Not adding to database.")
             print(word)
-            return
+            return None
         try:
             self.cursor.execute(
                 """
@@ -22,8 +22,12 @@ class VocabularyConnector:
                 (word.word, word.reading, word.definition, word.audio_file_path),
             )
             self.connection.commit()
+            id = self.cursor.lastrowid
+            word.db_id = id
+            return word
         except sqlite3.Error as error:
             print("ERROR INSERTING WORD: ", error)
+            return None
 
     def clear_database(self):
         self.cursor.execute(
@@ -47,22 +51,23 @@ class VocabularyConnector:
         if not sentence.is_fully_defined():
             print("ERROR: Sentence is not fully defined. Not adding to database.")
             print(sentence)
-            return
+            return None
         if self.check_if_sentence_exists(sentence.sentence):
             print(
                 "skipping adding sentence to db since it already exists: ",
                 sentence.sentence,
             )
-            return
-        self._insert_sentence_in_db(sentence)
+            return None
+        added_sentence = self._insert_sentence_in_db(sentence)
+        return added_sentence
 
     def _insert_sentence_in_db(self, sentence: JapaneseSentence):
         try:
             self.cursor.execute(
                 """
-      INSERT INTO sentences (sentence, definition, audio_file_path)
-      VALUES (?, ?, ?)
-      """,
+                INSERT INTO sentences (sentence, definition, audio_file_path)
+                VALUES (?, ?, ?)
+                """,
                 (
                     sentence.sentence,
                     sentence.definition,
@@ -70,8 +75,12 @@ class VocabularyConnector:
                 ),
             )
             self.connection.commit()
+            id = self.cursor.lastrowid
+            sentence.db_id = id
+            return sentence
         except sqlite3.Error as error:
             print("ERROR INSERTING SENTENCE: ", error)
+            return None
 
     def check_if_sentence_exists(self, sentence):
         self.cursor.execute(

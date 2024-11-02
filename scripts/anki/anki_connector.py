@@ -90,16 +90,21 @@ class AnkiConnector:
     def get_all_notes(self):
         self._open_anki_if_not_running()
         ids = self.get_all_note_ids()
+        notes = self.get_notes(ids)
+        return notes
+
+    def get_notes(self, note_ids: list[int]):
+        self._open_anki_if_not_running()
         anki_request_json = {
             "action": "notesInfo",
             "version": 6,
-            "params": {"notes": ids},
+            "params": {"notes": note_ids},
         }
         response = requests.post(os.environ["ANKI_CONNECT_URL"], json=anki_request_json)
         response_json = response.json()
         result = response_json["result"]
         if result is None:
-            print(f"Failed to retrieve all notes. Error: {response_json['error']}")
+            print(f"Failed to retrieve notes. Error: {response_json['error']}")
         return result
 
     def get_all_note_ids(self):

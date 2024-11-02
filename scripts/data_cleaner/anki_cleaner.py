@@ -3,7 +3,7 @@ from ..anki.anki_connector import AnkiConnector
 from ..database.vocabulary_connector import VocabularyConnector
 from ..text_handling.japanese_word import JapaneseWord
 from ..text_handling.sentence import JapaneseSentence
-from ..anki.anki_word_adder import add_notes_to_anki, make_sentence_note
+from ..anki.anki_word_adder import add_notes_to_anki_and_mark_in_db, make_sentence_note
 from ..anki.anki_note import AnkiNote
 from ..text_handling.sentence_data_extractor import SentenceDataExtractor
 import re
@@ -72,7 +72,7 @@ class AnkiCleaner:
 
         if len(notes_to_add) > 0:
             print("adding missing notes: ", len(notes_to_add))
-            add_notes_to_anki(notes_to_add)
+            add_notes_to_anki_and_mark_in_db(notes_to_add)
         else:
             print("No missing cards found")
 

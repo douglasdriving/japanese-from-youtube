@@ -127,7 +127,7 @@ class DataCleaner:
                 else:
                     anki_id = anki_note["noteId"]
                     self.vocabulary_connector.update_anki_note_id(
-                        "vocabulary", word.database_id, anki_id
+                        "vocabulary", word.db_id, anki_id
                     )
 
         def update_sentences(all_anki_notes):
@@ -154,7 +154,7 @@ class DataCleaner:
                 else:
                     anki_id = anki_note["noteId"]
                     self.vocabulary_connector.update_anki_note_id(
-                        "sentences", sentence.database_id, anki_id
+                        "sentences", sentence.db_id, anki_id
                     )
 
         print("Adding missing anki ids...")

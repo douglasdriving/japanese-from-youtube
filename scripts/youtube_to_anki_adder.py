@@ -10,20 +10,10 @@ from .text_handling.japanese_word import JapaneseWord
 audioPlayer = AudioPlayer("")
 vocabulary_connector = VocabularyConnector()
 
-
-def get_yes_or_no_input_from_user(prompt: str):
-    print(prompt)
-    user_input = input()
-    while user_input != "y" and user_input != "n":
-        print("invalid input. please enter 'y' or 'n'")
-        user_input = input()
-    if user_input == "y":
-        return True
-    else:
-        return False
+# this has to be a class...
 
 
-def get_valid_youtube_id_from_user():
+def _get_valid_youtube_id_from_user():
     print("enter a youtube video id")
     video_id = ""
     while len(video_id) != 11:
@@ -32,15 +22,17 @@ def get_valid_youtube_id_from_user():
     return video_id
 
 
-def add_sentence_to_db(sentence: JapaneseSentence):
+def _add_sentence_to_db(sentence: JapaneseSentence):
     if sentence.is_fully_defined():
-        vocabulary_connector.add_sentence(sentence)
+        added_sentence = vocabulary_connector.add_sentence(sentence)
+        return added_sentence
     else:
         print("skipped adding sentence to db since it is not fully defined: ")
         print(sentence.sentence)
+        return None
 
 
-def add_word_to_db_if_new(word: JapaneseWord):
+def _add_word_to_db_if_new(word: JapaneseWord):
     if not word.is_fully_defined():
         print(
             "skipped word since it is not fully defined: ",
@@ -48,7 +40,9 @@ def add_word_to_db_if_new(word: JapaneseWord):
             ", ",
             word.definition,
         )
-    elif vocabulary_connector.check_if_word_exists(word.word):
+        return None
+
+    if vocabulary_connector.check_if_word_exists(word.word):
         print(
             "skipped word since it already exists in the database: ",
             word.word,
@@ -56,37 +50,39 @@ def add_word_to_db_if_new(word: JapaneseWord):
             word.reading,
             ")",
         )
-    else:
-        vocabulary_connector.save_word_in_db(word)
+        return None
+
+    added_word = vocabulary_connector.save_word_in_db(word)
+    if added_word:
         print("added word to db: " + word.word + " (" + word.reading + ")")
+    else:
+        print("failed to add word to db: " + word.word + " (" + word.definition + ")")
+    return added_word
 
 
-def add_new_words_to_db(transcript: str):
-    words = extract_new_words_from_transcript(transcript)
-    words_added: list[JapaneseWord] = []
-    if words is None:
-        print("Failed to extract unique words from youtube video. exiting")
-        return
-    for word in words:
-        word = add_word_to_db_if_new(word)
-        if type(word) is JapaneseWord:
-            words_added.append(word)
-    return words_added
-
-
-def add_words_and_sentences_to_db(sentences: list[JapaneseSentence]):
-    for sentence in sentences:
-        for word in sentence.words:
-            add_word_to_db_if_new(word)
-        add_sentence_to_db(sentence)
+def _add_words_and_sentences_to_db(sentences: list[JapaneseSentence]):
+    added_sentences: list[JapaneseSentence] = []
+    for added_sentence in sentences:
+        added_words: list[JapaneseWord] = []
+        for word in added_sentence.words:
+            added_word = _add_word_to_db_if_new(word)
+            if added_word:
+                added_words.append(added_word)
+        added_sentence = _add_sentence_to_db(added_sentence)
+        if added_sentence:
+            added_sentence.words = added_words
+            added_sentences.append(added_sentence)
+    return added_sentences
 
 
 def add_new_vocab_from_youtube_to_anki_deck():
-    video_id = get_valid_youtube_id_from_user()
+    video_id = _get_valid_youtube_id_from_user()
     print("extracting sentences and words from youtube video...")
     transcript = get_transcript(video_id)
     sentence_data_extractor = SentenceDataExtractor(transcript)
     sentences = sentence_data_extractor.extract_sentences_not_in_db()
-    add_words_and_sentences_to_db(sentences)
-    add_words_and_sentences_to_anki(sentences)
+    sentences_added_to_db = _add_words_and_sentences_to_db(sentences)
+    add_words_and_sentences_to_anki(sentences_added_to_db)
     print("finished adding vocab to anki deck")
+
+    # now check to make sure this works! :)

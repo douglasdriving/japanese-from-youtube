@@ -6,7 +6,7 @@ class JapaneseSentence:
     sentence: str
     definition: str
     audio_file_path: str
-    database_id: int
+    db_id: int
     words: list[JapaneseWord]
 
     def __init__(
@@ -20,7 +20,7 @@ class JapaneseSentence:
         self.sentence = sentence
         self.definition = definition
         self.audio_file_path = audio_file
-        self.database_id = database_id
+        self.db_id = database_id
         self.words = words
 
     def is_fully_defined(self):
