@@ -80,7 +80,8 @@ class AnkiConnector:
         response_json = response.json()
         result = response_json["result"]
         if response_json["error"] is not None:
-            print(f"Failed to update card. Error: {response_json["error"]}")
+            error = response_json["error"]
+            print(f"Failed to update card. Error: {error}")
         return result
 
 

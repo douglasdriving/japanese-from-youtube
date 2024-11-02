@@ -27,42 +27,55 @@ class AnkiCleaner:
 
     def _add_missing_cards(self):
 
+        print("checking if there are any missing cards...")
         cards = self.anki_connector.get_all_anki_cards()
         anki_card_definitions: list[str] = [
-            card["fields"]["Back"]["value"] for card in cards
+            re.split(r"<br\s*/?>|\n", card["fields"]["Back"]["value"])[0]
+            for card in cards
+        ]
+        anki_card_audio_file_names: list[str] = [
+            re.search(r"\[sound:(.*?)\]", card["fields"]["Front"]["value"]).group(1)
+            for card in cards
         ]
 
-        print("ADDING MISSING CARDS: cards in anki: ", len(anki_card_definitions))
+        print("cards in anki: ", len(anki_card_definitions))
         notes_to_add: list[AnkiNote] = []
 
         words_in_db: list[JapaneseWord] = self.vocab_connector.get_all_words()
         for word in words_in_db:
-            word_missing_from_anki = word.definition not in anki_card_definitions
-            if word_missing_from_anki:
+            word_definition_is_in_anki = word.definition in anki_card_definitions
+            audio_file_name = word.audio_file_path.split("/")[-1]
+            audio_is_in_anki = audio_file_name in anki_card_audio_file_names
+            is_in_anki = word_definition_is_in_anki or audio_is_in_anki
+            if not is_in_anki:
                 notes_to_add.append(AnkiNote(word.audio_file_path, word.definition))
 
         sentences_in_db: list[JapaneseSentence] = (
             self.vocab_connector.get_all_sentences()
         )
         for sentence in sentences_in_db:
-            sentence_missing_from_anki = (
-                sentence.definition not in anki_card_definitions
-            )
-            if sentence_missing_from_anki:
+            definition_is_in_anki = sentence.definition in anki_card_definitions
+            audio_file_name = sentence.audio_file_path.split("/")[-1]
+            audio_is_in_anki = audio_file_name in anki_card_audio_file_names
+            is_in_anki = definition_is_in_anki or audio_is_in_anki
+            if not is_in_anki:
                 notes_to_add.append(
                     AnkiNote(sentence.audio_file_path, sentence.definition)
                 )
 
         print(
-            "ADDING MISSING CARDS: number of words and sentences in db: ",
+            "words + sentences in db: ",
             len(words_in_db) + len(sentences_in_db),
         )
 
         if len(notes_to_add) > 0:
-            print("ADDING MISSING CARDS: number of notes to add: ", len(notes_to_add))
+            print("adding missing notes: ", len(notes_to_add))
             add_notes_to_anki(notes_to_add)
+        else:
+            print("No missing cards found")
 
     def _correct_poor_card_backs(self):
+        print("Checking if there are any poorly formatted card backs to update...")
         cards = self.anki_connector.get_all_anki_cards()
         bad_sentence_cards = self._get_bad_sentence_cards(cards)
         for idx, card in enumerate(bad_sentence_cards):
