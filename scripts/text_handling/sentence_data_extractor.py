@@ -4,7 +4,7 @@ from .speech_synthesis import save_jp_text_as_audio
 from ..database.vocabulary_connector import VocabularyConnector
 from .translator import translate_jp_to_en
 from .word_extractor_new import WordExtractor
-from ..transcript_line import TranscriptLine
+from .transcript_line import TranscriptLine
 
 
 class SentenceDataExtractor:

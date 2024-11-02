@@ -1,5 +1,5 @@
 from youtube_transcript_api import YouTubeTranscriptApi
-from scripts.transcript_line import TranscriptLine
+from scripts.text_handling.transcript_line import TranscriptLine
 
 
 class YoutubeTranscriber:
@@ -7,7 +7,7 @@ class YoutubeTranscriber:
     def __init__(self):
         pass
 
-    def get_transcript(video_id):
+    def transcribe(video_id):
         try:
             transcript = YouTubeTranscriptApi.get_transcript(video_id, languages=["ja"])
             transcript_lines = [

@@ -1,10 +1,10 @@
 from .anki.anki_word_adder import AnkiWordAdder
 from .database.vocabulary_connector import VocabularyConnector
 from .text_handling.sentence_data_extractor import SentenceDataExtractor
-from .youtube_transcriber import YoutubeTranscriber
+from .text_handling.youtube_transcriber import YoutubeTranscriber
 from .text_handling.sentence import JapaneseSentence
 from .text_handling.japanese_word import JapaneseWord
-from .transcript_line import TranscriptLine
+from .text_handling.transcript_line import TranscriptLine
 
 
 class YoutubeScraper:
@@ -21,9 +21,7 @@ class YoutubeScraper:
     def scrape_video(self):
         video_id = self._get_valid_youtube_id_from_user()
         print("extracting sentences and words from youtube video...")
-        transcript: list[TranscriptLine] = self.youtube_transcriber.get_transcript(
-            video_id
-        )
+        transcript: list[TranscriptLine] = self.youtube_transcriber.transcribe(video_id)
         sentence_data_extractor = SentenceDataExtractor(transcript)
         sentences = sentence_data_extractor.extract_sentences_not_in_db()
         sentences_added_to_db = self._add_words_and_sentences_to_db(sentences)
