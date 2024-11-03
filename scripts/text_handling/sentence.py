@@ -8,6 +8,8 @@ class JapaneseSentence:
     audio_file_path: str
     db_id: int
     words: list[JapaneseWord]
+    practice_interval: int
+    anki_note_id: int
 
     def __init__(
         self,
@@ -22,6 +24,8 @@ class JapaneseSentence:
         self.audio_file_path = audio_file
         self.db_id = database_id
         self.words = words
+        self.practice_interval = 0
+        self.anki_note_id = None
 
     def is_fully_defined(self):
         return (

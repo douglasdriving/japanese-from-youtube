@@ -6,6 +6,10 @@ from ..text_handling.sentence import JapaneseSentence
 
 
 class DbConnector:
+
+    connection: sqlite3.Connection
+    cursor: sqlite3.Cursor
+
     def __init__(self):
         self.connection = sqlite3.connect("vocabulary.db")
         self.cursor = self.connection.cursor()
@@ -124,6 +128,7 @@ class DbConnector:
         sentences: list[JapaneseSentence] = []
         for row in data:
             sentence = JapaneseSentence(row[1], row[2], row[3], row[0])
+            sentence.anki_note_id = row[4]
             sentences.append(sentence)
         return sentences
 
@@ -247,3 +252,18 @@ class DbConnector:
             )
         except sqlite3.Error as error:
             print("ERROR INSERTING VIDEO SENTENCE CROSSREF: ", error)
+
+    def update_sentence_practice_intervals(self, sentences: list[JapaneseSentence]):
+        for sentence in sentences:
+            self.cursor.execute(
+                """
+                UPDATE sentences
+                SET practice_interval = ?
+                WHERE id = ?
+                """,
+                (sentence.practice_interval, sentence.db_id),
+            )
+            self.connection.commit()
+            print(
+                f"Updated practice interval for sentence {sentence.sentence} to {sentence.practice_interval}"
+            )
