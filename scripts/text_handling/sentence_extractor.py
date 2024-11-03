@@ -3,7 +3,7 @@ from .sentence import JapaneseSentence
 from .speech_synthesizer import SpeechSynthesizer
 from ..database.db_connector import DbConnector
 from .translator import Translator
-from .word_extractor_new import WordExtractor
+from .word_extractor import WordExtractor
 from .transcript_line import TranscriptLine
 
 
@@ -98,7 +98,7 @@ class SentenceExtractor:
             if sentence_exists:
                 print(
                     idx + 1,
-                    ". skipping sentence since it already exists: ",
+                    ". extracting sentence data from db: ",
                     line.text,
                 )
                 sentence_obj = self._extract_sentence_from_db_by_kana(line.text)
@@ -107,7 +107,7 @@ class SentenceExtractor:
                 sentence_obj = self._make_sentence(line.text)
                 print(
                     idx + 1,
-                    ". made sentence: ",
+                    ". made new sentence: ",
                     line.text,
                     " (",
                     sentence_obj.definition,

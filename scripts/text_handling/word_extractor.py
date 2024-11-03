@@ -1,115 +1,104 @@
-# import subprocess
-import re
+from .japanese_word import JapaneseWord
 from jisho_api.tokenize import Tokens
 from jisho_api.word import Word
-from .japanese_word import JapaneseWord
 from ..database.db_connector import DbConnector
+from .speech_synthesizer import SpeechSynthesizer
+import re
+import warnings
 
 
-def cleanup_word(word):
-    word = word.replace(".", "")
-    word = word.replace("。", "")
-    word = word.replace("、", "")
-    word = word.replace(".", "")
-    return word
+class WordExtractor:
 
+    vocabulary_connector: DbConnector
+    speech_synthesizer: SpeechSynthesizer
 
-def get_word_data(kana_word: str):
+    def __init__(self):
+        self.vocabulary_connector = DbConnector()
+        self.speech_synthesizer = SpeechSynthesizer()
 
-    def get_definitions_as_string(base_word_data):
-        definitions_of_most_common_reading = base_word_data.senses[
-            0
-        ].english_definitions
-        definitions_limited_to_3 = definitions_of_most_common_reading[:3]
-        definitions_as_string = "; ".join(definitions_limited_to_3)
-        return definitions_as_string
+    def extract_words_from_text(self, text: str):
+        cleaned_text = self._clean_text(text)
+        word_texts = self._get_unique_words_from_text(cleaned_text)
+        japanese_words = []
+        if word_texts is not None:
+            for word in word_texts:
+                japanese_word = self._get_japanese_word(word)
+                if japanese_word is not None:
+                    japanese_words.append(japanese_word)
+        return japanese_words
 
-    base_word_result = Word.request(kana_word)
-    if base_word_result == None:
-        return None
+    def _get_unique_words_from_text(self, text):
+        cleaned_text = self._clean_text(text)
+        tokens_result = Tokens.request(cleaned_text)
+        if not tokens_result or not tokens_result.data:
+            warnings.warn(f"Could not find tokens in Jisho API: {cleaned_text}")
+            return None
+        tokens = tokens_result.data
+        clean_tokens = self._cleanup_tokens(tokens)
+        words = [token.token for token in clean_tokens]
+        return words
 
-    base_word_data = base_word_result.data[0]
-    base_word = base_word_data.japanese[0].word
-    most_common_reading = base_word_data.japanese[0].reading
+    def _clean_text(self, text: str):
+        jp_text = re.sub(r"[a-zA-Z]", "", text)
+        cleaned_jp_text = re.sub(r"[、。]", " ", jp_text)
+        return cleaned_jp_text
 
-    if base_word == None:
-        base_word = most_common_reading
+    def _cleanup_tokens(self, tokens):
 
-    definitions_as_string = get_definitions_as_string(base_word_data)
-    japanese_word = JapaneseWord(base_word, most_common_reading, definitions_as_string)
-    return japanese_word
+        def cleanup_word(word):
+            word = word.replace(".", "")
+            word = word.replace("。", "")
+            word = word.replace("、", "")
+            word = word.replace(".", "")
+            return word
 
+        def contains_latin_characters(text: str) -> bool:
+            return any("a" <= char <= "z" or "A" <= char <= "Z" for char in text)
 
-def contains_latin_characters(text: str) -> bool:
-    return any("a" <= char <= "z" or "A" <= char <= "Z" for char in text)
+        cleaned_up_list = []
 
+        for token in tokens:
 
-def cleanup_tokens(list_of_tokens):
+            is_valid = not token.pos_tag.name == "unk"
+            is_japanese = not contains_latin_characters(token.token)
+            is_duplicate = False
+            for saved_token in cleaned_up_list:
+                if token.token == saved_token.token:
+                    is_duplicate = True
+                    break
 
-    cleaned_up_list = []
+            if not is_duplicate and is_valid and is_japanese:
+                token.token = cleanup_word(token.token)
+                cleaned_up_list.append(token)
 
-    for token in list_of_tokens:
+        return cleaned_up_list
 
-        is_valid = not token.pos_tag.name == "unk"
-        is_japanese = not contains_latin_characters(token.token)
-        is_duplicate = False
-        for saved_token in cleaned_up_list:
-            if token.token == saved_token.token:
-                is_duplicate = True
-                break
+    def _get_japanese_word(self, kana_word: str):
+        japanese_word = self.vocabulary_connector.get_word_if_exists(kana_word)
+        if japanese_word == None:
+            japanese_word = self._make_new_japanese_word(kana_word)
+        return japanese_word
 
-        if not is_duplicate and is_valid and is_japanese:
-            token.token = cleanup_word(token.token)
-            cleaned_up_list.append(token)
+    def _make_new_japanese_word(self, kana_word: str):
 
-    return cleaned_up_list
+        def get_definitions_as_string(senses):
+            definitions = senses[0].english_definitions[:3]
+            return "; ".join(definitions)
 
+        base_word_result = Word.request(kana_word)
+        if not base_word_result:
+            warnings.warn(f"Could not find word in Jisho API: {kana_word}")
+            return None
 
-def cleanup_text(text):
-    jp_text = re.sub(r"[a-zA-Z]", "", text)
-    cleaned_jp_text = re.sub(r"[、。]", " ", jp_text)
-    return cleaned_jp_text
+        base_word_data = base_word_result.data[0]
+        japanese_info = base_word_data.japanese[0]
+        base_word = japanese_info.word or japanese_info.reading
+        definitions_as_string = get_definitions_as_string(base_word_data.senses)
+        audio_file_path = self.speech_synthesizer.save_jp_text_as_audio(
+            base_word, is_sentence=False
+        )
 
-
-def get_words_from_text(text):
-    cleaned_text = cleanup_text(text)
-    tokens_result = Tokens.request(cleaned_text)
-    tokens = tokens_result.data
-    clean_tokens = cleanup_tokens(tokens)
-    words = [token.token for token in clean_tokens]
-    return words
-
-
-def extract_new_words_from_text(text):
-
-    def filter_out_words_that_are_already_in_db(words_to_filter):
-        vocabulary_connector = DbConnector()
-        words_in_db = vocabulary_connector.get_all_words()
-        words_in_db_kana = [word.word for word in words_in_db]
-        filtered_words = []
-        for word in words_to_filter:
-            if word not in words_in_db_kana:
-                filtered_words.append(word)
-        return filtered_words
-
-    japanese_words: list[JapaneseWord] = []
-    all_words = get_words_from_text(text)
-    print("Extracted " + str(len(all_words)) + " words from text.")
-    new_words = filter_out_words_that_are_already_in_db(all_words)
-    print(str(len(new_words)) + " new words.")
-
-    # extract data for new words
-    words_checked = 0
-    for word_kana in new_words:
-        words_checked += 1
-        word: JapaneseWord = get_word_data(word_kana)
-        if word == None:
-            print(str(words_checked) + ". Failed to extract word: " + word_kana)
-            continue
-        if word == None:
-            print(str(words_checked) + ". Failed to extract word: " + word_kana)
-            continue
-        japanese_words.append(word)
-        print(str(words_checked) + ". Extracted word: " + word_kana)
-
-    return japanese_words
+        japanese_word = JapaneseWord(
+            base_word, japanese_info.reading, definitions_as_string, audio_file_path
+        )
+        return japanese_word

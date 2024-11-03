@@ -2,6 +2,8 @@ import sqlite3
 from ..text_handling.japanese_word import JapaneseWord
 from ..text_handling.sentence import JapaneseSentence
 
+# time to refactor
+
 
 class DbConnector:
     def __init__(self):
@@ -13,7 +15,7 @@ class DbConnector:
             print("ERROR: Word is not fully defined. Not adding to database.")
             print(word)
             return None
-        if self.check_if_word_exists(word.word):
+        if self._check_if_word_exists(word.word):
             print("skipping adding word to db since it already exists: ", word.word)
             return None
         try:
@@ -32,19 +34,11 @@ class DbConnector:
             print("ERROR INSERTING WORD: ", error)
             return None
 
-    def clear_database(self):
+    def _check_if_word_exists(self, word_in_kanji: str):
         self.cursor.execute(
             """
-    DELETE FROM vocabulary
-    """
-        )
-        self.connection.commit()
-
-    def check_if_word_exists(self, word_in_kanji: str):
-        self.cursor.execute(
-            """
-    SELECT * FROM vocabulary WHERE word = (?)
-    """,
+            SELECT * FROM vocabulary WHERE word = (?)
+            """,
             (word_in_kanji,),
         )
         word_exists = self.cursor.fetchone() is not None
@@ -93,24 +87,6 @@ class DbConnector:
             (sentence,),
         )
         return self.cursor.fetchone() is not None
-
-    def get_highest_sentence_id(self):
-        self.cursor.execute(
-            """
-    SELECT MAX(id) FROM sentences
-    """
-        )
-        max_id = self.cursor.fetchone()[0]
-        return max_id
-
-    def get_highest_word_id(self):
-        self.cursor.execute(
-            """
-            SELECT MAX(id) FROM vocabulary
-            """
-        )
-        max_id = self.cursor.fetchone()[0]
-        return max_id
 
     def get_all_words(self):
         self.cursor.execute(
@@ -226,6 +202,22 @@ class DbConnector:
 
     def add_video(self, youtube_id: str, title: str):
         try:
+            # check if video already exists
+            self.cursor.execute(
+                """
+                SELECT id FROM videos WHERE youtube_id = ?
+                """,
+                (youtube_id,),
+            )
+            video_data = self.cursor.fetchone()
+            if video_data is not None:
+                print(
+                    f"Video with youtube_id '{youtube_id}' already exists with id {video_data[0]}"
+                )
+                id = video_data[0]
+                return video_data[0]
+
+            # otherwise, add video to db
             self.cursor.execute(
                 """
                 INSERT INTO videos (youtube_id, title)
@@ -235,6 +227,7 @@ class DbConnector:
             )
             self.connection.commit()
             id = self.cursor.lastrowid
+            print(f"Added video '{title}' to database with id {id}")
             return id
         except sqlite3.Error as error:
             print("ERROR INSERTING VIDEO: ", error)
@@ -243,11 +236,14 @@ class DbConnector:
         try:
             self.cursor.execute(
                 """
-                INSERT INTO video_sentences (video_id, sentence_id)
+                INSERT INTO videos_sentences (video_id, sentence_id)
                 VALUES (?, ?)
                 """,
                 (video_id, sentence_id),
             )
             self.connection.commit()
+            print(
+                f"Added video-sentence crossref to database with video_id {video_id} and sentence_id {sentence_id}"
+            )
         except sqlite3.Error as error:
             print("ERROR INSERTING VIDEO SENTENCE CROSSREF: ", error)
