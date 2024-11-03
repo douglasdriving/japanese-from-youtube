@@ -3,7 +3,7 @@ import re
 from jisho_api.tokenize import Tokens
 from jisho_api.word import Word
 from .japanese_word import JapaneseWord
-from ..database.vocabulary_connector import VocabularyConnector
+from ..database.db_connector import DbConnector
 
 
 def cleanup_word(word):
@@ -83,7 +83,7 @@ def get_words_from_text(text):
 def extract_new_words_from_text(text):
 
     def filter_out_words_that_are_already_in_db(words_to_filter):
-        vocabulary_connector = VocabularyConnector()
+        vocabulary_connector = DbConnector()
         words_in_db = vocabulary_connector.get_all_words()
         words_in_db_kana = [word.word for word in words_in_db]
         filtered_words = []

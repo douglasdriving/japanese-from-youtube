@@ -1,6 +1,6 @@
 # cleans the data in anki
 from ..anki.anki_connector import AnkiConnector
-from ..database.vocabulary_connector import VocabularyConnector
+from ..database.db_connector import DbConnector
 from ..text_handling.japanese_word import JapaneseWord
 from ..text_handling.sentence import JapaneseSentence
 from ..anki.anki_word_adder import AnkiWordAdder
@@ -12,13 +12,13 @@ import re
 class AnkiCleaner:
 
     anki_connector: AnkiConnector
-    vocab_connector: VocabularyConnector
+    vocab_connector: DbConnector
     anki_word_adder: AnkiWordAdder
     sentence_extractor: SentenceExtractor
 
     def __init__(self):
         self.anki_connector = AnkiConnector()
-        self.vocab_connector = VocabularyConnector()
+        self.vocab_connector = DbConnector()
         self.anki_word_adder = AnkiWordAdder()
         self.sentence_extractor = SentenceExtractor(None)
 
@@ -152,8 +152,10 @@ class AnkiCleaner:
         back = note["fields"]["Back"]["value"]
         english_sentence = re.split(r"<br\s*/?>|\n", back)[0]
         # requires bulk sentence extraction
-        japanese_sentence = self.sentence_extractor.extract_db_data_for_sentence(
-            english_sentence
+        japanese_sentence = (
+            self.sentence_extractor.extract_sentence_from_db_by_definition(
+                english_sentence
+            )
         )
         if japanese_sentence is None:
             print(

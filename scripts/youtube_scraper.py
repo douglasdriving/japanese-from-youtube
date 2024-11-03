@@ -1,5 +1,5 @@
 from .anki.anki_word_adder import AnkiWordAdder
-from .database.vocabulary_connector import VocabularyConnector
+from .database.db_connector import DbConnector
 from .text_handling.sentence_extractor import SentenceExtractor
 from .text_handling.youtube_transcriber import YoutubeTranscriber
 from .text_handling.sentence import JapaneseSentence
@@ -9,24 +9,43 @@ from .text_handling.transcript_line import TranscriptLine
 
 class YoutubeScraper:
 
-    vocabulary_connector: VocabularyConnector
+    db_connector: DbConnector
     youtube_transcriber: YoutubeTranscriber
     anki_word_adder: AnkiWordAdder
 
     def __init__(self):
-        self.vocabulary_connector = VocabularyConnector()
+        self.db_connector = DbConnector()
         self.youtube_transcriber = YoutubeTranscriber()
         self.anki_word_adder = AnkiWordAdder()
 
     def scrape_video(self):
-        video_id = self._get_valid_youtube_id_from_user()
+        youtube_video_id = self._get_valid_youtube_id_from_user()
         print("extracting sentences and words from youtube video...")
-        transcript: list[TranscriptLine] = self.youtube_transcriber.transcribe(video_id)
-        sentence_data_extractor = SentenceExtractor(transcript)
-        sentences = sentence_data_extractor.extract_sentences_not_in_db()
-        sentences_added_to_db = self._add_words_and_sentences_to_db(sentences)
+        transcript: list[TranscriptLine] = self.youtube_transcriber.transcribe(
+            youtube_video_id
+        )
+        sentence_extractor = SentenceExtractor(transcript)
+        sentences: list[JapaneseSentence] = sentence_extractor.extract_sentences()
+        sentences_added_to_db: list[JapaneseSentence] = (
+            self._add_new_words_and_sentences_to_db(sentences)
+        )
+        for sentence in sentences:
+            if sentence.db_id is None:
+                for sentence_added_to_db in sentences_added_to_db:
+                    if sentence.sentence == sentence_added_to_db.sentence:
+                        sentence.db_id = sentence_added_to_db.db_id
+                        break
+        self._add_video_to_db(youtube_video_id, sentences)
         self.anki_word_adder.add_words_and_sentences_to_anki(sentences_added_to_db)
         print("finished adding vocab to anki deck")
+
+    def _add_video_to_db(
+        self, youtube_video_id: str, sentences_in_video: list[JapaneseSentence]
+    ):
+        video_title = YoutubeTranscriber.get_video_title(youtube_video_id)
+        video_db_id = self.db_connector.add_video(youtube_video_id, video_title)
+        for sentence in sentences_in_video:
+            self.db_connector.add_video_sentences_crossref(video_db_id, sentence.db_id)
 
     def _get_valid_youtube_id_from_user(self):
         print("enter a youtube video id")
@@ -38,15 +57,15 @@ class YoutubeScraper:
             video_id = input()
         return video_id
 
-    def _add_words_and_sentences_to_db(self, sentences: list[JapaneseSentence]):
+    def _add_new_words_and_sentences_to_db(self, sentences: list[JapaneseSentence]):
         added_sentences: list[JapaneseSentence] = []
         for sentence in sentences:
             added_words: list[JapaneseWord] = []
             for word in sentence.words:
-                added_word = self.vocabulary_connector.add_word_if_new(word)
+                added_word = self.db_connector.add_word_if_new(word)
                 if added_word:
                     added_words.append(added_word)
-            added_sentence = self.vocabulary_connector.add_sentence_if_new(sentence)
+            added_sentence = self.db_connector.add_sentence_if_new(sentence)
             if added_sentence:
                 added_sentence.words = added_words
                 added_sentences.append(added_sentence)

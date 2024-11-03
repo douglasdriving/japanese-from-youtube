@@ -3,7 +3,7 @@ from ..text_handling.japanese_word import JapaneseWord
 from ..text_handling.sentence import JapaneseSentence
 
 
-class VocabularyConnector:
+class DbConnector:
     def __init__(self):
         self.connection = sqlite3.connect("vocabulary.db")
         self.cursor = self.connection.cursor()
@@ -167,12 +167,28 @@ class VocabularyConnector:
             )
             return word
 
-    def get_sentence(self, english_sentence: str):
+    def get_sentence_by_definition(self, english_sentence: str):
         self.cursor.execute(
             """
                 SELECT * FROM sentences WHERE definition = (?)
             """,
             (english_sentence,),
+        )
+        sentence_data = self.cursor.fetchone()
+        if sentence_data is None:
+            return None
+        else:
+            sentence = JapaneseSentence(
+                sentence_data[1], sentence_data[2], sentence_data[3], sentence_data[0]
+            )
+            return sentence
+
+    def get_sentence_by_kana_text(self, kana_sentence: str):
+        self.cursor.execute(
+            """
+                SELECT * FROM sentences WHERE sentence = (?)
+            """,
+            (kana_sentence,),
         )
         sentence_data = self.cursor.fetchone()
         if sentence_data is None:
@@ -207,3 +223,31 @@ class VocabularyConnector:
         )
         self.connection.commit()
         print(f"Updated anki_note_id for {id} to {anki_id} in {table_name}")
+
+    def add_video(self, youtube_id: str, title: str):
+        try:
+            self.cursor.execute(
+                """
+                INSERT INTO videos (youtube_id, title)
+                VALUES (?, ?)
+                """,
+                (youtube_id, title),
+            )
+            self.connection.commit()
+            id = self.cursor.lastrowid
+            return id
+        except sqlite3.Error as error:
+            print("ERROR INSERTING VIDEO: ", error)
+
+    def add_video_sentences_crossref(self, video_id: int, sentence_id: int):
+        try:
+            self.cursor.execute(
+                """
+                INSERT INTO video_sentences (video_id, sentence_id)
+                VALUES (?, ?)
+                """,
+                (video_id, sentence_id),
+            )
+            self.connection.commit()
+        except sqlite3.Error as error:
+            print("ERROR INSERTING VIDEO SENTENCE CROSSREF: ", error)

@@ -1,7 +1,7 @@
 # extracts sentence data from a given japanese text
 from .sentence import JapaneseSentence
 from .speech_synthesizer import SpeechSynthesizer
-from ..database.vocabulary_connector import VocabularyConnector
+from ..database.db_connector import DbConnector
 from .translator import Translator
 from .word_extractor_new import WordExtractor
 from .transcript_line import TranscriptLine
@@ -11,41 +11,55 @@ class SentenceExtractor:
 
     transcript: list[TranscriptLine]
     sentences: list[JapaneseSentence]
-    vocabulary_connector: VocabularyConnector
+    vocabulary_connector: DbConnector
     word_extractor: WordExtractor
     speech_synthesizer: SpeechSynthesizer
 
     def __init__(self, transcript: list[TranscriptLine]):
         self.transcript = transcript
         self.sentences = []
-        self.vocabulary_connector = VocabularyConnector()
+        self.vocabulary_connector = DbConnector()
         self.word_extractor = WordExtractor()
         self.speech_synthesizer = SpeechSynthesizer()
 
-    def extract_sentences_not_in_db(self):
+    def extract_sentences(self):
         print("Extracting sentences...")
         if self.transcript is None:
             print("ERROR: No text to extract sentences from")
             return None
         self._clean_lines()
-        self._remove_lines_already_in_db()
         self._remove_empty_lines()
-        print("Found ", len(self.transcript), " new sentences")
+        print("Found ", len(self.transcript), " sentences in transcript")
         sentences_with_data: list[JapaneseSentence] = (
-            self._make_transcript_into_sentence_objects()
+            self._make_sentences_from_transcript()
         )
         return sentences_with_data
 
-    def extract_db_data_for_sentence(self, enlish_sentence: str):
+    def extract_sentence_from_db_by_definition(self, english_sentence: str):
         # want a bulk version of this
         # requires bulk retrieval of sentences from db
-        japanese_sentence = self.vocabulary_connector.get_sentence(enlish_sentence)
+        japanese_sentence = self.vocabulary_connector.get_sentence_by_definition(
+            english_sentence
+        )
         if japanese_sentence is None:
-            print("ERROR: Sentence not found in db: ", enlish_sentence)
+            print("ERROR: Sentence not found in db: ", english_sentence)
             return None
         else:
             # want a bulk version
             # what i need is a cross ref table for words and sentences
+            japanese_sentence.words = self._extract_words_for_sentence(
+                japanese_sentence
+            )
+            return japanese_sentence
+
+    def _extract_sentence_from_db_by_kana(self, kana_sentence: str):
+        japanese_sentence = self.vocabulary_connector.get_sentence_by_kana_text(
+            kana_sentence
+        )
+        if japanese_sentence is None:
+            print("ERROR: Sentence not found in db: ", kana_sentence)
+            return None
+        else:
             japanese_sentence.words = self._extract_words_for_sentence(
                 japanese_sentence
             )
@@ -74,7 +88,7 @@ class SentenceExtractor:
                 new_lines.append(line)
         self.transcript = new_lines
 
-    def _make_transcript_into_sentence_objects(self):
+    def _make_sentences_from_transcript(self):
         print("making ", len(self.transcript), " sentences")
         sentences_with_definition: list[JapaneseSentence] = []
         for idx, line in enumerate(self.transcript):
@@ -87,8 +101,10 @@ class SentenceExtractor:
                     ". skipping sentence since it already exists: ",
                     line.text,
                 )
+                sentence_obj = self._extract_sentence_from_db_by_kana(line.text)
+                sentences_with_definition.append(sentence_obj)
             else:
-                sentence_obj = self._make_sentence_object(line.text)
+                sentence_obj = self._make_sentence(line.text)
                 print(
                     idx + 1,
                     ". made sentence: ",
@@ -100,7 +116,7 @@ class SentenceExtractor:
                 sentences_with_definition.append(sentence_obj)
         return sentences_with_definition
 
-    def _make_sentence_object(self, sentence):  # this could be done as a batch
+    def _make_sentence(self, sentence):  # this could be done as a batch
         translator = Translator()
         translation = translator.translate_jp_to_en(
             sentence
