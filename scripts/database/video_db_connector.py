@@ -18,12 +18,12 @@ class VideoDbConnector:
         data = self.db_connector.cursor.fetchall()
         return data
 
-    def get_sentences_for_video(self, video_id: int):
+    def get_sentences_for_video(self, id: int):
         self.db_connector.cursor.execute(
             """
-            SELECT * FROM sentences WHERE video_id = ?
+            SELECT * FROM sentences WHERE id = ?
             """,
-            (video_id,),
+            (id,),
         )
         data = self.db_connector.cursor.fetchall()
         sentences: list[JapaneseSentence] = []

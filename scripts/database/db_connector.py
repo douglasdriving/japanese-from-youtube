@@ -129,6 +129,7 @@ class DbConnector:
         for row in data:
             sentence = JapaneseSentence(row[1], row[2], row[3], row[0])
             sentence.anki_note_id = row[4]
+            sentence.practice_interval = row[5]
             sentences.append(sentence)
         return sentences
 

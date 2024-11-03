@@ -13,10 +13,14 @@ class ProgressDetector:
 
     def update_progress(self):
         self._update_sentence_progress()
-        ids_of_videos_to_unlock = self._get_ids_of_videos_that_can_be_unlocked()
-        for video_id in ids_of_videos_to_unlock:
-            self.video_db_connector.unlock_video(video_id)
-            print(f"Unlocked video!!!!! -> https://www.youtube.com/watch?v={video_id}")
+        youtube_ids_of_videos_to_unlock = (
+            self._get_youtube_ids_of_videos_that_can_be_unlocked()
+        )
+        for youtube_video_id in youtube_ids_of_videos_to_unlock:
+            self.video_db_connector.unlock_video(youtube_video_id)
+            print(
+                f"Unlocked video!!!!! -> https://www.youtube.com/watch?v={youtube_video_id}"
+            )
 
     def _update_sentence_progress(self):
 
@@ -34,6 +38,12 @@ class ProgressDetector:
             for anki_card in anki_cards:
                 if sentence.anki_note_id == anki_card["note"]:
                     if sentence.practice_interval != anki_card["interval"]:
+                        # print(
+                        #     "diff detected. db: ",
+                        #     sentence.practice_interval,  # prints 0 for all
+                        #     " anki: ",
+                        #     anki_card["interval"],
+                        # )
                         sentence.practice_interval = anki_card["interval"]
                         sentences_with_updated_practice_intervals.append(sentence)
                         break
@@ -43,24 +53,28 @@ class ProgressDetector:
             sentences_with_updated_practice_intervals
         )
 
-    def _get_ids_of_videos_that_can_be_unlocked(self):
+    def _get_youtube_ids_of_videos_that_can_be_unlocked(self):
 
         # get all locked videos
         locked_videos = self.video_db_connector.get_locked_videos()
 
         # for all locked videos, get all sentences
-        ids_of_videos_to_unlock = []
+        youtube_ids_of_videos_to_unlock = []
         for video in locked_videos:
             sentences_in_video: list[JapaneseSentence] = (
                 self.video_db_connector.get_sentences_for_video(video[0])
             )
             all_sentences_have_interval_of_4_or_more = True
             for sentence in sentences_in_video:
-                if sentence.practice_interval < 4:
+                print("practice interval of sentence: ", sentence.practice_interval)
+                if not sentence.practice_interval > 4:
                     all_sentences_have_interval_of_4_or_more = False
+                    print(
+                        "sentence with interval less than 4 detected! can't unlock video"
+                    )
                     break
             if all_sentences_have_interval_of_4_or_more:
-                ids_of_videos_to_unlock.append(video[0])
+                youtube_ids_of_videos_to_unlock.append(video[2])
 
         # return all videos that where all sentences have an interval of 4 or more
-        return ids_of_videos_to_unlock
+        return youtube_ids_of_videos_to_unlock
