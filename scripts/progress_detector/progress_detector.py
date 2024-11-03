@@ -66,12 +66,8 @@ class ProgressDetector:
             )
             all_sentences_have_interval_of_4_or_more = True
             for sentence in sentences_in_video:
-                print("practice interval of sentence: ", sentence.practice_interval)
-                if not sentence.practice_interval > 4:
+                if not (sentence.practice_interval > 4):
                     all_sentences_have_interval_of_4_or_more = False
-                    print(
-                        "sentence with interval less than 4 detected! can't unlock video"
-                    )
                     break
             if all_sentences_have_interval_of_4_or_more:
                 youtube_ids_of_videos_to_unlock.append(video[2])
