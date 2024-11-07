@@ -5,6 +5,7 @@ from ..database.db_connector import DbConnector
 from .translator import Translator
 from .word_extractor import WordExtractor
 from .transcript_line import TranscriptLine
+from ..database.sentence_db_connector import SentenceDbConnector
 
 
 class SentenceExtractor:
@@ -14,6 +15,7 @@ class SentenceExtractor:
     vocabulary_connector: DbConnector
     word_extractor: WordExtractor
     speech_synthesizer: SpeechSynthesizer
+    sentence_db_connector: SentenceDbConnector
 
     def __init__(self, transcript: list[TranscriptLine]):
         self.transcript = transcript
@@ -21,6 +23,7 @@ class SentenceExtractor:
         self.vocabulary_connector = DbConnector()
         self.word_extractor = WordExtractor()
         self.speech_synthesizer = SpeechSynthesizer()
+        self.sentence_db_connector = SentenceDbConnector()
 
     def extract_sentences(self):
         print("Extracting sentences...")
@@ -38,7 +41,7 @@ class SentenceExtractor:
     def extract_sentence_from_db_by_definition(self, english_sentence: str):
         # want a bulk version of this
         # requires bulk retrieval of sentences from db
-        japanese_sentence = self.vocabulary_connector.get_sentence_by_definition(
+        japanese_sentence = self.sentence_db_connector.get_sentence_by_definition(
             english_sentence
         )
         if japanese_sentence is None:
@@ -53,7 +56,7 @@ class SentenceExtractor:
             return japanese_sentence
 
     def _extract_sentence_from_db_by_kana(self, kana_sentence: str):
-        japanese_sentence = self.vocabulary_connector.get_sentence_by_kana_text(
+        japanese_sentence = self.sentence_db_connector.get_sentence_by_kana_text(
             kana_sentence
         )
         if japanese_sentence is None:
@@ -83,7 +86,7 @@ class SentenceExtractor:
         new_lines = []
         for line in self.transcript:
             print("checking if sentence exists: ", line.text, "...")
-            if not self.vocabulary_connector.check_if_sentence_exists(line.text):
+            if not self.sentence_db_connector.check_if_sentence_exists(line.text):
                 print("sentence does not exist - adding it!")
                 new_lines.append(line)
         self.transcript = new_lines
@@ -92,7 +95,7 @@ class SentenceExtractor:
         print("making ", len(self.transcript), " sentences")
         sentences_with_definition: list[JapaneseSentence] = []
         for idx, line in enumerate(self.transcript):
-            sentence_exists = self.vocabulary_connector.check_if_sentence_exists(
+            sentence_exists = self.sentence_db_connector.check_if_sentence_exists(
                 line.text
             )
             if sentence_exists:

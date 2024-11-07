@@ -7,6 +7,7 @@ from ..database.db_connector import DbConnector
 from ..anki.anki_connector import AnkiConnector
 from ..text_handling.word_extractor import WordExtractor
 from ..text_handling.japanese_word import JapaneseWord
+from ..database.sentence_db_connector import SentenceDbConnector
 
 
 class DataCleaner:
@@ -15,12 +16,14 @@ class DataCleaner:
     cursor: sqlite3.Cursor
     vocabulary_connector: DbConnector
     anki_connector: AnkiConnector
+    sentence_db_connector: SentenceDbConnector
 
     def __init__(self):
         self.connection = sqlite3.connect("vocabulary.db")
         self.cursor = self.connection.cursor()
         self.vocabulary_connector = DbConnector()
         self.anki_connector = AnkiConnector()
+        self.sentence_db_connector = SentenceDbConnector()
 
     def clean_data(self):
         print("Cleaning data...")
@@ -41,7 +44,7 @@ class DataCleaner:
         data = (
             self.vocabulary_connector.get_all_words()
             if table == "vocabulary"
-            else self.vocabulary_connector.get_all_sentences()
+            else self.sentence_db_connector.get_all_sentences()
         )
 
         corrent_audio_file_patter = (
@@ -123,7 +126,7 @@ class DataCleaner:
         def update_sentences(all_anki_notes):
             print("Updating sentences...")
             sentences_to_update = (
-                self.vocabulary_connector.get_sentences_without_anki_note_id()
+                self.sentence_db_connector.get_sentences_without_anki_note_id()
             )
             for sentence in sentences_to_update:
                 anki_note = next(
@@ -153,7 +156,7 @@ class DataCleaner:
         update_sentences(anki_notes)
 
     def _add_missing_crossrefs(self):
-        sentences = self.vocabulary_connector.get_all_sentences()
+        sentences = self.sentence_db_connector.get_all_sentences()
         word_extractor = WordExtractor()
         for sentence in sentences:
             is_missing_crossrefs = sentence.words is None or len(sentence.words) == 0
@@ -167,7 +170,7 @@ class DataCleaner:
                     if not word:
                         print(f"Could not add word because it is None")
                     elif word.db_id is not None:
-                        self.vocabulary_connector.add_sentence_word_crossref(
+                        self.sentence_db_connector.add_sentence_word_crossref(
                             sentence.db_id, word.db_id
                         )
                     else:

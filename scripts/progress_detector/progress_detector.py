@@ -1,5 +1,5 @@
 from ..anki.anki_connector import AnkiConnector
-from ..database.db_connector import DbConnector
+from ..database.sentence_db_connector import SentenceDbConnector
 from ..text_handling.sentence import JapaneseSentence
 from ..database.video_db_connector import VideoDbConnector
 
@@ -7,9 +7,11 @@ from ..database.video_db_connector import VideoDbConnector
 class ProgressDetector:
 
     video_db_connector: VideoDbConnector
+    sentence_db_connector: SentenceDbConnector
 
     def __init__(self):
         self.video_db_connector = VideoDbConnector()
+        self.sentence_db_connector = SentenceDbConnector()
 
     def update_progress(self):
         self._update_sentence_progress()
@@ -26,8 +28,7 @@ class ProgressDetector:
         anki_cards = anki_connector.get_all_anki_cards()
 
         # get all sentences
-        db_connector = DbConnector()
-        sentences = db_connector.get_all_sentences()
+        sentences = self.sentence_db_connector.get_all_sentences()
 
         # update the practice intervals sentences where it differs from anki
         sentences_with_updated_practice_intervals: list[JapaneseSentence] = []
@@ -46,7 +47,7 @@ class ProgressDetector:
                         break
 
         # update the practice intervals in the database
-        db_connector.update_sentence_practice_intervals(
+        self.sentence_db_connector.update_sentence_practice_intervals(
             sentences_with_updated_practice_intervals
         )
 
@@ -59,7 +60,7 @@ class ProgressDetector:
         youtube_ids_of_videos_to_unlock = []
         for video in locked_videos:
             sentences_in_video: list[JapaneseSentence] = (
-                self.video_db_connector.get_sentences_for_video(video[0])
+                self.sentence_db_connector.get_sentences_for_video(video[0])
             )
             all_sentences_have_interval_of_4_or_more = True
             for sentence in sentences_in_video:

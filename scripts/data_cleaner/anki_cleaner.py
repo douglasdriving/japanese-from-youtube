@@ -1,6 +1,7 @@
 # cleans the data in anki
 from ..anki.anki_connector import AnkiConnector
 from ..database.db_connector import DbConnector
+from ..database.sentence_db_connector import SentenceDbConnector
 from ..text_handling.japanese_word import JapaneseWord
 from ..text_handling.sentence import JapaneseSentence
 from ..anki.anki_word_adder import AnkiWordAdder
@@ -13,6 +14,7 @@ class AnkiCleaner:
 
     anki_connector: AnkiConnector
     vocab_connector: DbConnector
+    sentence_db_connector: SentenceDbConnector
     anki_word_adder: AnkiWordAdder
     sentence_extractor: SentenceExtractor
 
@@ -31,7 +33,7 @@ class AnkiCleaner:
         print("Anki cleaning finished")
 
     def _delete_notes_not_in_db(self):
-        sentences_in_db = self.vocab_connector.get_all_sentences()
+        sentences_in_db = self.sentence_db_connector.get_all_sentences()
         words_in_db = self.vocab_connector.get_all_words()
         anki_ids_in_db = [sentence.anki_id for sentence in sentences_in_db] + [
             word.anki_id for word in words_in_db
@@ -68,7 +70,7 @@ class AnkiCleaner:
                 notes_to_add.append(AnkiNote(word.audio_file_path, word.definition))
 
         sentences_in_db: list[JapaneseSentence] = (
-            self.vocab_connector.get_all_sentences()
+            self.sentence_db_connector.get_all_sentences()
         )
         for sentence in sentences_in_db:
             definition_is_in_anki = sentence.definition in anki_card_definitions
