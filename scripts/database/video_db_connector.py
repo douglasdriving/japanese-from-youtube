@@ -22,9 +22,20 @@ class VideoDbConnector:
     def get_sentences_for_video(self, id: int):
         self.db_connector.cursor.execute(
             """
-            SELECT * FROM sentences WHERE id = ?
+            SELECT sentence_id FROM videos_sentences WHERE video_id = ?
             """,
             (id,),
+        )
+        sentence_ids = [row[0] for row in self.db_connector.cursor.fetchall()]
+
+        if not sentence_ids:
+            return []
+
+        self.db_connector.cursor.execute(
+            f"""
+            SELECT * FROM sentences WHERE id IN ({','.join('?' for _ in sentence_ids)})
+            """,
+            sentence_ids,
         )
         data = self.db_connector.cursor.fetchall()
         # would be useful with a function that transforms the db data into a list of JapaneseSentence objects
@@ -36,7 +47,7 @@ class VideoDbConnector:
                 sentence_data[3],
                 sentence_data[0],
             )
-            sentence.anki_note_id = sentence_data[4]
+            sentence.anki_id = sentence_data[4]
             sentence.practice_interval = sentence_data[5]
             sentences.append(sentence)
         return sentences

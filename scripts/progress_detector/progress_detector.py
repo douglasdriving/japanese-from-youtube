@@ -36,7 +36,7 @@ class ProgressDetector:
         sentences_with_updated_practice_intervals: list[JapaneseSentence] = []
         for sentence in sentences:
             for anki_card in anki_cards:
-                if sentence.anki_note_id == anki_card["note"]:
+                if sentence.anki_id == anki_card["note"]:
                     if sentence.practice_interval != anki_card["interval"]:
                         # print(
                         #     "diff detected. db: ",
@@ -61,15 +61,25 @@ class ProgressDetector:
         # for all locked videos, get all sentences
         youtube_ids_of_videos_to_unlock = []
         for video in locked_videos:
+            print("checking if video can be unlocked: ", video[1], "...")
             sentences_in_video: list[JapaneseSentence] = (
                 self.video_db_connector.get_sentences_for_video(video[0])
             )
+            print("sentences in video: ", len(sentences_in_video))  # this is only 1...
             all_sentences_have_interval_of_4_or_more = True
             for sentence in sentences_in_video:
+                print(
+                    "checking sentence with practice interval: ",
+                    sentence.practice_interval,
+                )
                 if not (sentence.practice_interval > 4):
+                    print(
+                        "sentence with interval of less than 4 detected. will not unlock this video"
+                    )
                     all_sentences_have_interval_of_4_or_more = False
                     break
             if all_sentences_have_interval_of_4_or_more:
+                print("all sentences have interval of 4 or more. unlocking video")
                 youtube_ids_of_videos_to_unlock.append(video[2])
 
         # return all videos that where all sentences have an interval of 4 or more
