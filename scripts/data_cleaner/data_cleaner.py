@@ -5,6 +5,8 @@ from scripts.text_handling.speech_synthesizer import SpeechSynthesizer
 from .anki_cleaner import AnkiCleaner
 from ..database.db_connector import DbConnector
 from ..anki.anki_connector import AnkiConnector
+from ..text_handling.word_extractor import WordExtractor
+from ..text_handling.japanese_word import JapaneseWord
 
 
 class DataCleaner:
@@ -22,6 +24,7 @@ class DataCleaner:
 
     def clean_data(self):
         print("Cleaning data...")
+        self._add_missing_crossrefs()
         self._clean_audio_file_names()
         anki_cleaner = AnkiCleaner()
         anki_cleaner.clean()
@@ -36,9 +39,9 @@ class DataCleaner:
     def _clean_audio_file_names_in_table(self, table="vocabulary"):
 
         data = (
-            self._get_all_words_from_db()
+            self.vocabulary_connector.get_all_words()
             if table == "vocabulary"
-            else self._get_all_sentences_from_db()
+            else self.vocabulary_connector.get_all_sentences()
         )
 
         corrent_audio_file_patter = (
@@ -92,22 +95,6 @@ class DataCleaner:
                 print(
                     f"Deleted {audio_file} from audios folder since it is not in correct format"
                 )
-
-    def _get_all_words_from_db(self):
-        self.cursor.execute(
-            """
-            SELECT * FROM vocabulary
-            """
-        )
-        return self.cursor.fetchall()
-
-    def _get_all_sentences_from_db(self):
-        self.cursor.execute(
-            """
-            SELECT * FROM sentences
-            """
-        )
-        return self.cursor.fetchall()
 
     def _add_missing_anki_ids(self):
 
@@ -164,3 +151,17 @@ class DataCleaner:
         anki_notes = self.anki_connector.get_all_notes()
         update_words(anki_notes)
         update_sentences(anki_notes)
+
+    def _add_missing_crossrefs(self):
+        sentences = self.vocabulary_connector.get_all_sentences()
+        word_extractor = WordExtractor()
+        for sentence in sentences:
+            is_missing_crossrefs = sentence.words is None or len(sentence.words) == 0
+            if is_missing_crossrefs:
+                words: list[JapaneseWord] = word_extractor.extract_words_from_text(
+                    sentence.sentence
+                )
+                for word in words:
+                    self.vocabulary_connector.add_sentence_word_crossref(
+                        sentence.db_id, word.db_id
+                    )

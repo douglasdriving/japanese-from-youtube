@@ -138,7 +138,34 @@ class DbConnector:
             sentence.anki_id = row[4]
             sentence.practice_interval = row[5]
             sentences.append(sentence)
+        for sentence in sentences:
+            sentence.words = self.get_words_for_sentence(sentence.db_id)
         return sentences
+
+    def get_words_for_sentence(self, sentence_id: int):
+        self.cursor.execute(
+            """
+            SELECT word_id FROM sentences_words WHERE sentence_id = (?)
+            """,
+            (sentence_id,),
+        )
+        sentence_data = self.cursor.fetchall()
+        word_ids = [row[0] for row in sentence_data]
+        if len(word_ids) == 0:
+            return []
+        self.cursor.execute(
+            """
+            SELECT * FROM vocabulary WHERE id IN ({})
+            """.format(
+                ",".join("?" * len(word_ids))
+            ),
+            word_ids,
+        )
+        word_data = self.cursor.fetchall()
+        words: list[JapaneseWord] = []
+        for row in word_data:
+            word = JapaneseWord(row[1], row[2], row[3], row[4], row[0])
+            words.append(word)
 
     def get_word_if_exists(self, word_in_kana: str):
         self.cursor.execute(
@@ -275,3 +302,19 @@ class DbConnector:
             print(
                 f"Updated practice interval for sentence {sentence.sentence} to {sentence.practice_interval}"
             )
+
+    def add_sentence_word_crossref(self, sentence_id: int, word_id: int):
+        try:
+            self.cursor.execute(
+                """
+                INSERT INTO sentences_words (sentence_id, word_id)
+                VALUES (?, ?)
+                """,
+                (sentence_id, word_id),
+            )
+            self.connection.commit()
+            print(
+                f"Added sentence-word crossref to database with sentence_id {sentence_id} and word_id {word_id}"
+            )
+        except sqlite3.Error as error:
+            print("ERROR INSERTING SENTENCE WORD CROSSREF: ", error)

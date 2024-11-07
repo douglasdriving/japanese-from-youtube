@@ -2,6 +2,21 @@ from scripts.youtube_scraper import YoutubeScraper
 from scripts.data_cleaner.data_cleaner import DataCleaner
 from scripts.progress_detector.progress_detector import ProgressDetector
 
+# now: unlock sentences only after the word profficiency is high enough!
+
+# then, we need to mark sentences as locked in the db
+
+# then, we need to check the locked sentences, and its status
+# we will do that by checking the word profficiency of the sentence
+# and then unlock it if it is high enough
+
+# what if the locked sentences have already been added to anki?
+# delete it, and then add it back in later when it is unlocked
+
+# when we get sentences from db - utilize the crossrefs to also get the words
+
+# lets go!
+
 
 class MainProgram:
 

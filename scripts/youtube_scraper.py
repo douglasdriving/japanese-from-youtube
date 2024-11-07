@@ -58,6 +58,8 @@ class YoutubeScraper:
         return video_id
 
     def _add_new_words_and_sentences_to_db(self, sentences: list[JapaneseSentence]):
+
+        # add words and sentences
         added_sentences: list[JapaneseSentence] = []
         for sentence in sentences:
             added_words: list[JapaneseWord] = []
@@ -69,4 +71,10 @@ class YoutubeScraper:
             if added_sentence:
                 added_sentence.words = added_words
                 added_sentences.append(added_sentence)
+
+        # add cross references
+        for sentence in added_sentences:
+            for word in sentence.words:
+                self.db_connector.add_sentence_word_crossref(sentence.db_id, word.db_id)
+
         return added_sentences
