@@ -162,6 +162,15 @@ class DataCleaner:
                     sentence.sentence
                 )
                 for word in words:
-                    self.vocabulary_connector.add_sentence_word_crossref(
-                        sentence.db_id, word.db_id
-                    )
+                    if word.db_id is None:
+                        word = self.vocabulary_connector.add_word_if_new(word)
+                    if not word:
+                        print(f"Could not add word because it is None")
+                    elif word.db_id is not None:
+                        self.vocabulary_connector.add_sentence_word_crossref(
+                            sentence.db_id, word.db_id
+                        )
+                    else:
+                        print(
+                            f"Could not add crossref for word: {word.word} because it does not have a db id"
+                        )

@@ -28,6 +28,23 @@ class DbConnector:
             )
             return None
         if self._check_if_word_exists(word.word):
+            self.cursor.execute(
+                """
+                SELECT * FROM vocabulary WHERE word = ?
+                """,
+                (word.word,),
+            )
+            word_data = self.cursor.fetchone()
+            if word_data:
+                word = JapaneseWord(
+                    word_data[1],
+                    word_data[2],
+                    word_data[3],
+                    word_data[4],
+                    word_data[0],
+                    word_data[5],
+                )
+                return word
             return None
         try:
             self.cursor.execute(
@@ -166,6 +183,7 @@ class DbConnector:
         for row in word_data:
             word = JapaneseWord(row[1], row[2], row[3], row[4], row[0])
             words.append(word)
+        return words
 
     def get_word_if_exists(self, word_in_kana: str):
         self.cursor.execute(
