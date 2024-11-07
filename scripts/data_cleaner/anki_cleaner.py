@@ -24,10 +24,28 @@ class AnkiCleaner:
 
     def clean_data(self):
         print("Cleaning anki data...")
+        self._delete_notes_not_in_db()
         self._add_missing_cards()
         self._correct_poor_card_backs()
         self._add_missing_card_tags()
         print("Anki cleaning finished")
+
+    def _delete_notes_not_in_db(self):
+        sentences_in_db = self.vocab_connector.get_all_sentences()
+        words_in_db = self.vocab_connector.get_all_words()
+        anki_ids_in_db = [sentence.anki_id for sentence in sentences_in_db] + [
+            word.anki_id for word in words_in_db
+        ]
+        all_notes = self.anki_connector.get_all_notes()
+        ids_of_notes_to_delete = [
+            note["noteId"] for note in all_notes if note["noteId"] not in anki_ids_in_db
+        ]
+        print(
+            "deleting notes not in db from anki: ",
+            len(ids_of_notes_to_delete),
+            " (NOT ACTIVATED YET)",
+        )
+        # self.anki_connector.delete_notes(ids_of_notes_to_delete)
 
     def _add_missing_cards(self):
 

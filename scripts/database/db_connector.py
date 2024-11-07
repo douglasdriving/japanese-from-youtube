@@ -16,8 +16,16 @@ class DbConnector:
 
     def add_word_if_new(self, word: JapaneseWord):
         if not word.is_fully_defined():
-            print("ERROR: Word is not fully defined. Not adding to database.")
-            print(word)
+            print(
+                "ERROR: Word is not fully defined. Not adding to database. word: ",
+                word.word,
+                ", reading: ",
+                word.reading,
+                ", definition: ",
+                word.definition,
+                ", audio_file_path: ",
+                word.audio_file_path,
+            )
             return None
         if self._check_if_word_exists(word.word):
             return None
@@ -100,7 +108,7 @@ class DbConnector:
         data = self.cursor.fetchall()
         words: list[JapaneseWord] = []
         for row in data:
-            word = JapaneseWord(row[1], row[2], row[3], row[4], row[0])
+            word = JapaneseWord(row[1], row[2], row[3], row[4], row[0], row[5])
             words.append(word)
         return words
 
@@ -127,7 +135,7 @@ class DbConnector:
         sentences: list[JapaneseSentence] = []
         for row in data:
             sentence = JapaneseSentence(row[1], row[2], row[3], row[0])
-            sentence.anki_note_id = row[4]
+            sentence.anki_id = row[4]
             sentence.practice_interval = row[5]
             sentences.append(sentence)
         return sentences

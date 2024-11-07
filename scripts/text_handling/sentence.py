@@ -9,7 +9,7 @@ class JapaneseSentence:
     db_id: int
     words: list[JapaneseWord]
     practice_interval: int
-    anki_note_id: int
+    anki_id: int
 
     def __init__(
         self,
@@ -25,7 +25,7 @@ class JapaneseSentence:
         self.db_id = database_id
         self.words = words
         self.practice_interval = 0
-        self.anki_note_id = None
+        self.anki_id = None
 
     def is_fully_defined(self):
         return (

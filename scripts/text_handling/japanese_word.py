@@ -5,6 +5,7 @@ class JapaneseWord:
     definition: str | None
     audio_file_path: str | None
     db_id: int | None
+    anki_id: int | None
 
     def __init__(
         self,
@@ -13,12 +14,14 @@ class JapaneseWord:
         definition: str = None,
         audio_file_path: str = None,
         database_id: int = None,
+        anki_id: int = None,
     ):
         self.word = word
         self.reading = reading
         self.definition = definition
         self.audio_file_path = audio_file_path
         self.db_id = database_id
+        self.anki_id = anki_id
 
     def is_same(self, other):
         is_same_word = self.word == other.word

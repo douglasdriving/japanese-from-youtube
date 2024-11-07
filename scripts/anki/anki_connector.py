@@ -139,3 +139,19 @@ class AnkiConnector:
         else:
             print("Tags ", tag, " added successfully to notes: ", len(note_ids))
         return result
+
+    def delete_notes(self, note_ids: list[int]):
+        print("Deleting anki notes: ", len(note_ids), "...")
+        self._open_anki_if_not_running()
+        anki_request_json = {
+            "action": "deleteNotes",
+            "version": 6,
+            "params": {"notes": note_ids},
+        }
+        response = requests.post(os.environ["ANKI_CONNECT_URL"], json=anki_request_json)
+        response_json = response.json()
+        if response_json["error"] is not None:
+            print(f"Failed to delete notes. Error: {response_json['error']}")
+        else:
+            print("Anki notes deleted successfully: ", len(note_ids))
+        return response_json["result"]
