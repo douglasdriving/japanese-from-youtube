@@ -20,7 +20,6 @@ class DbConnector:
             print(word)
             return None
         if self._check_if_word_exists(word.word):
-            print("skipping adding word to db since it already exists: ", word.word)
             return None
         try:
             self.cursor.execute(
@@ -31,6 +30,7 @@ class DbConnector:
                 (word.word, word.reading, word.definition, word.audio_file_path),
             )
             self.connection.commit()
+            print(f"Added word '{word.word}' ({word.definition}) to database")
             id = self.cursor.lastrowid
             word.db_id = id
             return word
@@ -54,10 +54,6 @@ class DbConnector:
             print(sentence)
             return None
         if self.check_if_sentence_exists(sentence.sentence):
-            print(
-                "skipping adding sentence to db since it already exists: ",
-                sentence.sentence,
-            )
             return None
         added_sentence = self._insert_sentence_in_db(sentence)
         return added_sentence
@@ -76,6 +72,9 @@ class DbConnector:
                 ),
             )
             self.connection.commit()
+            print(
+                f"Added sentence '{sentence.sentence}' ({sentence.definition}) to database"
+            )
             id = self.cursor.lastrowid
             sentence.db_id = id
             return sentence
