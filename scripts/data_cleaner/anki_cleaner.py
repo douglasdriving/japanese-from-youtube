@@ -22,7 +22,7 @@ class AnkiCleaner:
         self.anki_word_adder = AnkiWordAdder()
         self.sentence_extractor = SentenceExtractor(None)
 
-    def clean_data(self):
+    def clean(self):
         print("Cleaning anki data...")
         self._delete_notes_not_in_db()
         self._add_missing_cards()
@@ -40,12 +40,7 @@ class AnkiCleaner:
         ids_of_notes_to_delete = [
             note["noteId"] for note in all_notes if note["noteId"] not in anki_ids_in_db
         ]
-        print(
-            "deleting notes not in db from anki: ",
-            len(ids_of_notes_to_delete),
-            " (NOT ACTIVATED YET)",
-        )
-        # self.anki_connector.delete_notes(ids_of_notes_to_delete)
+        self.anki_connector.delete_notes(ids_of_notes_to_delete)
 
     def _add_missing_cards(self):
 
