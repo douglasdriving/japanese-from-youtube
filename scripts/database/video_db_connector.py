@@ -52,11 +52,12 @@ class VideoDbConnector:
             sentences.append(sentence)
         return sentences
 
-    def unlock_video(self, video_id: int):
+    def unlock_video(self, youtube_id: str):
         self.db_connector.cursor.execute(
             """
-            UPDATE videos SET unlocked = 1 WHERE id = ?
+            UPDATE videos SET unlocked = 1 WHERE youtube_id = ?
             """,
-            (video_id,),
+            (youtube_id,),
         )
         self.db_connector.connection.commit()
+        print(f"Unlocked video!!!!! -> https://www.youtube.com/watch?v={youtube_id}")
