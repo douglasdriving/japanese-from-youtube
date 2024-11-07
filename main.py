@@ -18,7 +18,11 @@ class MainProgram:
         self.data_cleaner.clean_data()
         self.progress_detector.update_progress()
         self.youtube_scraper.scrape_video()
-        input("Program finished. Press Enter to exit...")
+        while True:
+            user_input = input("Press Enter to scrape another video or ESC to exit...")
+            if user_input.lower() == "esc":
+                break
+            self.youtube_scraper.scrape_video()
 
 
 main_program = MainProgram()
