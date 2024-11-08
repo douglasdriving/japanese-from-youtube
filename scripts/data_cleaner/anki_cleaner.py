@@ -1,6 +1,6 @@
 # cleans the data in anki
 from ..anki.anki_connector import AnkiConnector
-from ..database.db_connector import DbConnector
+from ..database.word_db_connector import WordDbConnector
 from ..database.sentence_db_connector import SentenceDbConnector
 from ..text_handling.japanese_word import JapaneseWord
 from ..text_handling.sentence import JapaneseSentence
@@ -13,14 +13,14 @@ import re
 class AnkiCleaner:
 
     anki_connector: AnkiConnector
-    vocab_connector: DbConnector
+    vocab_connector: WordDbConnector
     sentence_db_connector: SentenceDbConnector
     anki_word_adder: AnkiWordAdder
     sentence_extractor: SentenceExtractor
 
     def __init__(self):
         self.anki_connector = AnkiConnector()
-        self.vocab_connector = DbConnector()
+        self.vocab_connector = WordDbConnector()
         self.anki_word_adder = AnkiWordAdder()
         self.sentence_extractor = SentenceExtractor(None)
 

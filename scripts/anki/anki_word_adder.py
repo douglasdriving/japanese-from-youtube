@@ -4,7 +4,7 @@ from .anki_note import AnkiNote
 from ..text_handling.sentence import JapaneseSentence
 from ..text_handling.romaziner import Romanizer
 from .anki_connector import AnkiConnector
-from ..database.db_connector import DbConnector
+from ..database.word_db_connector import WordDbConnector
 from dotenv import load_dotenv
 
 
@@ -14,7 +14,7 @@ class AnkiWordAdder:
     anki_connect_url: str
     anki_path: str
     anki_connector: AnkiConnector
-    vocabulary_connector: DbConnector
+    vocabulary_connector: WordDbConnector
 
     def __init__(self):
         load_dotenv()
@@ -22,7 +22,7 @@ class AnkiWordAdder:
         self.anki_connect_url = os.environ["ANKI_CONNECT_URL"]
         self.anki_path = os.environ["ANKI_PATH"]
         self.anki_connector = AnkiConnector()
-        self.vocabulary_connector = DbConnector()
+        self.vocabulary_connector = WordDbConnector()
 
     def make_sentence_note(self, sentence: JapaneseSentence):
         romanizer = Romanizer()

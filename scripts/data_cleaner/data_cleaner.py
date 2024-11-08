@@ -3,7 +3,7 @@ import re
 import os
 from scripts.text_handling.speech_synthesizer import SpeechSynthesizer
 from .anki_cleaner import AnkiCleaner
-from ..database.db_connector import DbConnector
+from ..database.word_db_connector import WordDbConnector
 from ..anki.anki_connector import AnkiConnector
 from ..text_handling.word_extractor import WordExtractor
 from ..text_handling.japanese_word import JapaneseWord
@@ -14,14 +14,14 @@ class DataCleaner:
 
     connection: sqlite3.Connection
     cursor: sqlite3.Cursor
-    vocabulary_connector: DbConnector
+    vocabulary_connector: WordDbConnector
     anki_connector: AnkiConnector
     sentence_db_connector: SentenceDbConnector
 
     def __init__(self):
         self.connection = sqlite3.connect("vocabulary.db")
         self.cursor = self.connection.cursor()
-        self.vocabulary_connector = DbConnector()
+        self.vocabulary_connector = WordDbConnector()
         self.anki_connector = AnkiConnector()
         self.sentence_db_connector = SentenceDbConnector()
 

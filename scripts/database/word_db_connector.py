@@ -2,10 +2,8 @@ import sqlite3
 from ..text_handling.japanese_word import JapaneseWord
 from ..text_handling.sentence import JapaneseSentence
 
-# time to refactor
 
-
-class DbConnector:
+class WordDbConnector:
 
     connection: sqlite3.Connection
     cursor: sqlite3.Cursor
@@ -14,7 +12,6 @@ class DbConnector:
         self.connection = sqlite3.connect("vocabulary.db")
         self.cursor = self.connection.cursor()
 
-    # move to word db connector
     def add_word_if_new(self, word: JapaneseWord):
         if not word.is_fully_defined():
             print(
@@ -64,7 +61,6 @@ class DbConnector:
             print("ERROR INSERTING WORD: ", error)
             return None
 
-    # move to word db connector
     def _check_if_word_exists(self, word_in_kanji: str):
         self.cursor.execute(
             """
@@ -75,7 +71,6 @@ class DbConnector:
         word_exists = self.cursor.fetchone() is not None
         return word_exists
 
-    # move to word db connector
     def get_all_words(self):
         self.cursor.execute(
             """
@@ -89,7 +84,6 @@ class DbConnector:
             words.append(word)
         return words
 
-    # move to word db connector
     def get_words_without_anki_note_id(self):
         self.cursor.execute(
             """
@@ -103,7 +97,6 @@ class DbConnector:
             words.append(word)
         return words
 
-    # move to word db connector
     def get_words_for_sentence(self, sentence_id: int):
         self.cursor.execute(
             """
@@ -130,7 +123,6 @@ class DbConnector:
             words.append(word)
         return words
 
-    # move to word db connector
     def get_word_if_exists(self, word_in_kana: str):
         self.cursor.execute(
             """

@@ -1,4 +1,4 @@
-from .db_connector import DbConnector
+from .word_db_connector import WordDbConnector
 from ..text_handling.sentence import JapaneseSentence
 import sqlite3
 

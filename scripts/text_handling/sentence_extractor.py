@@ -1,7 +1,7 @@
 # extracts sentence data from a given japanese text
 from .sentence import JapaneseSentence
 from .speech_synthesizer import SpeechSynthesizer
-from ..database.db_connector import DbConnector
+from ..database.word_db_connector import WordDbConnector
 from .translator import Translator
 from .word_extractor import WordExtractor
 from .transcript_line import TranscriptLine
@@ -12,7 +12,7 @@ class SentenceExtractor:
 
     transcript: list[TranscriptLine]
     sentences: list[JapaneseSentence]
-    vocabulary_connector: DbConnector
+    vocabulary_connector: WordDbConnector
     word_extractor: WordExtractor
     speech_synthesizer: SpeechSynthesizer
     sentence_db_connector: SentenceDbConnector
@@ -20,7 +20,7 @@ class SentenceExtractor:
     def __init__(self, transcript: list[TranscriptLine]):
         self.transcript = transcript
         self.sentences = []
-        self.vocabulary_connector = DbConnector()
+        self.vocabulary_connector = WordDbConnector()
         self.word_extractor = WordExtractor()
         self.speech_synthesizer = SpeechSynthesizer()
         self.sentence_db_connector = SentenceDbConnector()

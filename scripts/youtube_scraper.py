@@ -1,5 +1,5 @@
 from .anki.anki_word_adder import AnkiWordAdder
-from .database.db_connector import DbConnector
+from .database.word_db_connector import WordDbConnector
 from .database.sentence_db_connector import SentenceDbConnector
 from .database.video_db_connector import VideoDbConnector
 from .text_handling.sentence_extractor import SentenceExtractor
@@ -11,13 +11,13 @@ from .text_handling.transcript_line import TranscriptLine
 
 class YoutubeScraper:
 
-    db_connector: DbConnector
+    db_connector: WordDbConnector
     video_db_connector: VideoDbConnector
     youtube_transcriber: YoutubeTranscriber
     anki_word_adder: AnkiWordAdder
 
     def __init__(self):
-        self.db_connector = DbConnector()
+        self.db_connector = WordDbConnector()
         self.video_db_connector = VideoDbConnector()
         self.youtube_transcriber = YoutubeTranscriber()
         self.anki_word_adder = AnkiWordAdder()
