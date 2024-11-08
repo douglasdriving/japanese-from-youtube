@@ -4,6 +4,8 @@ from scripts.progress_detector.progress_detector import ProgressDetector
 
 # now: unlock sentences only after the word profficiency is high enough!
 
+# ------------------------------------------------
+
 # then, we need to mark sentences as locked in the db
 
 # then, we need to check the locked sentences, and its status

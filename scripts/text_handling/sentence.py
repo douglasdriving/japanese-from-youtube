@@ -10,6 +10,7 @@ class JapaneseSentence:
     words: list[JapaneseWord]
     practice_interval: int
     anki_id: int
+    unlocked: bool = False
 
     def __init__(
         self,
@@ -18,6 +19,7 @@ class JapaneseSentence:
         audio_file: str = None,
         database_id: int = None,
         words: list[JapaneseWord] = None,
+        unlocked: bool = False,
     ):
         self.sentence = sentence
         self.definition = definition
@@ -26,6 +28,7 @@ class JapaneseSentence:
         self.words = words
         self.practice_interval = 0
         self.anki_id = None
+        self.unlocked = False
 
     def is_fully_defined(self):
         return (

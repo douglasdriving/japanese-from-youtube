@@ -1,4 +1,5 @@
 from ..text_handling.sentence import JapaneseSentence
+from .word_db_connector import WordDbConnector
 import sqlite3
 
 
@@ -6,10 +7,12 @@ class SentenceDbConnector:
 
     connection: sqlite3.Connection
     cursor: sqlite3.Cursor
+    word_connector: WordDbConnector
 
     def __init__(self):
         self.connection = sqlite3.connect("vocabulary.db")
         self.cursor = self.connection.cursor()
+        self.word_connector = WordDbConnector()
 
     def add_sentence_if_new(self, sentence: JapaneseSentence):
         if not sentence.is_fully_defined():
@@ -61,15 +64,24 @@ class SentenceDbConnector:
             """
         )
         data = self.cursor.fetchall()
-        sentences: list[JapaneseSentence] = []
-        for row in data:
-            sentence = JapaneseSentence(row[1], row[2], row[3], row[0])
-            sentence.anki_id = row[4]
-            sentence.practice_interval = row[5]
-            sentences.append(sentence)
-        for sentence in sentences:
-            sentence.words = self.get_words_for_sentence(sentence.db_id)
+        sentences = self._make_sentences(data)
         return sentences
+
+    def _make_sentences(self, table_data):
+        sentences: list[JapaneseSentence] = []
+        for row in table_data:
+            sentence = self._make_sentence(row)
+            sentences.append(sentence)
+        return sentences
+
+    def _make_sentence(self, table_row):
+        sentence = JapaneseSentence(
+            table_row[1], table_row[2], table_row[3], table_row[0], None, table_row[6]
+        )
+        sentence.anki_id = table_row[4]
+        sentence.practice_interval = table_row[5]
+        sentence.words = self.word_connector.get_words_for_sentence(sentence.db_id)
+        return sentence
 
     def get_sentence_by_definition(self, english_sentence: str):
         self.cursor.execute(
@@ -78,13 +90,11 @@ class SentenceDbConnector:
             """,
             (english_sentence,),
         )
-        sentence_data = self.cursor.fetchone()
-        if sentence_data is None:
+        row = self.cursor.fetchone()
+        if row is None:
             return None
         else:
-            sentence = JapaneseSentence(
-                sentence_data[1], sentence_data[2], sentence_data[3], sentence_data[0]
-            )
+            sentence = self._make_sentence(row)
             return sentence
 
     def get_sentence_by_kana_text(self, kana_sentence: str):
@@ -94,13 +104,11 @@ class SentenceDbConnector:
             """,
             (kana_sentence,),
         )
-        sentence_data = self.cursor.fetchone()
-        if sentence_data is None:
+        row = self.cursor.fetchone()
+        if row is None:
             return None
         else:
-            sentence = JapaneseSentence(
-                sentence_data[1], sentence_data[2], sentence_data[3], sentence_data[0]
-            )
+            sentence = self._make_sentence(row)
             return sentence
 
     def get_sentences_without_anki_note_id(self):
@@ -110,10 +118,7 @@ class SentenceDbConnector:
             """
         )
         data = self.cursor.fetchall()
-        sentences: list[JapaneseSentence] = []
-        for row in data:
-            sentence = JapaneseSentence(row[1], row[2], row[3], row[0])
-            sentences.append(sentence)
+        sentences = self._make_sentences(data)
         return sentences
 
     def update_sentence_practice_intervals(self, sentences: list[JapaneseSentence]):
@@ -148,34 +153,23 @@ class SentenceDbConnector:
             print("ERROR INSERTING SENTENCE WORD CROSSREF: ", error)
 
     def get_sentences_for_video(self, id: int):
-        self.db_connector.cursor.execute(
+        self.cursor.execute(
             """
             SELECT sentence_id FROM videos_sentences WHERE video_id = ?
             """,
             (id,),
         )
-        sentence_ids = [row[0] for row in self.db_connector.cursor.fetchall()]
+        sentence_ids = [row[0] for row in self.cursor.fetchall()]
 
         if not sentence_ids:
             return []
 
-        self.db_connector.cursor.execute(
+        self.cursor.execute(
             f"""
             SELECT * FROM sentences WHERE id IN ({','.join('?' for _ in sentence_ids)})
             """,
             sentence_ids,
         )
-        data = self.db_connector.cursor.fetchall()
-        # would be useful with a function that transforms the db data into a list of JapaneseSentence objects
-        sentences: list[JapaneseSentence] = []
-        for sentence_data in data:
-            sentence = JapaneseSentence(
-                sentence_data[1],
-                sentence_data[2],
-                sentence_data[3],
-                sentence_data[0],
-            )
-            sentence.anki_id = sentence_data[4]
-            sentence.practice_interval = sentence_data[5]
-            sentences.append(sentence)
+        data = self.cursor.fetchall()
+        sentences = self._make_sentences(data)
         return sentences
