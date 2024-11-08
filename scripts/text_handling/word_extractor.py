@@ -31,7 +31,9 @@ class WordExtractor:
         cleaned_text = self._clean_text(text)
         tokens_result = Tokens.request(cleaned_text)
         if not tokens_result or not tokens_result.data:
-            warnings.warn(f"Could not find tokens in Jisho API: {cleaned_text}")
+            print(
+                f"WARNING: Could not find tokens in Jisho API. Will not return unique words for text: {cleaned_text}"
+            )
             return None
         tokens = tokens_result.data
         clean_tokens = self._cleanup_tokens(tokens)

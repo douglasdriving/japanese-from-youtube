@@ -6,8 +6,6 @@ from scripts.progress_detector.progress_detector import ProgressDetector
 
 # ------------------------------------------------
 
-# then, we need to mark sentences as locked in the db
-
 # then, we need to check the locked sentences, and its status
 # we will do that by checking the word profficiency of the sentence
 # and then unlock it if it is high enough
