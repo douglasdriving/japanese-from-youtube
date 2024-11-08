@@ -14,40 +14,7 @@ class SentenceDbConnector:
         self.cursor = self.connection.cursor()
         self.word_connector = WordDbConnector()
 
-    def add_sentence_if_new(self, sentence: JapaneseSentence):
-        if not sentence.is_fully_defined():
-            print("ERROR: Sentence is not fully defined. Not adding to database.")
-            print(sentence)
-            return None
-        if self.check_if_sentence_exists(sentence.sentence):
-            return None
-        added_sentence = self._insert_sentence_in_db(sentence)
-        return added_sentence
-
-    def _insert_sentence_in_db(self, sentence: JapaneseSentence):
-        try:
-            self.cursor.execute(
-                """
-                INSERT INTO sentences (sentence, definition, audio_file_path)
-                VALUES (?, ?, ?)
-                """,
-                (
-                    sentence.sentence,
-                    sentence.definition,
-                    sentence.audio_file_path,
-                ),
-            )
-            self.connection.commit()
-            print(
-                f"Added sentence '{sentence.sentence}' ({sentence.definition}) to database"
-            )
-            id = self.cursor.lastrowid
-            sentence.db_id = id
-            return sentence
-        except sqlite3.Error as error:
-            print("ERROR INSERTING SENTENCE: ", error)
-            return None
-
+    # check
     def check_if_sentence_exists(self, sentence):
         self.cursor.execute(
             """
@@ -57,6 +24,7 @@ class SentenceDbConnector:
         )
         return self.cursor.fetchone() is not None
 
+    # get
     def get_all_sentences(self):
         self.cursor.execute(
             """
@@ -67,21 +35,15 @@ class SentenceDbConnector:
         sentences = self._make_sentences(data)
         return sentences
 
-    def _make_sentences(self, table_data):
-        sentences: list[JapaneseSentence] = []
-        for row in table_data:
-            sentence = self._make_sentence(row)
-            sentences.append(sentence)
-        return sentences
-
-    def _make_sentence(self, table_row):
-        sentence = JapaneseSentence(
-            table_row[1], table_row[2], table_row[3], table_row[0], None, table_row[6]
+    def get_locked_sentences(self):
+        self.cursor.execute(
+            """
+            SELECT * FROM sentences WHERE unlocked = 0
+            """
         )
-        sentence.anki_id = table_row[4]
-        sentence.practice_interval = table_row[5]
-        sentence.words = self.word_connector.get_words_for_sentence(sentence.db_id)
-        return sentence
+        data = self.cursor.fetchall()
+        sentences = self._make_sentences(data)
+        return sentences
 
     def get_sentence_by_definition(self, english_sentence: str):
         self.cursor.execute(
@@ -149,37 +111,6 @@ class SentenceDbConnector:
             sentence = self._make_sentence(row)
             return sentence
 
-    def update_sentence_practice_intervals(self, sentences: list[JapaneseSentence]):
-        for sentence in sentences:
-            self.cursor.execute(
-                """
-                UPDATE sentences
-                SET practice_interval = ?
-                WHERE id = ?
-                """,
-                (sentence.practice_interval, sentence.db_id),
-            )
-            self.connection.commit()
-            print(
-                f"Updated practice interval for sentence {sentence.sentence} to {sentence.practice_interval}"
-            )
-
-    def add_sentence_word_crossref(self, sentence_id: int, word_id: int):
-        try:
-            self.cursor.execute(
-                """
-                INSERT INTO sentences_words (sentence_id, word_id)
-                VALUES (?, ?)
-                """,
-                (sentence_id, word_id),
-            )
-            self.connection.commit()
-            print(
-                f"Added sentence-word crossref to database with sentence_id {sentence_id} and word_id {word_id}"
-            )
-        except sqlite3.Error as error:
-            print("ERROR INSERTING SENTENCE WORD CROSSREF: ", error)
-
     def get_sentences_for_video(self, id: int):
         self.cursor.execute(
             """
@@ -202,6 +133,49 @@ class SentenceDbConnector:
         sentences = self._make_sentences(data)
         return sentences
 
+    # add
+    def add_sentence_if_new(self, sentence: JapaneseSentence):
+        if not sentence.is_fully_defined():
+            print("ERROR: Sentence is not fully defined. Not adding to database.")
+            print(sentence)
+            return None
+        if self.check_if_sentence_exists(sentence.sentence):
+            return None
+        added_sentence = self._insert_sentence_in_db(sentence)
+        return added_sentence
+
+    def add_sentence_word_crossref(self, sentence_id: int, word_id: int):
+        try:
+            self.cursor.execute(
+                """
+                INSERT INTO sentences_words (sentence_id, word_id)
+                VALUES (?, ?)
+                """,
+                (sentence_id, word_id),
+            )
+            self.connection.commit()
+            print(
+                f"Added sentence-word crossref to database with sentence_id {sentence_id} and word_id {word_id}"
+            )
+        except sqlite3.Error as error:
+            print("ERROR INSERTING SENTENCE WORD CROSSREF: ", error)
+
+    # update
+    def update_sentence_practice_intervals(self, sentences: list[JapaneseSentence]):
+        for sentence in sentences:
+            self.cursor.execute(
+                """
+                UPDATE sentences
+                SET practice_interval = ?
+                WHERE id = ?
+                """,
+                (sentence.practice_interval, sentence.db_id),
+            )
+            self.connection.commit()
+            print(
+                f"Updated practice interval for sentence {sentence.sentence} to {sentence.practice_interval}"
+            )
+
     def update_audio_file_path(self, audio_file_path: str, sentence_id: int):
         self.cursor.execute(
             """
@@ -216,6 +190,19 @@ class SentenceDbConnector:
             f"Updated audio file path for sentence {sentence_id} to {audio_file_path}"
         )
 
+    def unlock_sentences(self, sentence_ids: list[int]):
+        self.cursor.execute(
+            f"""
+            UPDATE sentences
+            SET unlocked = 1
+            WHERE id IN ({','.join('?' for _ in sentence_ids)})
+            """,
+            sentence_ids,
+        )
+        self.connection.commit()
+        print(f"Unlocked sentences with ids {sentence_ids}")
+
+    # delete
     def delete_sentence(self, sentence_id: int):
         self.cursor.execute(
             """
@@ -225,3 +212,44 @@ class SentenceDbConnector:
         )
         self.connection.commit()
         print(f"Deleted sentence with id {sentence_id}")
+
+    # helpers
+    def _make_sentences(self, table_data):
+        sentences: list[JapaneseSentence] = []
+        for row in table_data:
+            sentence = self._make_sentence(row)
+            sentences.append(sentence)
+        return sentences
+
+    def _make_sentence(self, table_row):
+        sentence = JapaneseSentence(
+            table_row[1], table_row[2], table_row[3], table_row[0], None, table_row[6]
+        )
+        sentence.anki_id = table_row[4]
+        sentence.practice_interval = table_row[5]
+        sentence.words = self.word_connector.get_words_for_sentence(sentence.db_id)
+        return sentence
+
+    def _insert_sentence_in_db(self, sentence: JapaneseSentence):
+        try:
+            self.cursor.execute(
+                """
+                INSERT INTO sentences (sentence, definition, audio_file_path)
+                VALUES (?, ?, ?)
+                """,
+                (
+                    sentence.sentence,
+                    sentence.definition,
+                    sentence.audio_file_path,
+                ),
+            )
+            self.connection.commit()
+            print(
+                f"Added sentence '{sentence.sentence}' ({sentence.definition}) to database"
+            )
+            id = self.cursor.lastrowid
+            sentence.db_id = id
+            return sentence
+        except sqlite3.Error as error:
+            print("ERROR INSERTING SENTENCE: ", error)
+            return None

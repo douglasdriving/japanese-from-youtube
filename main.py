@@ -6,20 +6,24 @@ from scripts.progress_detector.progress_detector import ProgressDetector
 
 # ------------------------------------------------
 
-# then, we need to check the locked sentences, and its status
-# we will do that by checking the word profficiency of the sentence
-# and then unlock it if it is high enough
+# when we unlock the sentence, we should also add the anki card for it!
+# and add that card to the top of the deck.
+# PROBLEM: we cant change to card order. ankis algorithm determines that
+# so what we probably have to do is add all sentence cards by default when we scrape them, but also SUSPEND those cards (if they are not unlocked)
+# then, when we unlock the sentence, we unsuspend the card card
 
 # what if the locked sentences have already been added to anki?
 # delete it, and then add it back in later when it is unlocked
 
+# when we are cleaning anki and want to add sentence cards that are missing from the db, make sure we dont add the locked ones
+
 # when we get sentences from db - utilize the crossrefs to also get the words
+
+# make sure that sentences are not added to anki initially during the youtube scraping
 
 # lets go!
 
 # -------- BUGS ------------
-
-# sometimes, it seems like we are trying to break down a sentence that is actually just a word.
 
 
 class MainProgram:

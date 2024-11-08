@@ -74,6 +74,53 @@ class AnkiWordAdder:
             notes.append(sentence_note)
         self.add_notes_to_anki_and_mark_in_db(notes)
 
+    def add_sentences_to_deck_top(self, sentences: list[JapaneseSentence]):
+        self.anki_connector._open_anki_if_not_running()
+        notes: list[AnkiNote] = []
+        for sentence in sentences:
+            if sentence.db_id is None:
+                print(
+                    f"Warning: Sentence {sentence.sentence} has no database ID. Skipping adding to Anki."
+                )
+                continue
+            sentence_note = self.make_sentence_note(sentence)
+            notes.append(sentence_note)
+        self.add_notes_to_anki_and_mark_in_db(notes)
+
+    def _move_cards_to_top(self, card_ids: list[int]):
+        # actually, this does not seem like something we can do
+        pass
+
+    def _suspend_cards(self, card_ids: list[int]):
+        self.anki_connector._open_anki_if_not_running()
+        request_json = {
+            "action": "suspend",
+            "version": 6,
+            "params": {"cards": card_ids},
+        }
+        response = requests.post(self.anki_connect_url, json=request_json)
+        response_json = response.json()
+        if response_json["error"] is not None:
+            print(
+                f"Failed to move cards to top of deck. Error: {response_json['error']}"
+            )
+        return response_json["result"]
+
+    def _unsuspend_cards(self, card_ids: list[int]):
+        self.anki_connector._open_anki_if_not_running()
+        request_json = {
+            "action": "unsuspend",
+            "version": 6,
+            "params": {"cards": card_ids},
+        }
+        response = requests.post(self.anki_connect_url, json=request_json)
+        response_json = response.json()
+        if response_json["error"] is not None:
+            print(
+                f"Failed to move cards to top of deck. Error: {response_json['error']}"
+            )
+        return response_json["result"]
+
     def _get_card_options(self):
         options = (
             {

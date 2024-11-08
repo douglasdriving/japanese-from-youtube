@@ -1,33 +1,34 @@
 from ..anki.anki_connector import AnkiConnector
+from ..anki.anki_word_adder import AnkiWordAdder
+from ..anki.anki_note import AnkiNote
 from ..database.sentence_db_connector import SentenceDbConnector
 from ..database.word_db_connector import WordDbConnector
 from ..text_handling.japanese_sentence import JapaneseSentence
 from ..text_handling.japanese_word import JapaneseWord
 from ..database.video_db_connector import VideoDbConnector
+from ..database.word_db_connector import WordDbConnector
 
 
 class ProgressDetector:
 
     video_db_connector: VideoDbConnector
     sentence_db_connector: SentenceDbConnector
+    anki_connector: AnkiConnector
 
     def __init__(self):
         self.video_db_connector = VideoDbConnector()
         self.sentence_db_connector = SentenceDbConnector()
+        self.anki_connector = AnkiConnector()
 
     def update_progress(self):
         self._update_word_progress()
         self._update_sentence_progress()
-        youtube_ids_of_videos_to_unlock = (
-            self._get_youtube_ids_of_videos_that_can_be_unlocked()
-        )
-        for youtube_video_id in youtube_ids_of_videos_to_unlock:
-            self.video_db_connector.unlock_video(youtube_video_id)
+        self._unlock_sentences()
+        self._unlock_youtube_videos()
 
     def _update_word_progress(self):
         # get all anki cards
-        anki_connector = AnkiConnector()
-        anki_cards = anki_connector.get_all_anki_cards()
+        anki_cards = self.anki_connector.get_all_anki_cards()
 
         # get all sentences
         word_connector = WordDbConnector()
@@ -50,8 +51,7 @@ class ProgressDetector:
     def _update_sentence_progress(self):
 
         # get all anki cards
-        anki_connector = AnkiConnector()
-        anki_cards = anki_connector.get_all_anki_cards()
+        anki_cards = self.anki_connector.get_all_anki_cards()
 
         # get all sentences
         sentences = self.sentence_db_connector.get_all_sentences()
@@ -76,6 +76,48 @@ class ProgressDetector:
         self.sentence_db_connector.update_sentence_practice_intervals(
             sentences_with_updated_practice_intervals
         )
+
+    def _unlock_sentences(self):
+
+        # get all locked sentences
+        locked_sentences: list[JapaneseSentence] = (
+            self.sentence_db_connector.get_locked_sentences()
+        )
+
+        # find sentences ready to unlock
+        sentences_to_unlock = self._get_sentences_to_unlock(locked_sentences)
+        if sentences_to_unlock is None or len(sentences_to_unlock) == 0:
+            return
+
+        # unlock them
+        ids_of_sentences_to_unlock = [
+            sentence.db_id for sentence in sentences_to_unlock
+        ]
+        self.sentence_db_connector.unlock_sentences(ids_of_sentences_to_unlock)
+
+        # add them to anki
+        # SHOULD PROBABLY jUST unsuspend them instead. they should already be in anki
+        # anki_word_adder = AnkiWordAdder()
+        # anki_word_adder.add_sentences_to_deck_top(sentences_to_unlock)
+
+    def _get_sentences_to_unlock(self, locked_sentences):
+        sentences_to_unlock: list[JapaneseSentence] = []
+        for sentence in locked_sentences:
+            words_ready = True
+            for word in sentence.words:
+                if not (word.practice_interval > 3):
+                    words_ready = False
+                    break
+            if words_ready:
+                sentences_to_unlock.append(sentence)
+        return sentences_to_unlock
+
+    def _unlock_youtube_videos(self):
+        youtube_ids_of_videos_to_unlock = (
+            self._get_youtube_ids_of_videos_that_can_be_unlocked()
+        )
+        for youtube_video_id in youtube_ids_of_videos_to_unlock:
+            self.video_db_connector.unlock_video(youtube_video_id)
 
     def _get_youtube_ids_of_videos_that_can_be_unlocked(self):
 
