@@ -7,6 +7,7 @@ from ..database.word_db_connector import WordDbConnector
 from ..anki.anki_connector import AnkiConnector
 from ..text_handling.word_extractor import WordExtractor
 from ..text_handling.japanese_word import JapaneseWord
+from ..text_handling.japanese_sentence import JapaneseSentence
 from ..database.sentence_db_connector import SentenceDbConnector
 
 
@@ -14,16 +15,18 @@ class DataCleaner:
 
     connection: sqlite3.Connection
     cursor: sqlite3.Cursor
-    vocabulary_connector: WordDbConnector
+    word_db_connector: WordDbConnector
     anki_connector: AnkiConnector
     sentence_db_connector: SentenceDbConnector
+    speech_synthesizer: SpeechSynthesizer
 
     def __init__(self):
         self.connection = sqlite3.connect("vocabulary.db")
         self.cursor = self.connection.cursor()
-        self.vocabulary_connector = WordDbConnector()
+        self.word_db_connector = WordDbConnector()
         self.anki_connector = AnkiConnector()
         self.sentence_db_connector = SentenceDbConnector()
+        self.speech_synthesizer = SpeechSynthesizer()
 
     def clean_data(self):
         print("Cleaning data...")
@@ -33,60 +36,69 @@ class DataCleaner:
         anki_cleaner.clean()
         self._add_missing_anki_ids()
 
+    ## audio file name cleaning - separate class?
     def _clean_audio_file_names(self):
         print("Cleaning audio file names...")
-        self._clean_audio_file_names_in_table("vocabulary")
-        self._clean_audio_file_names_in_table("sentences")
+        self._clean_word_audio_file_names()
+        self._clean_sentence_audio_file_names()
         self._delete_all_audio_files_with_wrong_pattern()
 
-    def _clean_audio_file_names_in_table(self, table="vocabulary"):
+    def _clean_word_audio_file_names(self):
+        words = self.word_db_connector.get_all_words()
+        audio_file_pattern = self._get_audio_file_pattern()
+        for word in words:
+            if not os.path.exists(word.audio_file_path):
+                self._make_new_audio_for_word(word)
+            elif not audio_file_pattern.match(word.audio_file_path):
+                self._rename_word_audio(word)
 
-        data = (
-            self.vocabulary_connector.get_all_words()
-            if table == "vocabulary"
-            else self.sentence_db_connector.get_all_sentences()
+    def _rename_word_audio(self, word: JapaneseWord):
+        new_file_path = (
+            f"./audios/w{self.speech_synthesizer.get_highest_audio_id(False)+1}.wav"
         )
+        self.word_db_connector.update_audio_file_path(new_file_path, word.db_id)
+        self.connection.commit()
+        os.rename(word.audio_file_path, new_file_path)
+        print(f"Renamed {word.audio_file_path} to {new_file_path}")
 
-        corrent_audio_file_patter = (
-            re.compile(r"./audios/w\d+\.wav")
-            if table == "vocabulary"
-            else re.compile(r"./audios/s\d+\.wav")
+    def _make_new_audio_for_word(self, word: JapaneseWord):
+        new_audio_file = self.speech_synthesizer.save_jp_text_as_audio(word.word, False)
+        self.word_db_connector.update_audio_file_path(word.db_id, new_audio_file)
+        print(f"Added audio file for {word.word} to {new_audio_file}")
+
+    def _get_audio_file_pattern(self, audio_type="word"):
+        if audio_type == "word":
+            return re.compile(r"./audios/w\d+\.wav")
+        if audio_type == "sentence":
+            return re.compile(r"./audios/s\d+\.wav")
+        print("Invalid audio type: ", audio_type)
+        return None
+
+    def _clean_sentence_audio_file_names(self):
+        sentences = self.sentence_db_connector.get_all_sentences()
+        audio_file_pattern = self._get_audio_file_pattern("sentence")
+        for sentence in sentences:
+            if not os.path.exists(sentence.audio_file_path):
+                self._make_new_audio_for_sentence(sentence)
+            elif not audio_file_pattern.match(sentence.audio_file_path):
+                self._rename_sentence_audio(sentence)
+
+    def _rename_sentence_audio(self, sentence: JapaneseSentence):
+        new_file_path = (
+            f"./audios/s{self.speech_synthesizer.get_highest_audio_id(True)+1}.wav"
         )
+        self.sentence_db_connector.update_audio_file_path(new_file_path, sentence.db_id)
+        os.rename(sentence.audio_file_path, new_file_path)
+        print(f"Renamed {sentence.audio_file_path} to {new_file_path}")
 
-        for entry in data:
-            id = entry[0]
-            text = entry[1]
-            audio_file_path = entry[4] if table == "vocabulary" else entry[3]
-            if not os.path.exists(audio_file_path):
-                synthesizer = SpeechSynthesizer()
-                new_audio_file = synthesizer.save_jp_text_as_audio(
-                    text, id, table == "sentences"
-                )
-                self.cursor.execute(
-                    f"""
-                    UPDATE {table}
-                    SET audio_file_path = ?
-                    WHERE id = ?
-                    """,
-                    (new_audio_file, id),
-                )
-                self.connection.commit()
-                print(f"Added audio file for {text} to {new_audio_file}")
-            elif not corrent_audio_file_patter.match(audio_file_path):
-                signifier = "s" if table == "sentences" else "w"
-                new_file_path = f"./audios/{signifier}{id}.wav"
-                table_name = "sentences" if table == "sentences" else "vocabulary"
-                self.cursor.execute(
-                    f"""
-                    UPDATE {table_name}
-                    SET audio_file_path = ?
-                    WHERE id = ?
-                    """,
-                    (new_file_path, id),
-                )
-                self.connection.commit()
-                os.rename(audio_file_path, new_file_path)
-                print(f"Renamed {audio_file_path} to {new_file_path}")
+    def _make_new_audio_for_sentence(self, sentence: JapaneseSentence):
+        new_audio_file = self.speech_synthesizer.save_jp_text_as_audio(
+            sentence.sentence, True
+        )
+        self.sentence_db_connector.update_audio_file_path(
+            sentence.db_id, new_audio_file
+        )
+        print(f"Added audio file for {sentence.sentence} to {new_audio_file}")
 
     def _delete_all_audio_files_with_wrong_pattern(self):
         audio_files = os.listdir("./audios")
@@ -99,11 +111,12 @@ class DataCleaner:
                     f"Deleted {audio_file} from audios folder since it is not in correct format"
                 )
 
+    ## anki id and crossref adding
     def _add_missing_anki_ids(self):
 
         def update_words(all_anki_notes):
             print("Updating words...")
-            words_to_update = self.vocabulary_connector.get_words_without_anki_note_id()
+            words_to_update = self.word_db_connector.get_words_without_anki_note_id()
             for word in words_to_update:
                 anki_note = next(
                     (
@@ -119,7 +132,7 @@ class DataCleaner:
                     )
                 else:
                     anki_id = anki_note["noteId"]
-                    self.vocabulary_connector.update_anki_note_id(
+                    self.word_db_connector.update_anki_note_id(
                         "vocabulary", word.db_id, anki_id
                     )
 
@@ -146,7 +159,7 @@ class DataCleaner:
                     )
                 else:
                     anki_id = anki_note["noteId"]
-                    self.vocabulary_connector.update_anki_note_id(
+                    self.word_db_connector.update_anki_note_id(
                         "sentences", sentence.db_id, anki_id
                     )
 
@@ -166,7 +179,7 @@ class DataCleaner:
                 )
                 for word in words:
                     if word.db_id is None:
-                        word = self.vocabulary_connector.add_word_if_new(word)
+                        word = self.word_db_connector.add_word_if_new(word)
                     if not word:
                         print(f"Could not add word because it is None")
                     elif word.db_id is not None:

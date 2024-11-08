@@ -1,4 +1,4 @@
-from ..text_handling.japanese_word import JapaneseWord
+from .japanese_word import JapaneseWord
 
 
 class JapaneseSentence:

@@ -19,7 +19,7 @@ class SpeechSynthesizer:
         )
 
     def save_jp_text_as_audio(self, kana_text: str, is_sentence: bool):
-        highest_id = self._get_highest_audio_id(is_sentence)
+        highest_id = self.get_highest_audio_id(is_sentence)
         audio_file_path = f"./audios/w{highest_id+1}.wav"
         if is_sentence:
             audio_file_path = f"./audios/s{highest_id+1}.wav"
@@ -27,7 +27,7 @@ class SpeechSynthesizer:
             self._create_and_save_new_audio(kana_text, audio_file_path)
         return audio_file_path
 
-    def _get_highest_audio_id(self, is_sentence: bool):
+    def get_highest_audio_id(self, is_sentence: bool):
         if is_sentence:
             return self._get_highest_sentence_audio_id()
         else:

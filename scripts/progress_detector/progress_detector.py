@@ -1,7 +1,7 @@
 from ..anki.anki_connector import AnkiConnector
 from ..database.sentence_db_connector import SentenceDbConnector
 from ..database.word_db_connector import WordDbConnector
-from ..text_handling.sentence import JapaneseSentence
+from ..text_handling.japanese_sentence import JapaneseSentence
 from ..text_handling.japanese_word import JapaneseWord
 from ..database.video_db_connector import VideoDbConnector
 

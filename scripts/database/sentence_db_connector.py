@@ -1,4 +1,4 @@
-from ..text_handling.sentence import JapaneseSentence
+from ..text_handling.japanese_sentence import JapaneseSentence
 from .word_db_connector import WordDbConnector
 import sqlite3
 
@@ -173,3 +173,17 @@ class SentenceDbConnector:
         data = self.cursor.fetchall()
         sentences = self._make_sentences(data)
         return sentences
+
+    def update_audio_file_path(self, audio_file_path: str, sentence_id: int):
+        self.cursor.execute(
+            """
+            UPDATE sentences
+            SET audio_file_path = ?
+            WHERE id = ?
+            """,
+            (audio_file_path, sentence_id),
+        )
+        self.connection.commit()
+        print(
+            f"Updated audio file path for sentence {sentence_id} to {audio_file_path}"
+        )

@@ -1,7 +1,7 @@
 import requests
 import os
 from .anki_note import AnkiNote
-from ..text_handling.sentence import JapaneseSentence
+from ..text_handling.japanese_sentence import JapaneseSentence
 from ..text_handling.romaziner import Romanizer
 from .anki_connector import AnkiConnector
 from ..database.word_db_connector import WordDbConnector

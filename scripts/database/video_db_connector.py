@@ -1,5 +1,5 @@
 from .word_db_connector import WordDbConnector
-from ..text_handling.sentence import JapaneseSentence
+from ..text_handling.japanese_sentence import JapaneseSentence
 import sqlite3
 
 

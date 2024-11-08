@@ -1,5 +1,5 @@
 # extracts sentence data from a given japanese text
-from .sentence import JapaneseSentence
+from .japanese_sentence import JapaneseSentence
 from .speech_synthesizer import SpeechSynthesizer
 from ..database.word_db_connector import WordDbConnector
 from .translator import Translator

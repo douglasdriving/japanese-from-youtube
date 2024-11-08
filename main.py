@@ -17,6 +17,10 @@ from scripts.progress_detector.progress_detector import ProgressDetector
 
 # lets go!
 
+# -------- BUGS ------------
+
+# sometimes, it seems like we are trying to break down a sentence that is actually just a word.
+
 
 class MainProgram:
 

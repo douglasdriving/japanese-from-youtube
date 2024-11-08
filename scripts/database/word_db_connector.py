@@ -1,6 +1,6 @@
 import sqlite3
 from ..text_handling.japanese_word import JapaneseWord
-from ..text_handling.sentence import JapaneseSentence
+from ..text_handling.japanese_sentence import JapaneseSentence
 
 
 class WordDbConnector:
@@ -164,3 +164,14 @@ class WordDbConnector:
         print(
             f"Updated practice interval for {word.word} to {word.practice_interval} in database"
         )
+
+    def update_audio_file_path(self, audio_file_path: str, word_id: int):
+        self.cursor.execute(
+            """
+            UPDATE vocabulary
+            SET audio_file_path = ?
+            WHERE id = ?
+            """,
+            (audio_file_path, word_id),
+        )
+        self.connection.commit()
