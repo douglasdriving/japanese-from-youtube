@@ -13,53 +13,59 @@ class WordDbConnector:
         self.cursor = self.connection.cursor()
 
     def add_word_if_new(self, word: JapaneseWord):
-        if not word.is_fully_defined():
-            print(
-                "ERROR: Word is not fully defined. Not adding to database. word: ",
-                word.word,
-                ", reading: ",
-                word.reading,
-                ", definition: ",
-                word.definition,
-                ", audio_file_path: ",
-                word.audio_file_path,
-            )
-            return None
+
         if self._check_if_word_exists(word.word):
-            self.cursor.execute(
-                """
-                SELECT * FROM vocabulary WHERE word = ?
-                """,
-                (word.word,),
-            )
-            word_data = self.cursor.fetchone()
-            if word_data:
-                word = JapaneseWord(
-                    word_data[1],
-                    word_data[2],
-                    word_data[3],
-                    word_data[4],
-                    word_data[0],
-                    word_data[5],
-                )
-                return word
+            return self._get_word(word.db_id)
+
+        if not word.word:
+            print("Word has no kana, cant add to database")
             return None
+
+        if not word.definition:
+            print("Warning: Word has no definition, cant insert into database")
+            return None
+
+        if not word.audio_file_path:
+            print("Warning: Word has no audio file path, cant insert into database")
+            return None
+
+        if not word.reading:
+            print("Warning: Word has no reading, will insert with kana as reading")
+            word.reading = word.word
+
         try:
-            self.cursor.execute(
-                """
-                    INSERT INTO vocabulary (word, reading, definition, audio_file_path)
-                    VALUES (?, ?, ?, ?)
-                """,
-                (word.word, word.reading, word.definition, word.audio_file_path),
-            )
-            self.connection.commit()
-            print(f"Added word '{word.word}' ({word.definition}) to database")
-            id = self.cursor.lastrowid
-            word.db_id = id
+            word = self._add_word(word)
             return word
         except sqlite3.Error as error:
             print("ERROR INSERTING WORD: ", error)
             return None
+
+    def _add_word(self, word: JapaneseWord):
+        self.cursor.execute(
+            """
+            INSERT INTO vocabulary (word, reading, definition, audio_file_path)
+            VALUES (?, ?, ?, ?)
+            """,
+            (word.word, word.reading, word.definition, word.audio_file_path),
+        )
+        self.connection.commit()
+        print(f"Added word '{word.word}' ({word.definition}) to database")
+        id = self.cursor.lastrowid
+        word.db_id = id
+        return word
+
+    def _get_word(self, id: int):
+        word = None
+        self.cursor.execute(
+            """
+                SELECT * FROM vocabulary WHERE id = ?
+                """,
+            (id,),
+        )
+        row = self.cursor.fetchone()
+        if row:
+            word = self._make_word(row)
+        return word
 
     def _check_if_word_exists(self, word_in_kanji: str):
         self.cursor.execute(

@@ -32,11 +32,3 @@ class JapaneseWord:
         is_same_definition = self.definition == other.translation
         is_exact_same_word = is_same_word and is_same_reading and is_same_definition
         return is_exact_same_word
-
-    def is_fully_defined(self):
-        return (
-            self.word != None
-            and self.reading != None
-            and self.definition != None
-            and self.audio_file_path != None
-        )
