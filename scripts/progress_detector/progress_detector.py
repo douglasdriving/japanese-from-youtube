@@ -1,6 +1,8 @@
 from ..anki.anki_connector import AnkiConnector
 from ..database.sentence_db_connector import SentenceDbConnector
+from ..database.word_db_connector import WordDbConnector
 from ..text_handling.sentence import JapaneseSentence
+from ..text_handling.japanese_word import JapaneseWord
 from ..database.video_db_connector import VideoDbConnector
 
 
@@ -14,12 +16,37 @@ class ProgressDetector:
         self.sentence_db_connector = SentenceDbConnector()
 
     def update_progress(self):
+        self._update_word_progress()
         self._update_sentence_progress()
         youtube_ids_of_videos_to_unlock = (
             self._get_youtube_ids_of_videos_that_can_be_unlocked()
         )
         for youtube_video_id in youtube_ids_of_videos_to_unlock:
             self.video_db_connector.unlock_video(youtube_video_id)
+
+    def _update_word_progress(self):
+        # get all anki cards
+        anki_connector = AnkiConnector()
+        anki_cards = anki_connector.get_all_anki_cards()
+
+        # get all sentences
+        word_connector = WordDbConnector()
+        words = word_connector.get_all_words()
+
+        # update the practice intervals sentences where it differs from anki
+        words_with_updated_practice_intervals: list[JapaneseWord] = []
+        for word in words:
+            for anki_card in anki_cards:
+                if word.anki_id == anki_card["note"]:
+                    if word.practice_interval != anki_card["interval"]:
+                        word.practice_interval = anki_card["interval"]
+                        words_with_updated_practice_intervals.append(word)
+                        break
+
+        # update the practice intervals in the database
+        word_connector.update_word_practice_interval(
+            words_with_updated_practice_intervals
+        )
 
     def _update_sentence_progress(self):
 

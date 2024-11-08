@@ -78,11 +78,19 @@ class WordDbConnector:
             """
         )
         data = self.cursor.fetchall()
+        words = self._make_words(data)
+        return words
+
+    def _make_words(self, table_data):
         words: list[JapaneseWord] = []
-        for row in data:
-            word = JapaneseWord(row[1], row[2], row[3], row[4], row[0], row[5])
+        for row in table_data:
+            word = self._make_word(row)
             words.append(word)
         return words
+
+    def _make_word(self, row):
+        word = JapaneseWord(row[1], row[2], row[3], row[4], row[0], row[5], row[6])
+        return word
 
     def get_words_without_anki_note_id(self):
         self.cursor.execute(
@@ -91,10 +99,7 @@ class WordDbConnector:
             """
         )
         data = self.cursor.fetchall()
-        words: list[JapaneseWord] = []
-        for row in data:
-            word = JapaneseWord(row[1], row[2], row[3], row[4], row[0])
-            words.append(word)
+        words = self._make_words(data)
         return words
 
     def get_words_for_sentence(self, sentence_id: int):
@@ -104,8 +109,8 @@ class WordDbConnector:
             """,
             (sentence_id,),
         )
-        sentence_data = self.cursor.fetchall()
-        word_ids = [row[0] for row in sentence_data]
+        sentences_words_data = self.cursor.fetchall()
+        word_ids = [row[0] for row in sentences_words_data]
         if len(word_ids) == 0:
             return []
         self.cursor.execute(
@@ -117,10 +122,7 @@ class WordDbConnector:
             word_ids,
         )
         word_data = self.cursor.fetchall()
-        words: list[JapaneseWord] = []
-        for row in word_data:
-            word = JapaneseWord(row[1], row[2], row[3], row[4], row[0])
-            words.append(word)
+        words = self._make_words(word_data)
         return words
 
     def get_word_if_exists(self, word_in_kana: str):
@@ -130,13 +132,11 @@ class WordDbConnector:
             """,
             (word_in_kana,),
         )
-        word_data = self.cursor.fetchone()
-        if word_data is None:
+        row = self.cursor.fetchone()
+        if row is None:
             return None
         else:
-            word = JapaneseWord(
-                word_data[1], word_data[2], word_data[3], word_data[4], word_data[0]
-            )
+            word = self._make_word(row)
             return word
 
     def update_anki_note_id(self, table_name: str, id: int, anki_id: int):
@@ -150,3 +150,17 @@ class WordDbConnector:
         )
         self.connection.commit()
         print(f"Updated anki_note_id for {id} to {anki_id} in {table_name}")
+
+    def update_word_practice_interval(self, word: JapaneseWord):
+        self.cursor.execute(
+            """
+            UPDATE vocabulary
+            SET practice_interval = ?
+            WHERE id = ?
+            """,
+            (word.practice_interval, word.db_id),
+        )
+        self.connection.commit()
+        print(
+            f"Updated practice interval for {word.word} to {word.practice_interval} in database"
+        )
