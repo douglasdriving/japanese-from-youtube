@@ -27,8 +27,8 @@ class AnkiCleaner:
 
     def clean(self):
         print("Cleaning anki data...")
+        self._add_missing_notes()
         self._delete_notes_not_in_db()
-        self._add_missing_cards()
         self._correct_poor_card_backs()
         self._add_missing_card_tags()
         print("Anki cleaning finished")
@@ -43,44 +43,38 @@ class AnkiCleaner:
         ids_of_notes_to_delete = [
             note["noteId"] for note in all_notes if note["noteId"] not in anki_ids_in_db
         ]
-        self.anki_connector.delete_notes(ids_of_notes_to_delete)
+        if len(ids_of_notes_to_delete) > 0:
+            self.anki_connector.delete_notes(ids_of_notes_to_delete)
+        else:
+            print("No notes to delete from anki")
 
-    def _add_missing_cards(self):
+    def _add_missing_notes(self):
 
         print("checking if there are any missing cards...")
-        cards = self.anki_connector.get_all_anki_cards()
-        anki_card_definitions: list[str] = [
-            re.split(r"<br\s*/?>|\n", card["fields"]["Back"]["value"])[0]
-            for card in cards
-        ]
-        anki_card_audio_file_names: list[str] = [
-            re.search(r"\[sound:(.*?)\]", card["fields"]["Front"]["value"]).group(1)
-            for card in cards
-        ]
-
-        print("cards in anki: ", len(anki_card_definitions))
-        notes_to_add: list[AnkiNote] = []
+        all_anki_ids = self.anki_connector.get_all_note_ids()
+        print("notes in anki: ", len(all_anki_ids))
 
         words_in_db: list[JapaneseWord] = self.vocab_connector.get_all_words()
-        for word in words_in_db:
-            word_definition_is_in_anki = word.definition in anki_card_definitions
-            audio_file_name = word.audio_file_path.split("/")[-1]
-            audio_is_in_anki = audio_file_name in anki_card_audio_file_names
-            is_in_anki = word_definition_is_in_anki or audio_is_in_anki
-            if not is_in_anki:
-                notes_to_add.append(AnkiNote(word.audio_file_path, word.definition))
-
         sentences_in_db: list[JapaneseSentence] = (
             self.sentence_db_connector.get_all_sentences()
         )
-        for sentence in sentences_in_db:
-            definition_is_in_anki = sentence.definition in anki_card_definitions
-            audio_file_name = sentence.audio_file_path.split("/")[-1]
-            audio_is_in_anki = audio_file_name in anki_card_audio_file_names
-            is_in_anki = definition_is_in_anki or audio_is_in_anki
-            if not is_in_anki:
+
+        notes_to_add: list[AnkiNote] = []
+
+        for word in words_in_db:
+            if word.anki_id is None or word.anki_id not in all_anki_ids:
                 notes_to_add.append(
-                    AnkiNote(sentence.audio_file_path, sentence.definition)
+                    AnkiNote(word.audio_file_path, word.definition, "word", word.db_id)
+                )
+        for sentence in sentences_in_db:
+            if sentence.anki_id is None or sentence.anki_id not in all_anki_ids:
+                notes_to_add.append(
+                    AnkiNote(
+                        sentence.audio_file_path,
+                        sentence.definition,
+                        "sentence",
+                        sentence.db_id,
+                    )
                 )
 
         print(
@@ -164,27 +158,16 @@ class AnkiCleaner:
         return is_sentence
 
     def _update_sentence_card_back(self, note):
-        # wish for a bulk update method
-        back = note["fields"]["Back"]["value"]
-        english_sentence = re.split(r"<br\s*/?>|\n", back)[0]
-        # requires bulk sentence extraction
-        japanese_sentence = (
-            self.sentence_extractor.extract_sentence_from_db_by_definition(
-                english_sentence
-            )
+        note_id = note["noteId"]
+        sentence = self.sentence_db_connector.get_sentence_by_anki_id(
+            anki_note_id=note_id
         )
-        if japanese_sentence is None:
-            print(
-                "ERROR: Could not extract data to update card back: ", english_sentence
-            )
+        if sentence is None:
+            print("No db data found for anki note with id: ", note_id, " deleting note")
+            self.anki_connector.delete_notes([note_id])
         else:
-            # bulk note maker
-            anki_note: AnkiNote = self.anki_word_adder.make_sentence_note(
-                japanese_sentence
-            )
+            anki_note: AnkiNote = self.anki_word_adder.make_sentence_note(sentence)
             new_back = anki_note.back
-            note_id = note["noteId"]
-            # and bulk card back updater
             self.anki_connector.update_card_back(note_id, new_back)
 
     def _add_missing_card_tags(self):

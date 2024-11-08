@@ -121,6 +121,34 @@ class SentenceDbConnector:
         sentences = self._make_sentences(data)
         return sentences
 
+    def get_sentence(self, id: int):
+        self.cursor.execute(
+            """
+            SELECT * FROM sentences WHERE id = ?
+            """,
+            (id,),
+        )
+        row = self.cursor.fetchone()
+        if row is None:
+            return None
+        else:
+            sentence = self._make_sentence(row)
+            return sentence
+
+    def get_sentence_by_anki_id(self, anki_note_id: int):
+        self.cursor.execute(
+            """
+            SELECT * FROM sentences WHERE anki_note_id = ?
+            """,
+            (anki_note_id,),
+        )
+        row = self.cursor.fetchone()
+        if row is None:
+            return None
+        else:
+            sentence = self._make_sentence(row)
+            return sentence
+
     def update_sentence_practice_intervals(self, sentences: list[JapaneseSentence]):
         for sentence in sentences:
             self.cursor.execute(
