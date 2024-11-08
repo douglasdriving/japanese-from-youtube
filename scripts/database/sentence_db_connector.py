@@ -187,3 +187,13 @@ class SentenceDbConnector:
         print(
             f"Updated audio file path for sentence {sentence_id} to {audio_file_path}"
         )
+
+    def delete_sentence(self, sentence_id: int):
+        self.cursor.execute(
+            """
+            DELETE FROM sentences WHERE id = ?
+            """,
+            (sentence_id,),
+        )
+        self.connection.commit()
+        print(f"Deleted sentence with id {sentence_id}")

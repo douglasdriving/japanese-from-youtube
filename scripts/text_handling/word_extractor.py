@@ -29,10 +29,12 @@ class WordExtractor:
 
     def _get_unique_words_from_text(self, text):
         cleaned_text = self._clean_text(text)
+        if self._get_japanese_word(cleaned_text) is not None:
+            return [cleaned_text]
         tokens_result = Tokens.request(cleaned_text)
         if not tokens_result or not tokens_result.data:
             print(
-                f"WARNING: Could not find tokens in Jisho API. Will not return unique words for text: {cleaned_text}"
+                f"WARNING: Could not find tokens in Jisho API. Will not return any words for text: {cleaned_text}"
             )
             return None
         tokens = tokens_result.data
@@ -87,9 +89,14 @@ class WordExtractor:
             definitions = senses[0].english_definitions[:3]
             return "; ".join(definitions)
 
-        base_word_result = Word.request(kana_word)
-        if not base_word_result:
-            warnings.warn(f"Could not find word in Jisho API: {kana_word}")
+        base_word_result = None
+        try:
+            base_word_result = Word.request(kana_word)
+        except Exception as e:
+            print(f"Error when trying to get word ({kana_word}) from Jisho API: {e}")
+            return None
+
+        if not base_word_result or not base_word_result.data:
             return None
 
         base_word_data = base_word_result.data[0]

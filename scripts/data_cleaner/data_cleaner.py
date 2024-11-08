@@ -177,16 +177,19 @@ class DataCleaner:
                 words: list[JapaneseWord] = word_extractor.extract_words_from_text(
                     sentence.sentence
                 )
-                for word in words:
-                    if word.db_id is None:
-                        word = self.word_db_connector.add_word_if_new(word)
-                    if not word:
-                        print(f"Could not add word because it is None")
-                    elif word.db_id is not None:
-                        self.sentence_db_connector.add_sentence_word_crossref(
-                            sentence.db_id, word.db_id
-                        )
-                    else:
-                        print(
-                            f"Could not add crossref for word: {word.word} because it does not have a db id"
-                        )
+                if words is None or len(words) == 0:
+                    self.sentence_db_connector.delete_sentence(sentence.db_id)
+                else:
+                    for word in words:
+                        if word.db_id is None:
+                            word = self.word_db_connector.add_word_if_new(word)
+                        if not word:
+                            print(f"Could not add word because it is None")
+                        elif word.db_id is not None:
+                            self.sentence_db_connector.add_sentence_word_crossref(
+                                sentence.db_id, word.db_id
+                            )
+                        else:
+                            print(
+                                f"Could not add crossref for word: {word.word} because it does not have a db id"
+                            )

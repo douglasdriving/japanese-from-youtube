@@ -44,9 +44,8 @@ class ProgressDetector:
                         break
 
         # update the practice intervals in the database
-        word_connector.update_word_practice_interval(
-            words_with_updated_practice_intervals
-        )
+        for word in words_with_updated_practice_intervals:
+            word_connector.update_word_practice_interval(word)
 
     def _update_sentence_progress(self):
 
