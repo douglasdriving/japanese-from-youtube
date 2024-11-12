@@ -1,5 +1,5 @@
 from ..anki.anki_connector import AnkiConnector
-from ..anki.anki_word_adder import AnkiWordAdder
+from ..anki.anki_note_adder import AnkiNoteAdder
 from ..anki.anki_note import AnkiNote
 from ..database.sentence_db_connector import SentenceDbConnector
 from ..database.word_db_connector import WordDbConnector
@@ -95,10 +95,9 @@ class ProgressDetector:
         ]
         self.sentence_db_connector.unlock_sentences(ids_of_sentences_to_unlock)
 
-        # add them to anki
-        # SHOULD PROBABLY jUST unsuspend them instead. they should already be in anki
-        # anki_word_adder = AnkiWordAdder()
-        # anki_word_adder.add_sentences_to_deck_top(sentences_to_unlock)
+        # add them to anki in the prio deck!
+        anki_note_adder = AnkiNoteAdder()
+        anki_note_adder.add_sentences_to_priority_deck(sentences_to_unlock)
 
     def _get_sentences_to_unlock(self, locked_sentences):
         sentences_to_unlock: list[JapaneseSentence] = []

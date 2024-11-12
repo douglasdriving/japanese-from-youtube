@@ -4,13 +4,15 @@ from scripts.progress_detector.progress_detector import ProgressDetector
 
 # now: unlock sentences only after the word profficiency is high enough!
 
-# ------------------------------------------------
-
 # when we unlock the sentence, we should also add the anki card for it!
 # and add that card to the top of the deck.
-# PROBLEM: we cant change to card order. ankis algorithm determines that
-# so what we probably have to do is add all sentence cards by default when we scrape them, but also SUSPEND those cards (if they are not unlocked)
-# then, when we unlock the sentence, we unsuspend the card card
+
+# add unlocked sentences to the priority deck
+# if there are still new cards in the main deck, move them to the regular deck
+
+# ------------------------------------------------ TODO ------------------------------------------------
+
+# make sure normal cards are added to the regular deck
 
 # what if the locked sentences have already been added to anki?
 # delete it, and then add it back in later when it is unlocked

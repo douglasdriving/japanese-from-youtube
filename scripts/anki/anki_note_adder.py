@@ -8,9 +8,10 @@ from ..database.word_db_connector import WordDbConnector
 from dotenv import load_dotenv
 
 
-class AnkiWordAdder:
+class AnkiNoteAdder:
 
     deck_name: str
+    priority_deck_name: str
     anki_connect_url: str
     anki_path: str
     anki_connector: AnkiConnector
@@ -19,6 +20,7 @@ class AnkiWordAdder:
     def __init__(self):
         load_dotenv()
         self.deck_name = os.environ["ANKI_DECK_NAME"]
+        self.priority_deck_name = os.environ["ANKI_PRIORITY_DECK_NAME"]
         self.anki_connect_url = os.environ["ANKI_CONNECT_URL"]
         self.anki_path = os.environ["ANKI_PATH"]
         self.anki_connector = AnkiConnector()
@@ -74,7 +76,7 @@ class AnkiWordAdder:
             notes.append(sentence_note)
         self.add_notes_to_anki_and_mark_in_db(notes)
 
-    def add_sentences_to_deck_top(self, sentences: list[JapaneseSentence]):
+    def add_sentences_to_priority_deck(self, sentences: list[JapaneseSentence]):
         self.anki_connector._open_anki_if_not_running()
         notes: list[AnkiNote] = []
         for sentence in sentences:
@@ -85,7 +87,7 @@ class AnkiWordAdder:
                 continue
             sentence_note = self.make_sentence_note(sentence)
             notes.append(sentence_note)
-        self.add_notes_to_anki_and_mark_in_db(notes)
+        self.add_notes_to_anki_and_mark_in_db(notes, True)
 
     def _move_cards_to_top(self, card_ids: list[int]):
         # actually, this does not seem like something we can do
@@ -165,13 +167,13 @@ class AnkiWordAdder:
         return response_json["result"]
 
     # this is pretty long, might want to refactor
-    def _add_notes_to_anki(self, notes_to_add: list[AnkiNote]):
+    def _add_notes_to_anki(self, notes_to_add: list[AnkiNote], priority=False):
         self.anki_connector._open_anki_if_not_running()
 
         notes = []
         for note_to_add in notes_to_add:
             note = {
-                "deckName": self.deck_name,
+                "deckName": self.deck_name if not priority else self.priority_deck_name,
                 "modelName": "Basic",
                 "fields": {"Front": "", "Back": note_to_add.back},
                 "tags": note_to_add.tags,
@@ -235,9 +237,11 @@ class AnkiWordAdder:
                     )
                     break
 
-    def add_notes_to_anki_and_mark_in_db(self, notes_to_add: list[AnkiNote]):
+    def add_notes_to_anki_and_mark_in_db(
+        self, notes_to_add: list[AnkiNote], priority=False
+    ):
 
-        added_note_ids = self._add_notes_to_anki(notes_to_add)
+        added_note_ids = self._add_notes_to_anki(notes_to_add, priority)
         if added_note_ids is None:
             print("Anki adder returned to note ids. Skipping marking in DB")
         else:
