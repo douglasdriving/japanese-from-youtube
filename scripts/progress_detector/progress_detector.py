@@ -21,10 +21,15 @@ class ProgressDetector:
         self.anki_connector = AnkiConnector()
 
     def update_progress(self):
+        print("Updating progress...")
         self._update_word_progress()
+        print("Word progress updated.")
         self._update_sentence_progress()
+        print("Sentence progress updated.")
         self._unlock_sentences()
+        print("Sentences unlocked.")
         self._unlock_youtube_videos()
+        print("Videos unlocked.")
 
     def _update_word_progress(self):
         # get all anki cards

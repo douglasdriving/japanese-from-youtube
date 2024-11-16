@@ -74,7 +74,7 @@ class AnkiNoteAdder:
                 continue
             sentence_note = self.make_sentence_note(sentence)
             notes.append(sentence_note)
-        self.add_notes_to_anki_and_mark_in_db(notes)
+        self._add_notes_to_anki_and_mark_in_db(notes)
 
     def add_sentences_to_priority_deck(self, sentences: list[JapaneseSentence]):
         self.anki_connector._open_anki_if_not_running()
@@ -87,7 +87,7 @@ class AnkiNoteAdder:
                 continue
             sentence_note = self.make_sentence_note(sentence)
             notes.append(sentence_note)
-        self.add_notes_to_anki_and_mark_in_db(notes, True)
+        self._add_notes_to_anki_and_mark_in_db(notes, True)
 
     def _move_cards_to_top(self, card_ids: list[int]):
         # actually, this does not seem like something we can do
@@ -170,6 +170,29 @@ class AnkiNoteAdder:
     def _add_notes_to_anki(self, notes_to_add: list[AnkiNote], priority=False):
         self.anki_connector._open_anki_if_not_running()
 
+        # problem is, this will create duplicates if the note is already in the main deck
+        # actually, the prio cards could just be added straight into the main deck
+        # so we will avoid duplicates there
+        # however, its still a bit dangerous, since we can still have duplicates in other decks
+        # ideally, i guess we need to check if the note is already in either of the decks
+
+        # how can we do that?
+        # get all the notes (from all decks)
+        self.anki_connector.get_all_notes()  # make sure this gets from all decks!
+        # compare the back and front
+        for note in notes_to_add:
+            for anki_note in self.anki_connector.notes:
+                if (
+                    note.back == anki_note["fields"]["Back"]["value"]
+                    and note.front
+                    == anki_note["fields"]["Front"][
+                        "value"
+                    ]  # what is even the value of the front?
+                ):
+                    notes_to_add.remove(note)
+
+        # if its the same, dont add it
+
         notes = []
         for note_to_add in notes_to_add:
             note = {
@@ -237,7 +260,7 @@ class AnkiNoteAdder:
                     )
                     break
 
-    def add_notes_to_anki_and_mark_in_db(
+    def _add_notes_to_anki_and_mark_in_db(
         self, notes_to_add: list[AnkiNote], priority=False
     ):
 

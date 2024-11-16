@@ -84,7 +84,7 @@ class AnkiCleaner:
 
         if len(notes_to_add) > 0:
             print("adding missing notes: ", len(notes_to_add))
-            self.anki_word_adder.add_notes_to_anki_and_mark_in_db(notes_to_add)
+            self.anki_word_adder._add_notes_to_anki_and_mark_in_db(notes_to_add)
         else:
             print("No missing cards found")
 

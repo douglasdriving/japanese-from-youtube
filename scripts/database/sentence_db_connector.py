@@ -200,7 +200,7 @@ class SentenceDbConnector:
             sentence_ids,
         )
         self.connection.commit()
-        print(f"Unlocked sentences with ids {sentence_ids}")
+        print(f"Unlocked {len(sentence_ids)} sentences in db")
 
     # delete
     def delete_sentence(self, sentence_id: int):
