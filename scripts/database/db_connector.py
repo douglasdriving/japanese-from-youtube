@@ -27,13 +27,15 @@ class DbConnector:
                 ", audio_file_path: ",
                 word.audio_file_path,
             )
-            return None
+            return word
 
-        if self._check_if_word_exists(word_in_kanji=word.word):
-            self._add_definition_to_word_if_new(
+        word_in_db = self.get_word_if_exists(word.word, word.reading)
+        if word_in_db is not None:
+            updated_definition = self._add_definition_to_word_if_new(
                 word_id=word.db_id, new_definition=word.definition
             )
-            return None
+            word_in_db.definition = updated_definition
+            return word_in_db
 
         try:
             self.cursor.execute(
@@ -70,12 +72,12 @@ class DbConnector:
             print(
                 f"ERROR: Word with id {word_id} does not exist. cant update its definition"
             )
-            return
+            return ""
         current_definition = current_definition[0]
         definitions = current_definition.split(";")
         for definition in definitions:
             if definition.strip() == new_definition.strip():
-                return
+                return current_definition
         updated_definition = f"{current_definition}; {new_definition}"
         self.cursor.execute(
             """
@@ -87,6 +89,7 @@ class DbConnector:
         )
         self.connection.commit()
         print(f"Added definition '{new_definition}' to word with id {word_id}")
+        return updated_definition
 
     def _check_if_word_exists(self, word_in_kanji: str):
         self.cursor.execute(

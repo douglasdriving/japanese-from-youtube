@@ -3,7 +3,7 @@ from ..anki.anki_connector import AnkiConnector
 from ..database.db_connector import DbConnector
 from ..text_handling.word import JapaneseWord
 from ..text_handling.sentence import JapaneseSentence
-from ..anki.anki_word_adder import AnkiWordAdder
+from ..anki.anki_word_adder import AnkiAdder
 from ..anki.anki_note import AnkiNote
 from ..text_handling.sentence_extractor import SentenceExtractor
 import re
@@ -13,13 +13,13 @@ class AnkiCleaner:
 
     anki_connector: AnkiConnector
     vocab_connector: DbConnector
-    anki_word_adder: AnkiWordAdder
+    anki_word_adder: AnkiAdder
     sentence_extractor: SentenceExtractor
 
     def __init__(self):
         self.anki_connector = AnkiConnector()
         self.vocab_connector = DbConnector()
-        self.anki_word_adder = AnkiWordAdder()
+        self.anki_word_adder = AnkiAdder()
         self.sentence_extractor = SentenceExtractor(None)
 
     def clean(self):

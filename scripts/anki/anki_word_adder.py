@@ -2,13 +2,14 @@ import requests
 import os
 from .anki_note import AnkiNote
 from ..text_handling.sentence import JapaneseSentence
+from ..text_handling.word import JapaneseWord
 from ..text_handling.romaziner import Romanizer
 from .anki_connector import AnkiConnector
 from ..database.db_connector import DbConnector
 from dotenv import load_dotenv
 
 
-class AnkiWordAdder:
+class AnkiAdder:
 
     deck_name: str
     anki_connect_url: str
@@ -73,6 +74,16 @@ class AnkiWordAdder:
             sentence_note = self.make_sentence_note(sentence)
             notes.append(sentence_note)
         self.add_notes_to_anki_and_mark_in_db(notes)
+
+    def add_sentence_note(self, sentence: JapaneseSentence):
+        note = self.make_sentence_note(sentence)
+        note_id = self.add_notes_to_anki_and_mark_in_db([note])[0]
+        return note_id
+
+    def add_word_note(self, word: JapaneseWord):
+        note = AnkiNote(word.audio_file_path, word.definition, ["word"], word.db_id)
+        note_id = self.add_notes_to_anki_and_mark_in_db([note])[0]
+        return note_id
 
     def _get_card_options(self):
         options = (
@@ -189,9 +200,9 @@ class AnkiWordAdder:
                     break
 
     def add_notes_to_anki_and_mark_in_db(self, notes_to_add: list[AnkiNote]):
-
         added_note_ids = self._add_notes_to_anki(notes_to_add)
         if added_note_ids is None:
             print("Anki adder returned to note ids. Skipping marking in DB")
         else:
             self._mark_notes_in_db(notes_to_add, added_note_ids)
+            return added_note_ids

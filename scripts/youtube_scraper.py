@@ -1,4 +1,4 @@
-from .anki.anki_word_adder import AnkiWordAdder
+from .anki.anki_word_adder import AnkiAdder
 from .database.db_connector import DbConnector
 from .text_handling.sentence_extractor import SentenceExtractor
 from .text_handling.youtube_transcriber import YoutubeTranscriber
@@ -11,12 +11,12 @@ class YoutubeScraper:
 
     db_connector: DbConnector
     youtube_transcriber: YoutubeTranscriber
-    anki_word_adder: AnkiWordAdder
+    anki_adder: AnkiAdder
 
     def __init__(self):
         self.db_connector = DbConnector()
         self.youtube_transcriber = YoutubeTranscriber()
-        self.anki_word_adder = AnkiWordAdder()
+        self.anki_adder = AnkiAdder()
 
     def scrape_video(self):
         youtube_video_id = self._get_valid_youtube_id_from_user()
@@ -26,21 +26,8 @@ class YoutubeScraper:
         )
         sentence_extractor = SentenceExtractor(transcript)
         sentences: list[JapaneseSentence] = sentence_extractor.extract_sentences()
-        sentences_added_to_db: list[JapaneseSentence] = (
-            self._add_new_words_and_sentences_to_db(sentences)
-        )
-        for sentence in sentences:
-            if sentence.db_id is None:
-                for sentence_added_to_db in sentences_added_to_db:
-                    if sentence.sentence == sentence_added_to_db.sentence:
-                        sentence.db_id = sentence_added_to_db.db_id
-                        break
+        sentences = self._add_new_words_and_sentences(sentences)
         self._add_video_to_db(youtube_video_id, sentences)
-
-        # TODO:
-        # also here, the romaji could now be used for the words
-        # also, consider how word translations are used and taken into anki
-        self.anki_word_adder.add_words_and_sentences_to_anki(sentences_added_to_db)
         print("finished adding vocab to anki deck")
 
     def _add_video_to_db(
@@ -61,16 +48,23 @@ class YoutubeScraper:
             video_id = input()
         return video_id
 
-    def _add_new_words_and_sentences_to_db(self, sentences: list[JapaneseSentence]):
+    def _add_new_words_and_sentences(self, sentences: list[JapaneseSentence]):
         added_sentences: list[JapaneseSentence] = []
         for sentence in sentences:
-            added_words: list[JapaneseWord] = []
-            for word in sentence.words:
-                added_word = self.db_connector.add_word_if_new(word)
-                if added_word:
-                    added_words.append(added_word)
+            sentence.words = self._add_new_words(sentence.words)
             added_sentence = self.db_connector.add_sentence_if_new(sentence)
             if added_sentence:
-                added_sentence.words = added_words  # should it really just be the "added" words? shouldnt it just be all words?
+                anki_note_id = self.anki_adder.add_sentence_note(added_sentence)
+                added_sentence.anki_id = anki_note_id
                 added_sentences.append(added_sentence)
         return added_sentences
+
+    def _add_new_words(self, words: list[JapaneseWord]):
+        added_words: list[JapaneseWord] = []
+        for word in words:
+            word = self.db_connector.add_word_if_new(word)
+            if word:
+                anki_id = self.anki_adder.add_word_note(word)
+                word.anki_id = anki_id
+                added_words.append(word)
+        return added_words
