@@ -36,6 +36,10 @@ class YoutubeScraper:
                         sentence.db_id = sentence_added_to_db.db_id
                         break
         self._add_video_to_db(youtube_video_id, sentences)
+
+        # TODO:
+        # also here, the romaji could now be used for the words
+        # also, consider how word translations are used and taken into anki
         self.anki_word_adder.add_words_and_sentences_to_anki(sentences_added_to_db)
         print("finished adding vocab to anki deck")
 
@@ -67,6 +71,6 @@ class YoutubeScraper:
                     added_words.append(added_word)
             added_sentence = self.db_connector.add_sentence_if_new(sentence)
             if added_sentence:
-                added_sentence.words = added_words
+                added_sentence.words = added_words  # should it really just be the "added" words? shouldnt it just be all words?
                 added_sentences.append(added_sentence)
         return added_sentences

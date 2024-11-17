@@ -15,6 +15,7 @@ class DbConnector:
         self.cursor = self.connection.cursor()
 
     def add_word_if_new(self, word: JapaneseWord):
+
         if not word.is_fully_defined():
             print(
                 "ERROR: Word is not fully defined. Not adding to database. word: ",
@@ -27,24 +28,65 @@ class DbConnector:
                 word.audio_file_path,
             )
             return None
-        if self._check_if_word_exists(word.word):
+
+        if self._check_if_word_exists(word_in_kanji=word.word):
+            self._add_definition_to_word_if_new(
+                word_id=word.db_id, new_definition=word.definition
+            )
             return None
+
         try:
             self.cursor.execute(
                 """
-                    INSERT INTO vocabulary (word, reading, definition, audio_file_path)
-                    VALUES (?, ?, ?, ?)
+                    INSERT INTO vocabulary (word, reading, definition, audio_file_path, romaji)
+                    VALUES (?, ?, ?, ?, ?)
                 """,
-                (word.word, word.reading, word.definition, word.audio_file_path),
+                (
+                    word.word,
+                    word.reading,
+                    word.definition,
+                    word.audio_file_path,
+                    word.romaji,
+                ),
             )
             self.connection.commit()
-            print(f"Added word '{word.word}' ({word.definition}) to database")
+            print(f"Added word '{word.romaji}' ({word.definition}) to database")
             id = self.cursor.lastrowid
             word.db_id = id
             return word
         except sqlite3.Error as error:
             print("ERROR INSERTING WORD: ", error)
             return None
+
+    def _add_definition_to_word_if_new(self, word_id, new_definition: str):
+        self.cursor.execute(
+            """
+            SELECT definition FROM vocabulary WHERE id = (?)
+            """,
+            (word_id,),
+        )
+        current_definition = self.cursor.fetchone()
+        if current_definition is None:
+            print(
+                f"ERROR: Word with id {word_id} does not exist. cant update its definition"
+            )
+            return
+        current_definition = current_definition[0]
+        definitions = current_definition.split(";")
+        for definition in definitions:
+            if definition.strip() == new_definition.strip():
+                return
+        updated_definition = f"{current_definition}; {new_definition}"
+        self.cursor.execute(
+            """
+            UPDATE vocabulary
+            SET definition = ?
+            WHERE id = ?
+            """,
+            (updated_definition, word_id),
+        )
+        self.connection.commit()
+        print(f"Added definition '{new_definition}' to word with id {word_id}")
 
     def _check_if_word_exists(self, word_in_kanji: str):
         self.cursor.execute(
