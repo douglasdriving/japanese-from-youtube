@@ -275,3 +275,26 @@ class DbConnector:
             print(
                 f"Updated practice interval for sentence {sentence.sentence} to {sentence.practice_interval}"
             )
+
+    def get_word_if_exists(self, word_in_kana: str, reading: str):
+        self.cursor.execute(
+            """
+                SELECT * FROM vocabulary WHERE word = (?) AND reading = (?)
+            """,
+            (word_in_kana, reading),
+        )
+        word_data = self.cursor.fetchone()
+        if word_data is None:
+            return None
+        else:
+            return self.turn_word_data_into_word(word_data)
+
+    def turn_word_data_into_word(self, word_data):
+        return JapaneseWord(
+            word_data[1],
+            word_data[2],
+            word_data[3],
+            word_data[4],
+            word_data[0],
+            word_data[5],
+        )

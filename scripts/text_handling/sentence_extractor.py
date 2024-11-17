@@ -1,8 +1,9 @@
 # extracts sentence data from a given japanese text
 from .sentence import JapaneseSentence
+from .word import JapaneseWord
 from .speech_synthesizer import SpeechSynthesizer
 from ..database.db_connector import DbConnector
-from .translator import Translator
+from ..gpt.open_ai_connector import OpenAiConnector
 from .word_extractor import WordExtractor
 from .transcript_line import TranscriptLine
 
@@ -14,6 +15,7 @@ class SentenceExtractor:
     vocabulary_connector: DbConnector
     word_extractor: WordExtractor
     speech_synthesizer: SpeechSynthesizer
+    open_ai_connector: OpenAiConnector
 
     def __init__(self, transcript: list[TranscriptLine]):
         self.transcript = transcript
@@ -21,6 +23,7 @@ class SentenceExtractor:
         self.vocabulary_connector = DbConnector()
         self.word_extractor = WordExtractor()
         self.speech_synthesizer = SpeechSynthesizer()
+        self.open_ai_connector = OpenAiConnector()
 
     def extract_sentences(self):
         print("Extracting sentences...")
@@ -47,7 +50,7 @@ class SentenceExtractor:
         else:
             # want a bulk version
             # what i need is a cross ref table for words and sentences
-            japanese_sentence.words = self._extract_words_for_sentence(
+            japanese_sentence.words = self._add_audio_file_paths_to_words(
                 japanese_sentence
             )
             return japanese_sentence
@@ -60,7 +63,7 @@ class SentenceExtractor:
             print("ERROR: Sentence not found in db: ", kana_sentence)
             return None
         else:
-            japanese_sentence.words = self._extract_words_for_sentence(
+            japanese_sentence.words = self._add_audio_file_paths_to_words(
                 japanese_sentence
             )
             return japanese_sentence
@@ -104,7 +107,7 @@ class SentenceExtractor:
                 sentence_obj = self._extract_sentence_from_db_by_kana(line.text)
                 sentences_with_definition.append(sentence_obj)
             else:
-                sentence_obj = self._make_sentence(line.text)
+                sentence_obj = self._create_new_sentence(line.text)
                 print(
                     idx + 1,
                     ". made new sentence: ",
@@ -116,24 +119,32 @@ class SentenceExtractor:
                 sentences_with_definition.append(sentence_obj)
         return sentences_with_definition
 
-    def _make_sentence(self, sentence_text):
+    def _create_new_sentence(self, sentence_text):
+        sentence_obj = self.open_ai_connector.get_sentence_data(sentence_text)
+        if sentence_obj is None:
+            print(
+                "ERROR MAKING SENTENCE: ",
+                sentence_text,
+                " open ai connector returned none",
+            )
+            return None
+        self._create_audio_for_sentence(sentence_obj)
+        for word in sentence_obj.words:
+            word_in_db = self.vocabulary_connector.get_word_if_exists(
+                word_in_kana=word.word, reading=word.reading
+            )
+            if word_in_db is not None:
+                word.db_id = word_in_db.db_id
+                word.anki_id = word_in_db.anki_id
+            if word_in_db is not None and word_in_db.audio_file_path is not None:
+                word.audio_file_path = word_in_db.audio_file_path
+            else:
+                word.audio_file_path = self.speech_synthesizer.save_jp_text_as_audio(
+                    word.reading, is_sentence=False
+                )
+        return sentence_obj
 
-        # here, we should do this using GPT instead.
-        # send the text, and return an object with sentences and words
-        # the only thing we need to do after is the audio
-
-        translator = Translator()
-        translation = translator.translate_jp_to_en(sentence_text)
-        sentence_obj = JapaneseSentence(sentence_text, translation)
+    def _create_audio_for_sentence(self, sentence_obj: JapaneseSentence):
         sentence_obj.audio_file_path = self.speech_synthesizer.save_jp_text_as_audio(
             sentence_obj.sentence, is_sentence=True
         )
-
-        # check this function! make sure that it uses GPT instead. Most data we can probably get straight away from the GPT
-        sentence_obj.words = self._extract_words_for_sentence(sentence_obj)
-
-        return sentence_obj
-
-    def _extract_words_for_sentence(self, sentence: JapaneseSentence):
-        words = self.word_extractor.extract_words_from_text(sentence.sentence)
-        return words
