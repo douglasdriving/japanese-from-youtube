@@ -1,5 +1,5 @@
 import sqlite3
-from ..text_handling.japanese_word import JapaneseWord
+from ..text_handling.word import JapaneseWord
 from ..text_handling.sentence import JapaneseSentence
 
 # time to refactor

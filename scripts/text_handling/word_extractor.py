@@ -1,4 +1,4 @@
-from .japanese_word import JapaneseWord
+from .word import JapaneseWord
 from jisho_api.tokenize import Tokens
 from jisho_api.word import Word
 from ..database.db_connector import DbConnector

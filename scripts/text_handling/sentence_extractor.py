@@ -116,18 +116,22 @@ class SentenceExtractor:
                 sentences_with_definition.append(sentence_obj)
         return sentences_with_definition
 
-    def _make_sentence(self, sentence):  # this could be done as a batch
+    def _make_sentence(self, sentence_text):
+
+        # here, we should do this using GPT instead.
+        # send the text, and return an object with sentences and words
+        # the only thing we need to do after is the audio
+
         translator = Translator()
-        translation = translator.translate_jp_to_en(
-            sentence
-        )  # deepl can translate an array of sentences
-        sentence_obj = JapaneseSentence(sentence, translation)
-        sentence_obj.audio_file_path = self.speech_synthesizer.save_jp_text_as_audio(  # although, unclear if the azure api can do batch call. can we make parralel calls?
+        translation = translator.translate_jp_to_en(sentence_text)
+        sentence_obj = JapaneseSentence(sentence_text, translation)
+        sentence_obj.audio_file_path = self.speech_synthesizer.save_jp_text_as_audio(
             sentence_obj.sentence, is_sentence=True
         )
-        sentence_obj.words = self._extract_words_for_sentence(
-            sentence_obj
-        )  # and then this would be quite complicated to do as a batch as well.
+
+        # check this function! make sure that it uses GPT instead. Most data we can probably get straight away from the GPT
+        sentence_obj.words = self._extract_words_for_sentence(sentence_obj)
+
         return sentence_obj
 
     def _extract_words_for_sentence(self, sentence: JapaneseSentence):

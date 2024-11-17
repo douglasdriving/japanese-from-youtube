@@ -1,9 +1,10 @@
-from ..text_handling.japanese_word import JapaneseWord
+from .word import JapaneseWord
 
 
 class JapaneseSentence:
 
     sentence: str
+    romaji: str
     definition: str
     audio_file_path: str
     db_id: int
@@ -18,6 +19,7 @@ class JapaneseSentence:
         audio_file: str = None,
         database_id: int = None,
         words: list[JapaneseWord] = None,
+        romaji: str = None,
     ):
         self.sentence = sentence
         self.definition = definition
@@ -26,6 +28,7 @@ class JapaneseSentence:
         self.words = words
         self.practice_interval = 0
         self.anki_id = None
+        self.romaji = romaji
 
     def is_fully_defined(self):
         return (

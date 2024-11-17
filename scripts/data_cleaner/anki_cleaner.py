@@ -1,7 +1,7 @@
 # cleans the data in anki
 from ..anki.anki_connector import AnkiConnector
 from ..database.db_connector import DbConnector
-from ..text_handling.japanese_word import JapaneseWord
+from ..text_handling.word import JapaneseWord
 from ..text_handling.sentence import JapaneseSentence
 from ..anki.anki_word_adder import AnkiWordAdder
 from ..anki.anki_note import AnkiNote

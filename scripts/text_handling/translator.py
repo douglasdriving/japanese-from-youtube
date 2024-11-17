@@ -1,4 +1,4 @@
-from .japanese_word import JapaneseWord
+from .word import JapaneseWord
 import deepl
 import os
 from dotenv import load_dotenv

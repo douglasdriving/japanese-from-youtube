@@ -3,7 +3,7 @@ from .database.db_connector import DbConnector
 from .text_handling.sentence_extractor import SentenceExtractor
 from .text_handling.youtube_transcriber import YoutubeTranscriber
 from .text_handling.sentence import JapaneseSentence
-from .text_handling.japanese_word import JapaneseWord
+from .text_handling.word import JapaneseWord
 from .text_handling.transcript_line import TranscriptLine
 
 
