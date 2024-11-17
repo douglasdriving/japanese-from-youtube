@@ -19,15 +19,29 @@ class YoutubeScraper:
         self.anki_adder = AnkiAdder()
 
     def scrape_video(self):
+
         youtube_video_id = self._get_valid_youtube_id_from_user()
         print("extracting sentences and words from youtube video...")
         transcript: list[TranscriptLine] = self.youtube_transcriber.transcribe(
             youtube_video_id
         )
+        line_count = len(transcript)
+        print("extracted ", line_count, " lines of text from video")
         sentence_extractor = SentenceExtractor(transcript)
-        sentences: list[JapaneseSentence] = sentence_extractor.extract_sentences()
-        sentences = self._add_new_words_and_sentences(sentences)
-        self._add_video_to_db(youtube_video_id, sentences)
+        added_sentences: list[JapaneseSentence] = []
+        for i, line in enumerate(transcript):
+            print("processing line ", i + 1, " of ", line_count)
+            sentence = sentence_extractor.extract_sentence(line.text)
+            if sentence.words is not None:
+                sentence.words = self._add_new_words(sentence.words)
+            added_sentence = self.db_connector.add_sentence_if_new(sentence)
+            if added_sentence:
+                sentence.anki_id = self.anki_adder.add_sentence_note(added_sentence)
+                added_sentences.append(added_sentence)
+
+        # sentences: list[JapaneseSentence] = sentence_extractor.extract_sentences()
+        # sentences = self._add_new_words_and_sentences(sentences)
+        self._add_video_to_db(youtube_video_id, added_sentences)
         print("finished adding vocab to anki deck")
 
     def _add_video_to_db(
@@ -64,7 +78,8 @@ class YoutubeScraper:
         for word in words:
             word = self.db_connector.add_word_if_new(word)
             if word:
-                anki_id = self.anki_adder.add_word_note(word)
-                word.anki_id = anki_id
+                if word.anki_id is None:
+                    anki_id = self.anki_adder.add_word_note(word)
+                    word.anki_id = anki_id
                 added_words.append(word)
         return added_words

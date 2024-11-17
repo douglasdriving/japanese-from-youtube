@@ -20,20 +20,21 @@ class JapaneseSentence:
         database_id: int = None,
         words: list[JapaneseWord] = None,
         romaji: str = None,
+        anki_id: int = None,
+        practice_interval: int = 0,
     ):
         self.sentence = sentence
         self.definition = definition
         self.audio_file_path = audio_file
         self.db_id = database_id
         self.words = words
-        self.practice_interval = 0
-        self.anki_id = None
+        self.practice_interval = practice_interval
+        self.anki_id = anki_id
         self.romaji = romaji
 
     def is_fully_defined(self):
         return (
             self.definition is not None
-            and self.audio_file_path is not None
             and self.audio_file_path is not None
             and self.words is not None
         )

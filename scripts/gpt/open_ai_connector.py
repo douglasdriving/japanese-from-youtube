@@ -10,31 +10,38 @@ class OpenAiConnector:
         self.client = OpenAI()
 
     def get_sentence_data(self, sentence_text: str):
-        response = self.client.chat.completions.create(
-            model="gpt-4o-mini",
-            messages=[
-                {
-                    "role": "system",
-                    "content": [
-                        {
-                            "type": "text",
-                            "text": "You are a Japanese translator. You will give the user information about Japanese sentences. The user will provide you with a sentence, and you will return a JSON object containing information about that sentence. The JSON object will contain these fields:\n\n- text: the original sentence sent by the user\n- romaji: the sentence written in romaji\n- translation: the sentence translated into English\n- words: an array of each word in the sentence\n\nEach word in the array should be an object with these fields:\n\n- text: the word in kana\n- reading: the reading of the word in furigana\n- romaji: the word in romaji\n- translation: the English translation/definition of the word",
-                        }
-                    ],
-                },
-                {
-                    "role": "user",
-                    "content": [{"type": "text", "text": sentence_text}],
-                },
-            ],
-            temperature=0.18,
-            max_tokens=2048,
-            top_p=1,
-            frequency_penalty=0,
-            presence_penalty=0,
-        )
-        print("gpt processed sentence with total tokens: ", response.usage.total_tokens)
-        sentence_json = json.loads(response.choices[0].message.content)
+        try:
+            response = self.client.chat.completions.create(
+                model="gpt-4o-mini",
+                messages=[
+                    {
+                        "role": "system",
+                        "content": [
+                            {
+                                "type": "text",
+                                "text": "You are a Japanese translator. You will give the user information about Japanese sentences. The user will provide you with a sentence, and you will return a JSON object containing information about that sentence. The JSON object will contain these fields:\n\n- text: the original sentence sent by the user\n- romaji: the sentence written in romaji\n- translation: the sentence translated into English\n- words: an array of each word in the sentence\n\nEach word in the array should be an object with these fields:\n\n- text: the word in kana\n- reading: the reading of the word in furigana\n- romaji: the word in romaji\n- translation: the English translation/definition of the word",
+                            }
+                        ],
+                    },
+                    {
+                        "role": "user",
+                        "content": [{"type": "text", "text": sentence_text}],
+                    },
+                ],
+                temperature=0.18,
+                max_tokens=2048,
+                top_p=1,
+                frequency_penalty=0,
+                presence_penalty=0,
+            )
+            print(
+                "gpt processed sentence with total tokens: ",
+                response.usage.total_tokens,
+            )
+            sentence_json = json.loads(response.choices[0].message.content)
+        except Exception as e:
+            print("ERROR GETTING SENTENCE DATA: ", e)
+            return None
         sentence = self._turn_sentence_json_into_sentence(sentence_json)
         if sentence is None:
             print("ERROR GETTING SENTENCE DATA: sentence json returned None")

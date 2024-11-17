@@ -38,9 +38,32 @@ class SentenceExtractor:
         )
         return sentences_with_data
 
+    def extract_sentence(self, sentence_text: str):
+        if sentence_text is None or sentence_text == "":
+            print("ERROR: No text to extract sentence from")
+            return None
+        sentence_text = self._clean_line(sentence_text)
+        sentence_in_db = self.vocabulary_connector.get_sentence_by_kana_text(
+            sentence_text
+        )
+        if sentence_in_db is not None:
+            print(
+                "extracted sentence data from db: ",
+                sentence_text,
+            )
+            return sentence_in_db
+        else:
+            created_sentence = self._create_new_sentence(sentence_text)
+            print(
+                "made new sentence: ",
+                sentence_text,
+                " (",
+                created_sentence.definition,
+                ")",
+            )
+            return created_sentence
+
     def extract_sentence_from_db_by_definition(self, english_sentence: str):
-        # want a bulk version of this
-        # requires bulk retrieval of sentences from db
         japanese_sentence = self.vocabulary_connector.get_sentence_by_definition(
             english_sentence
         )
@@ -55,23 +78,14 @@ class SentenceExtractor:
             )
             return japanese_sentence
 
-    def _extract_sentence_from_db_by_kana(self, kana_sentence: str):
-        japanese_sentence = self.vocabulary_connector.get_sentence_by_kana_text(
-            kana_sentence
-        )
-        if japanese_sentence is None:
-            print("ERROR: Sentence not found in db: ", kana_sentence)
-            return None
-        else:
-            japanese_sentence.words = self._add_audio_file_paths_to_words(
-                japanese_sentence
-            )
-            return japanese_sentence
-
     def _clean_lines(self):
         for line in self.transcript:
-            line.text = "".join([char for char in line.text if ord(char) >= 128])
-            line.text = line.text.replace("。", "")  # also do this in data cleaner!
+            line.text = self._clean_line(line.text)
+
+    def _clean_line(self, line: str):
+        line = "".join([char for char in line if ord(char) >= 128])
+        line = line.replace("。", "")
+        return line
 
     def _remove_empty_lines(self):
         self.transcript = [line for line in self.transcript if line.text.strip() != ""]
@@ -93,31 +107,30 @@ class SentenceExtractor:
 
     def _make_sentences_from_transcript(self):
         print("making ", len(self.transcript), " sentences")
-        sentences_with_definition: list[JapaneseSentence] = []
+        sentences: list[JapaneseSentence] = []
         for idx, line in enumerate(self.transcript):
-            sentence_exists = self.vocabulary_connector.check_if_sentence_exists(
+            sentence_in_db = self.vocabulary_connector.get_sentence_by_kana_text(
                 line.text
             )
-            if sentence_exists:
+            if sentence_in_db is not None:
                 print(
                     idx + 1,
-                    ". extracting sentence data from db: ",
+                    ". extracted sentence data from db: ",
                     line.text,
                 )
-                sentence_obj = self._extract_sentence_from_db_by_kana(line.text)
-                sentences_with_definition.append(sentence_obj)
+                sentences.append(sentence_in_db)
             else:
-                sentence_obj = self._create_new_sentence(line.text)
+                created_sentence = self._create_new_sentence(line.text)
                 print(
                     idx + 1,
                     ". made new sentence: ",
                     line.text,
                     " (",
-                    sentence_obj.definition,
+                    created_sentence.definition,
                     ")",
                 )
-                sentences_with_definition.append(sentence_obj)
-        return sentences_with_definition
+                sentences.append(sentence_in_db)
+        return sentences
 
     def _create_new_sentence(self, sentence_text):
         sentence_obj = self.open_ai_connector.get_sentence_data(sentence_text)

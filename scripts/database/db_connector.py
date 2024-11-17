@@ -103,8 +103,13 @@ class DbConnector:
 
     def add_sentence_if_new(self, sentence: JapaneseSentence):
         if not sentence.is_fully_defined():
-            print("ERROR: Sentence is not fully defined. Not adding to database.")
-            print(sentence)
+            print(
+                "ERROR: Sentence is not fully defined. Not adding to database: ",
+                sentence.sentence,
+                sentence.definition,
+                sentence.audio_file_path,
+                sentence.words,
+            )
             return None
         if self.check_if_sentence_exists(sentence.sentence):
             return None
@@ -228,10 +233,18 @@ class DbConnector:
         if sentence_data is None:
             return None
         else:
-            sentence = JapaneseSentence(
-                sentence_data[1], sentence_data[2], sentence_data[3], sentence_data[0]
-            )
-            return sentence
+            return self._turn_sentence_data_into_sentence(sentence_data)
+
+    def _turn_sentence_data_into_sentence(self, sentence_data):
+        sentence = JapaneseSentence(
+            database_id=sentence_data[0],
+            sentence=sentence_data[1],
+            definition=sentence_data[2],
+            audio_file=sentence_data[3],
+            anki_id=sentence_data[4],
+            practice_interval=sentence_data[5],
+        )
+        return sentence
 
     def get_sentences_without_anki_note_id(self):
         self.cursor.execute(
