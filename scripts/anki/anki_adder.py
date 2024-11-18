@@ -17,7 +17,7 @@ class AnkiAdder:
     anki_connect_url: str
     anki_path: str
     connector: AnkiConnector
-    getter: AnkiGetter
+    getter = AnkiGetter()
     updater = AnkiUpdater()
     note_maker = AnkiNoteMaker()
     vocabulary_connector: DbConnector

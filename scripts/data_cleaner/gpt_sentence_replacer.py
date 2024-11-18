@@ -64,5 +64,8 @@ class GPTSentenceReplacer:
         self.db_connector.change_word_definition(
             word_id=word_in_db.db_id, new_definition=new_word.definition
         )
-        new_anki_card_back = new_word.romaji + " - " + new_word.definition
-        self.anki_updater.update_card_back(word_in_db.anki_id, new_anki_card_back)
+        if word_in_db.anki_id:
+            new_anki_card_back = new_word.romaji + " - " + new_word.definition
+            self.anki_updater.update_card_back(word_in_db.anki_id, new_anki_card_back)
+        else:
+            self.anki_adder.add_word_note(new_word)

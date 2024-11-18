@@ -40,7 +40,7 @@ class AnkiConnector:
         response = requests.post(os.environ["ANKI_CONNECT_URL"], json=request_json)
         response_json = response.json()
         result = response_json["result"]
-        if result is None:
+        if response_json["error"] is not None:
             print(
                 f"Failed to make Anki request. Action: {action}, Params: {params}, Error: {response_json['error']}"
             )
