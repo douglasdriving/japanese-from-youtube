@@ -3,7 +3,8 @@ from ..text_handling.sentence_extractor import SentenceExtractor
 from ..text_handling.sentence import JapaneseSentence
 from ..text_handling.word import JapaneseWord
 from ..anki.anki_connector import AnkiConnector
-from ..anki.anki_word_adder import AnkiAdder
+from ..anki.anki_adder import AnkiAdder
+from ..anki.anki_updater import AnkiUpdater
 
 
 class GPTSentenceReplacer:
@@ -12,6 +13,7 @@ class GPTSentenceReplacer:
     db_connector = DbConnector()
     anki_connector = AnkiConnector()
     anki_adder = AnkiAdder()
+    anki_updater = AnkiUpdater()
 
     def __init__(self):
         pass
@@ -45,7 +47,7 @@ class GPTSentenceReplacer:
             else:
                 self._add_new_word(new_word)
         self.db_connector.update_sentence(new_sentence)
-        self.anki_adder.update_sentence(new_sentence)
+        self.anki_updater.update_sentence(new_sentence)
 
     def _add_new_word(self, new_word: JapaneseWord):
         if new_word.is_fully_defined():
@@ -63,4 +65,4 @@ class GPTSentenceReplacer:
             word_id=word_in_db.db_id, new_definition=new_word.definition
         )
         new_anki_card_back = new_word.romaji + " - " + new_word.definition
-        self.anki_connector.update_card_back(word_in_db.anki_id, new_anki_card_back)
+        self.anki_updater.update_card_back(word_in_db.anki_id, new_anki_card_back)

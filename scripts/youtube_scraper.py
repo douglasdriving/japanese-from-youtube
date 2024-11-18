@@ -1,4 +1,4 @@
-from .anki.anki_word_adder import AnkiAdder
+from .anki.anki_adder import AnkiAdder
 from .database.db_connector import DbConnector
 from .text_handling.sentence_extractor import SentenceExtractor
 from .text_handling.youtube_transcriber import YoutubeTranscriber

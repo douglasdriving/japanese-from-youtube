@@ -4,6 +4,7 @@ from ..text_handling.sentence import JapaneseSentence
 from ..text_handling.word import JapaneseWord
 from ..text_handling.romaziner import Romanizer
 from .anki_connector import AnkiConnector
+from .anki_updater import AnkiUpdater
 from .anki_getter import AnkiGetter
 from ..database.db_connector import DbConnector
 from dotenv import load_dotenv
@@ -16,6 +17,7 @@ class AnkiAdder:
     anki_path: str
     anki_connector: AnkiConnector
     anki_getter: AnkiGetter
+    anki_updater = AnkiUpdater()
     vocabulary_connector: DbConnector
 
     def __init__(self):
@@ -188,11 +190,3 @@ class AnkiAdder:
         else:
             self._mark_notes_in_db(notes_to_add, added_note_ids)
             return added_note_ids
-
-    # TODO: create anki updater class
-    def update_sentence(self, sentence: JapaneseSentence):
-        note = self.make_sentence_note(sentence)
-        self.anki_connector.open_anki_if_not_running()
-        note_id = sentence.anki_id
-        new_back = note.back
-        self.anki_connector.update_card_back(note_id, new_back)

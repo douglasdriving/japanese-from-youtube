@@ -3,9 +3,10 @@ from ..anki.anki_connector import AnkiConnector
 from ..database.db_connector import DbConnector
 from ..text_handling.word import JapaneseWord
 from ..text_handling.sentence import JapaneseSentence
-from ..anki.anki_word_adder import AnkiAdder
+from ..anki.anki_adder import AnkiAdder
 from ..anki.anki_note import AnkiNote
 from ..anki.anki_getter import AnkiGetter
+from ..anki.anki_updater import AnkiUpdater
 from ..text_handling.sentence_extractor import SentenceExtractor
 import re
 
@@ -16,6 +17,7 @@ class AnkiCleaner:
     vocab_connector: DbConnector
     anki_word_adder: AnkiAdder
     anki_getter = AnkiGetter()
+    anki_updater = AnkiUpdater()
     sentence_extractor: SentenceExtractor
 
     def __init__(self):
@@ -184,7 +186,7 @@ class AnkiCleaner:
             new_back = anki_note.back
             note_id = note["noteId"]
             # and bulk card back updater
-            self.anki_connector.update_card_back(note_id, new_back)
+            self.anki_updater.update_card_back(note_id, new_back)
 
     def _add_missing_card_tags(self):
 
@@ -207,10 +209,10 @@ class AnkiCleaner:
                     id_of_notes_to_tag_as_word.append(note_id)
         if len(id_of_notes_to_tag_as_word) > 0:
             print("Adding word tag to notes: ", len(id_of_notes_to_tag_as_word))
-            self.anki_connector.tag_notes(id_of_notes_to_tag_as_word, "word")
+            self.anki_updater.tag_notes(id_of_notes_to_tag_as_word, "word")
         if len(if_of_notes_to_tag_as_sentence) > 0:
             print("Adding sentence tag to notes: ", len(if_of_notes_to_tag_as_sentence))
-            self.anki_connector.tag_notes(if_of_notes_to_tag_as_sentence, "sentence")
+            self.anki_updater.tag_notes(if_of_notes_to_tag_as_sentence, "sentence")
         if (
             len(id_of_notes_to_tag_as_word) == 0
             and len(if_of_notes_to_tag_as_sentence) == 0
