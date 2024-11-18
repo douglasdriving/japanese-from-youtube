@@ -7,6 +7,7 @@ from ..anki.anki_adder import AnkiAdder
 from ..anki.anki_note import AnkiNote
 from ..anki.anki_getter import AnkiGetter
 from ..anki.anki_updater import AnkiUpdater
+from ..anki.anki_note_maker import AnkiNoteMaker
 from ..text_handling.sentence_extractor import SentenceExtractor
 import re
 
@@ -18,6 +19,7 @@ class AnkiCleaner:
     anki_word_adder: AnkiAdder
     anki_getter = AnkiGetter()
     anki_updater = AnkiUpdater()
+    anki_note_maker = AnkiNoteMaker()
     sentence_extractor: SentenceExtractor
 
     def __init__(self):
@@ -180,7 +182,7 @@ class AnkiCleaner:
             )
         else:
             # bulk note maker
-            anki_note: AnkiNote = self.anki_word_adder.make_sentence_note(
+            anki_note: AnkiNote = self.anki_note_maker.make_sentence_note(
                 japanese_sentence
             )
             new_back = anki_note.back

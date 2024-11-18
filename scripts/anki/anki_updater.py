@@ -1,11 +1,11 @@
 from .anki_connector import AnkiConnector
-from .anki_adder import AnkiAdder
+from .anki_note_maker import AnkiNoteMaker
 from ..text_handling.sentence import JapaneseSentence
 
 
 class AnkiUpdater:
     connector = AnkiConnector()
-    adder = AnkiAdder()
+    note_maker = AnkiNoteMaker()
 
     def __init__(self):
         pass
@@ -22,7 +22,7 @@ class AnkiUpdater:
         )
 
     def update_sentence(self, sentence: JapaneseSentence):
-        note = self.adder.make_sentence_note(sentence)
+        note = self.note_maker.make_sentence_note(sentence)
         note_id = sentence.anki_id
         new_back = note.back
         self.update_card_back(note_id, new_back)

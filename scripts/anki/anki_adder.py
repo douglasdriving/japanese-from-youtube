@@ -6,6 +6,7 @@ from ..text_handling.romaziner import Romanizer
 from .anki_connector import AnkiConnector
 from .anki_updater import AnkiUpdater
 from .anki_getter import AnkiGetter
+from .anki_note_maker import AnkiNoteMaker
 from ..database.db_connector import DbConnector
 from dotenv import load_dotenv
 
@@ -15,9 +16,10 @@ class AnkiAdder:
     deck_name: str
     anki_connect_url: str
     anki_path: str
-    anki_connector: AnkiConnector
-    anki_getter: AnkiGetter
-    anki_updater = AnkiUpdater()
+    connector: AnkiConnector
+    getter: AnkiGetter
+    updater = AnkiUpdater()
+    note_maker = AnkiNoteMaker()
     vocabulary_connector: DbConnector
 
     def __init__(self):
@@ -25,31 +27,11 @@ class AnkiAdder:
         self.deck_name = os.environ["ANKI_DECK_NAME"]
         self.anki_connect_url = os.environ["ANKI_CONNECT_URL"]
         self.anki_path = os.environ["ANKI_PATH"]
-        self.anki_connector = AnkiConnector()
+        self.connector = AnkiConnector()
         self.vocabulary_connector = DbConnector()
 
-    # TODO: create note maker class
-    def make_sentence_note(self, sentence: JapaneseSentence):
-        romanizer = Romanizer()
-        sentence_romaji = romanizer.romanize_with_spaces(sentence.sentence)
-        note_back = (
-            sentence.definition + "<br><br>" + sentence_romaji + "<br><br>Words:"
-        )
-        for word in sentence.words:
-            if word.reading is not None:
-                word_romaji = romanizer.romanize_with_spaces(word.reading)
-                note_back += f"<br>{word_romaji} - {word.definition}"
-            else:
-                print(
-                    f"Warning: Word {word.word} has no reading. This will be skipped in the Anki note."
-                )
-        note = AnkiNote(
-            sentence.audio_file_path, note_back, ["sentence"], sentence.db_id
-        )
-        return note
-
     def add_words_and_sentences_to_anki(self, sentences: list[JapaneseSentence]):
-        self.anki_connector.open_anki_if_not_running()
+        self.connector.open_anki_if_not_running()
         notes: list[AnkiNote] = []
         for sentence in sentences:
             for word in sentence.words:
@@ -75,12 +57,12 @@ class AnkiAdder:
                     f"Warning: Sentence {sentence.sentence} has no database ID. Skipping adding to Anki."
                 )
                 continue
-            sentence_note = self.make_sentence_note(sentence)
+            sentence_note = self.note_maker.make_sentence_note(sentence)
             notes.append(sentence_note)
         self.add_notes_to_anki_and_mark_in_db(notes)
 
     def add_sentence_note(self, sentence: JapaneseSentence):
-        note = self.make_sentence_note(sentence)
+        note = self.note_maker.make_sentence_note(sentence)
         note_id = self.add_notes_to_anki_and_mark_in_db([note])[0]
         return note_id
 
@@ -117,13 +99,13 @@ class AnkiAdder:
         return audio
 
     def _check_which_notes_can_be_added(self, notes: list):
-        return self.anki_connector.post_request(
+        return self.connector.post_request(
             "canAddNotesWithErrorDetail", {"notes": notes}
         )
 
     # this is pretty long, might want to refactor
     def _add_notes_to_anki(self, notes_to_add: list[AnkiNote]):
-        self.anki_connector.open_anki_if_not_running()
+        self.connector.open_anki_if_not_running()
 
         notes = []
         for note_to_add in notes_to_add:
@@ -157,9 +139,7 @@ class AnkiAdder:
             else:
                 valid_notes.append(note)
 
-        added_note_ids = self.anki_connector.post_request(
-            "addNotes", {"notes": valid_notes}
-        )
+        added_note_ids = self.connector.post_request("addNotes", {"notes": valid_notes})
         if added_note_ids is None:
             print(f"Failed to add card to Anki deck. Error: {response_json['error']}")
         else:
@@ -169,7 +149,7 @@ class AnkiAdder:
     def _mark_notes_in_db(
         self, notes_to_add: list[AnkiNote], added_note_ids: list[int]
     ):
-        added_notes = self.anki_getter.get_notes(added_note_ids)
+        added_notes = self.getter.get_notes(added_note_ids)
         for added_note in added_notes:
             for note_to_add in notes_to_add:
                 if note_to_add.back == added_note["fields"]["Back"]["value"]:
