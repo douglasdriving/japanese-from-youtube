@@ -44,67 +44,27 @@ class AnkiConnector:
         result = response_json["result"]
         if result is None:
             print(
-                f"Failed to make Anki request. Action: {action}, Error: {response_json['error']}"
+                f"Failed to make Anki request. Action: {action}, Params: {params}, Error: {response_json['error']}"
             )
         return result
 
     def update_card_back(self, note_id, new_back):
-        self.open_anki_if_not_running()
-        anki_request_json = {
-            "action": "updateNoteFields",
-            "version": 6,
-            "params": {
+        return self.post_request(
+            "updateNoteFields",
+            {
                 "note": {
                     "id": note_id,
                     "fields": {"Back": new_back},
                 }
             },
-        }
-        response = requests.post(os.environ["ANKI_CONNECT_URL"], json=anki_request_json)
-        response_json = response.json()
-        result = response_json["result"]
-        if response_json["error"] is not None:
-            error = response_json["error"]
-            print(f"Failed to update card with back: {new_back}. Error: {error}")
-            return None
-        else:
-            print("Card updated successfully: ", note_id)
-            return result
+        )
 
     # TODO: create note tagger class
     def tag_notes(self, note_ids: list[int], tag: str):
         print("Adding tag ", tag, " to notes: ", len(note_ids), "...")
-        self.open_anki_if_not_running()
-        anki_request_json = {
-            "action": "addTags",
-            "version": 6,
-            "params": {
-                "notes": note_ids,
-                "tags": tag,
-            },
-        }
-        response = requests.post(os.environ["ANKI_CONNECT_URL"], json=anki_request_json)
-        response_json = response.json()
-        result = response_json["result"]
-        if response_json["error"] is not None:
-            print(f"Failed to add tags to notes. Error: {response_json['error']}")
-        else:
-            print("Tags ", tag, " added successfully to notes: ", len(note_ids))
-        return result
+        return self.post_request("addTags", {"notes": note_ids, "tags": tag})
 
     # TODO: create note deleter class
     def delete_notes(self, note_ids: list[int]):
         print("Deleting anki notes: ", len(note_ids), "...")
-        self.open_anki_if_not_running()
-        anki_request_json = {
-            "action": "deleteNotes",
-            "version": 6,
-            "params": {"notes": note_ids},
-        }
-        response = requests.post(os.environ["ANKI_CONNECT_URL"], json=anki_request_json)
-        response_json = response.json()
-        if response_json["error"] is not None:
-            print(f"Failed to delete notes. Error: {response_json['error']}")
-        else:
-            print("Anki notes deleted successfully: ", len(note_ids))
-        return response_json["result"]
+        return self.post_request("deleteNotes", {"notes": note_ids})

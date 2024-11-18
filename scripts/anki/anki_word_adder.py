@@ -1,4 +1,3 @@
-import requests
 import os
 from .anki_note import AnkiNote
 from ..text_handling.sentence import JapaneseSentence
@@ -116,20 +115,9 @@ class AnkiAdder:
         return audio
 
     def _check_which_notes_can_be_added(self, notes: list):
-        request_json = {
-            "action": "canAddNotesWithErrorDetail",
-            "version": 6,
-            "params": {
-                "notes": notes,
-            },
-        }
-        response = requests.post(self.anki_connect_url, json=request_json)
-        response_json = response.json()
-        if response_json["result"] is None:
-            print(
-                f"Failed to check which notes can be added. Error: {response_json['error']}"
-            )
-        return response_json["result"]
+        return self.anki_connector.post_request(
+            "canAddNotesWithErrorDetail", {"notes": notes}
+        )
 
     # this is pretty long, might want to refactor
     def _add_notes_to_anki(self, notes_to_add: list[AnkiNote]):
@@ -167,18 +155,9 @@ class AnkiAdder:
             else:
                 valid_notes.append(note)
 
-        request_json = {
-            "action": "addNotes",
-            "version": 6,
-            "params": {
-                "notes": valid_notes,
-            },
-        }
-
-        response = requests.post(self.anki_connect_url, json=request_json)
-        response_json = response.json()
-        added_note_ids = response_json["result"]
-
+        added_note_ids = self.anki_connector.post_request(
+            "addNotes", {"notes": valid_notes}
+        )
         if added_note_ids is None:
             print(f"Failed to add card to Anki deck. Error: {response_json['error']}")
         else:
