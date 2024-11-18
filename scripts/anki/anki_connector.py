@@ -2,9 +2,14 @@ import time
 import subprocess
 import requests
 import os
+from ..text_handling.sentence import JapaneseSentence
+from .anki_word_adder import AnkiAdder
 
 
 class AnkiConnector:
+
+    anki_adder: AnkiAdder
+
     def __init__(self):
         pass
 
@@ -86,6 +91,7 @@ class AnkiConnector:
             print("Card updated successfully: ", note_id)
             return result
 
+    # TODO: create note getter class
     def get_all_notes(self):
         self._open_anki_if_not_running()
         ids = self.get_all_note_ids()
@@ -120,6 +126,7 @@ class AnkiConnector:
             print(f"Failed to retrieve all note ID's. Error: {response_json['error']}")
         return result
 
+    # TODO: create note tagger class
     def tag_notes(self, note_ids: list[int], tag: str):
         print("Adding tag ", tag, " to notes: ", len(note_ids), "...")
         self._open_anki_if_not_running()
@@ -140,6 +147,7 @@ class AnkiConnector:
             print("Tags ", tag, " added successfully to notes: ", len(note_ids))
         return result
 
+    # TODO: create note deleter class
     def delete_notes(self, note_ids: list[int]):
         print("Deleting anki notes: ", len(note_ids), "...")
         self._open_anki_if_not_running()
@@ -155,3 +163,11 @@ class AnkiConnector:
         else:
             print("Anki notes deleted successfully: ", len(note_ids))
         return response_json["result"]
+
+    # TODO: create anki updater class
+    def update_sentence(self, sentence: JapaneseSentence):
+        note = self.anki_adder.make_sentence_note(sentence)
+        self._open_anki_if_not_running()
+        note_id = sentence.anki_id
+        new_back = note.back
+        self.update_card_back(note_id, new_back)

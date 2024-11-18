@@ -57,6 +57,7 @@ class OpenAiConnector:
             sentence_json["text"],
             sentence_json["translation"],
             romaji=sentence_json["romaji"],
+            gpt_generated=True,
         )
         words_json = sentence_json.get("words", [])
         words: list[JapaneseWord] = []

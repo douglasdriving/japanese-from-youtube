@@ -62,21 +62,23 @@ class YoutubeScraper:
             video_id = input()
         return video_id
 
-    def _add_new_words_and_sentences(self, sentences: list[JapaneseSentence]):
-        added_sentences: list[JapaneseSentence] = []
-        for sentence in sentences:
-            sentence.words = self._add_new_words(sentence.words)
-            added_sentence = self.db_connector.add_sentence_if_new(sentence)
-            if added_sentence:
-                anki_note_id = self.anki_adder.add_sentence_note(added_sentence)
-                added_sentence.anki_id = anki_note_id
-                added_sentences.append(added_sentence)
-        return added_sentences
+    # def _add_new_words_and_sentences(self, sentences: list[JapaneseSentence]):
+    #     added_sentences: list[JapaneseSentence] = []
+    #     for sentence in sentences:
+    #         sentence.words = self._add_new_words(sentence.words)
+    #         added_sentence = self.db_connector.add_sentence_if_new(sentence)
+    #         if added_sentence:
+    #             anki_note_id = self.anki_adder.add_sentence_note(added_sentence)
+    #             added_sentence.anki_id = anki_note_id
+    #             added_sentences.append(added_sentence)
+    #    return added_sentences
 
     def _add_new_words(self, words: list[JapaneseWord]):
         added_words: list[JapaneseWord] = []
         for word in words:
-            word = self.db_connector.add_word_if_new(word)
+            word = self.db_connector.add_word_if_new_or_update_definition_if_existing(
+                word
+            )
             if word:
                 if word.anki_id is None:
                     anki_id = self.anki_adder.add_word_note(word)

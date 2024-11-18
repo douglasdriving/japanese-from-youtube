@@ -120,13 +120,14 @@ class DbConnector:
         try:
             self.cursor.execute(
                 """
-                INSERT INTO sentences (sentence, definition, audio_file_path)
-                VALUES (?, ?, ?)
+                INSERT INTO sentences (sentence, definition, audio_file_path, gpt_generated)
+                VALUES (?, ?, ?, ?)
                 """,
                 (
                     sentence.sentence,
                     sentence.definition,
                     sentence.audio_file_path,
+                    sentence.gpt_generated,
                 ),
             )
             self.connection.commit()
@@ -190,6 +191,18 @@ class DbConnector:
             sentences.append(sentence)
         return sentences
 
+    def get_sentences_not_generated_by_gpt(self):
+        self.cursor.execute(
+            """
+            SELECT * FROM sentences WHERE gpt_generated = 0
+            """
+        )
+        data = self.cursor.fetchall()
+        sentences: list[JapaneseSentence] = []
+        for row in data:
+            sentences.append(self._turn_sentence_data_into_sentence(row))
+        return sentences
+
     def get_word_if_exists(self, word_in_kana: str):
         self.cursor.execute(
             """
@@ -201,10 +214,7 @@ class DbConnector:
         if word_data is None:
             return None
         else:
-            word = JapaneseWord(
-                word_data[1], word_data[2], word_data[3], word_data[4], word_data[0]
-            )
-            return word
+            return self.turn_word_data_into_word(word_data)
 
     def get_sentence_by_definition(self, english_sentence: str):
         self.cursor.execute(
@@ -235,6 +245,7 @@ class DbConnector:
         else:
             return self._turn_sentence_data_into_sentence(sentence_data)
 
+    # TODO: make sure this function is used by all sentence extractions
     def _turn_sentence_data_into_sentence(self, sentence_data):
         sentence = JapaneseSentence(
             database_id=sentence_data[0],
@@ -243,6 +254,7 @@ class DbConnector:
             audio_file=sentence_data[3],
             anki_id=sentence_data[4],
             practice_interval=sentence_data[5],
+            gpt_generated=sentence_data[6],
         )
         return sentence
 
@@ -347,6 +359,7 @@ class DbConnector:
         else:
             return self.turn_word_data_into_word(word_data)
 
+    # TODO: make sure this function is used by all word extractions
     def turn_word_data_into_word(self, word_data):
         return JapaneseWord(
             word_data[1],
@@ -356,3 +369,43 @@ class DbConnector:
             word_data[0],
             word_data[5],
         )
+
+    def change_word_definition(self, word_id: int, new_definition: str):
+        try:
+            self.cursor.execute(
+                """
+                    UPDATE vocabulary
+                    SET definition = ?
+                    WHERE id = ?
+                    """,
+                (new_definition, word_id),
+            )
+            self.connection.commit()
+            print(
+                f"Updated definition for word with id {word_id} to '{new_definition}'"
+            )
+        except sqlite3.Error as error:
+            print("ERROR UPDATING WORD DEFINITION: ", error)
+
+    def update_sentence(self, sentence: JapaneseSentence):
+        try:
+            self.cursor.execute(
+                """
+                    UPDATE sentences
+                    SET sentence = ?, definition = ?, audio_file_path = ?, gpt_generated = ?
+                    WHERE id = ?
+                    """,
+                (
+                    sentence.sentence,
+                    sentence.definition,
+                    sentence.audio_file_path,
+                    sentence.gpt_generated,
+                    sentence.db_id,
+                ),
+            )
+            self.connection.commit()
+            print(
+                f"Updated sentence with id {sentence.db_id} to '{sentence.sentence}', '{sentence.definition}', '{sentence.audio_file_path}', '{sentence.gpt_generated}'"
+            )
+        except sqlite3.Error as error:
+            print("ERROR UPDATING SENTENCE: ", error)

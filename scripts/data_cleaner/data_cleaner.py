@@ -5,6 +5,7 @@ from scripts.text_handling.speech_synthesizer import SpeechSynthesizer
 from .anki_cleaner import AnkiCleaner
 from ..database.db_connector import DbConnector
 from ..anki.anki_connector import AnkiConnector
+from .gpt_sentence_replacer import GPTSentenceReplacer
 
 
 class DataCleaner:
@@ -23,6 +24,8 @@ class DataCleaner:
     def clean_data(self):
         print("Cleaning data...")
         self._clean_audio_file_names()
+        gpt_sentence_replacer = GPTSentenceReplacer()
+        gpt_sentence_replacer.replace_sentences_not_genereated_with_gpt()
         anki_cleaner = AnkiCleaner()
         anki_cleaner.clean()
         self._add_missing_anki_ids()

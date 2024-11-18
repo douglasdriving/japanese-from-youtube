@@ -11,6 +11,7 @@ class JapaneseSentence:
     words: list[JapaneseWord]
     practice_interval: int
     anki_id: int
+    gpt_generated: bool
 
     def __init__(
         self,
@@ -22,6 +23,7 @@ class JapaneseSentence:
         romaji: str = None,
         anki_id: int = None,
         practice_interval: int = 0,
+        gpt_generated: bool = False,
     ):
         self.sentence = sentence
         self.definition = definition
@@ -31,6 +33,7 @@ class JapaneseSentence:
         self.practice_interval = practice_interval
         self.anki_id = anki_id
         self.romaji = romaji
+        self.gpt_generated = gpt_generated
 
     def is_fully_defined(self):
         return (

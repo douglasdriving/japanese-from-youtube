@@ -25,6 +25,7 @@ class AnkiAdder:
         self.anki_connector = AnkiConnector()
         self.vocabulary_connector = DbConnector()
 
+    # TODO: create note maker class
     def make_sentence_note(self, sentence: JapaneseSentence):
         romanizer = Romanizer()
         sentence_romaji = romanizer.romanize_with_spaces(sentence.sentence)
