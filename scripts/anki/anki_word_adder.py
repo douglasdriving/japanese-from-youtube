@@ -207,3 +207,11 @@ class AnkiAdder:
         else:
             self._mark_notes_in_db(notes_to_add, added_note_ids)
             return added_note_ids
+
+    # TODO: create anki updater class
+    def update_sentence(self, sentence: JapaneseSentence):
+        note = self.make_sentence_note(sentence)
+        self.anki_connector._open_anki_if_not_running()
+        note_id = sentence.anki_id
+        new_back = note.back
+        self.anki_connector.update_card_back(note_id, new_back)

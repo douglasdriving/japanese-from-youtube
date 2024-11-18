@@ -2,13 +2,9 @@ import time
 import subprocess
 import requests
 import os
-from ..text_handling.sentence import JapaneseSentence
-from .anki_word_adder import AnkiAdder
 
 
 class AnkiConnector:
-
-    anki_adder: AnkiAdder
 
     def __init__(self):
         pass
@@ -163,11 +159,3 @@ class AnkiConnector:
         else:
             print("Anki notes deleted successfully: ", len(note_ids))
         return response_json["result"]
-
-    # TODO: create anki updater class
-    def update_sentence(self, sentence: JapaneseSentence):
-        note = self.anki_adder.make_sentence_note(sentence)
-        self._open_anki_if_not_running()
-        note_id = sentence.anki_id
-        new_back = note.back
-        self.update_card_back(note_id, new_back)

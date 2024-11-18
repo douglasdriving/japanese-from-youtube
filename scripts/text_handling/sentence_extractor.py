@@ -17,7 +17,7 @@ class SentenceExtractor:
     speech_synthesizer: SpeechSynthesizer
     open_ai_connector: OpenAiConnector
 
-    def __init__(self, transcript: list[TranscriptLine]):
+    def __init__(self, transcript: list[TranscriptLine] = None):
         self.transcript = transcript
         self.sentences = []
         self.vocabulary_connector = DbConnector()
@@ -53,7 +53,7 @@ class SentenceExtractor:
             )
             return sentence_in_db
         else:
-            created_sentence = self._create_new_sentence(sentence_text)
+            created_sentence = self.create_new_sentence(sentence_text)
             print(
                 "made new sentence: ",
                 sentence_text,
@@ -120,7 +120,7 @@ class SentenceExtractor:
                 )
                 sentences.append(sentence_in_db)
             else:
-                created_sentence = self._create_new_sentence(line.text)
+                created_sentence = self.create_new_sentence(line.text)
                 print(
                     idx + 1,
                     ". made new sentence: ",
@@ -132,7 +132,7 @@ class SentenceExtractor:
                 sentences.append(sentence_in_db)
         return sentences
 
-    def _create_new_sentence(self, sentence_text):
+    def create_new_sentence(self, sentence_text):
         sentence_obj = self.open_ai_connector.get_sentence_data(sentence_text)
         if sentence_obj is None:
             print(
