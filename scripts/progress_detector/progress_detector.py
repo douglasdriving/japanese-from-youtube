@@ -1,4 +1,4 @@
-from ..anki.anki_connector import AnkiConnector
+from ..anki.anki_getter import AnkiGetter
 from ..database.db_connector import DbConnector
 from ..text_handling.sentence import JapaneseSentence
 from ..database.video_db_connector import VideoDbConnector
@@ -22,8 +22,8 @@ class ProgressDetector:
     def _update_sentence_progress(self):
 
         # get all anki cards
-        anki_connector = AnkiConnector()
-        anki_cards = anki_connector.get_all_anki_cards()
+        anki_getter = AnkiGetter()
+        anki_cards = anki_getter.get_all_cards()
 
         # get all sentences
         db_connector = DbConnector()

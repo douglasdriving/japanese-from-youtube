@@ -5,6 +5,7 @@ from scripts.text_handling.speech_synthesizer import SpeechSynthesizer
 from .anki_cleaner import AnkiCleaner
 from ..database.db_connector import DbConnector
 from ..anki.anki_connector import AnkiConnector
+from ..anki.anki_getter import AnkiGetter
 from .gpt_sentence_replacer import GPTSentenceReplacer
 
 
@@ -14,6 +15,7 @@ class DataCleaner:
     cursor: sqlite3.Cursor
     vocabulary_connector: DbConnector
     anki_connector: AnkiConnector
+    anki_getter = AnkiGetter()
 
     def __init__(self):
         self.connection = sqlite3.connect("vocabulary.db")
@@ -164,6 +166,6 @@ class DataCleaner:
                     )
 
         print("Adding missing anki ids...")
-        anki_notes = self.anki_connector.get_all_notes()
+        anki_notes = self.anki_getter.get_all_notes()
         update_words(anki_notes)
         update_sentences(anki_notes)

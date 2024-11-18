@@ -5,6 +5,7 @@ from ..text_handling.word import JapaneseWord
 from ..text_handling.sentence import JapaneseSentence
 from ..anki.anki_word_adder import AnkiAdder
 from ..anki.anki_note import AnkiNote
+from ..anki.anki_getter import AnkiGetter
 from ..text_handling.sentence_extractor import SentenceExtractor
 import re
 
@@ -14,6 +15,7 @@ class AnkiCleaner:
     anki_connector: AnkiConnector
     vocab_connector: DbConnector
     anki_word_adder: AnkiAdder
+    anki_getter = AnkiGetter()
     sentence_extractor: SentenceExtractor
 
     def __init__(self):
@@ -36,7 +38,7 @@ class AnkiCleaner:
         anki_ids_in_db = [sentence.anki_id for sentence in sentences_in_db] + [
             word.anki_id for word in words_in_db
         ]
-        all_notes = self.anki_connector.get_all_notes()
+        all_notes = self.anki_getter.get_all_notes()
         ids_of_notes_to_delete = [
             note["noteId"] for note in all_notes if note["noteId"] not in anki_ids_in_db
         ]
@@ -45,7 +47,7 @@ class AnkiCleaner:
     def _add_missing_cards(self):
 
         print("checking if there are any missing cards...")
-        cards = self.anki_connector.get_all_anki_cards()
+        cards = self.anki_getter.get_all_cards()
         anki_card_definitions: list[str] = [
             re.split(r"<br\s*/?>|\n", card["fields"]["Back"]["value"])[0]
             for card in cards
@@ -109,7 +111,7 @@ class AnkiCleaner:
         print("All bad sentence cards updated")
 
     def _get_bad_sentence_notes(self):
-        all_notes = self.anki_connector.get_all_notes()
+        all_notes = self.anki_getter.get_all_notes()
         return [note for note in all_notes if self._is_bad_sentence_note(note)]
 
     def _is_bad_sentence_note(self, note):
@@ -192,7 +194,7 @@ class AnkiCleaner:
             return is_tagged_as_word_or_sentence
 
         print("Checking if there are any missing card tags...")
-        notes = self.anki_connector.get_all_notes()
+        notes = self.anki_getter.get_all_notes()
         id_of_notes_to_tag_as_word = []
         if_of_notes_to_tag_as_sentence = []
         for idx, note in enumerate(notes):

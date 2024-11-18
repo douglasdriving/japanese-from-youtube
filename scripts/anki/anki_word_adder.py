@@ -5,6 +5,7 @@ from ..text_handling.sentence import JapaneseSentence
 from ..text_handling.word import JapaneseWord
 from ..text_handling.romaziner import Romanizer
 from .anki_connector import AnkiConnector
+from .anki_getter import AnkiGetter
 from ..database.db_connector import DbConnector
 from dotenv import load_dotenv
 
@@ -15,6 +16,7 @@ class AnkiAdder:
     anki_connect_url: str
     anki_path: str
     anki_connector: AnkiConnector
+    anki_getter: AnkiGetter
     vocabulary_connector: DbConnector
 
     def __init__(self):
@@ -46,7 +48,7 @@ class AnkiAdder:
         return note
 
     def add_words_and_sentences_to_anki(self, sentences: list[JapaneseSentence]):
-        self.anki_connector._open_anki_if_not_running()
+        self.anki_connector.open_anki_if_not_running()
         notes: list[AnkiNote] = []
         for sentence in sentences:
             for word in sentence.words:
@@ -131,7 +133,7 @@ class AnkiAdder:
 
     # this is pretty long, might want to refactor
     def _add_notes_to_anki(self, notes_to_add: list[AnkiNote]):
-        self.anki_connector._open_anki_if_not_running()
+        self.anki_connector.open_anki_if_not_running()
 
         notes = []
         for note_to_add in notes_to_add:
@@ -186,7 +188,7 @@ class AnkiAdder:
     def _mark_notes_in_db(
         self, notes_to_add: list[AnkiNote], added_note_ids: list[int]
     ):
-        added_notes = self.anki_connector.get_notes(added_note_ids)
+        added_notes = self.anki_getter.get_notes(added_note_ids)
         for added_note in added_notes:
             for note_to_add in notes_to_add:
                 if note_to_add.back == added_note["fields"]["Back"]["value"]:
@@ -211,7 +213,7 @@ class AnkiAdder:
     # TODO: create anki updater class
     def update_sentence(self, sentence: JapaneseSentence):
         note = self.make_sentence_note(sentence)
-        self.anki_connector._open_anki_if_not_running()
+        self.anki_connector.open_anki_if_not_running()
         note_id = sentence.anki_id
         new_back = note.back
         self.anki_connector.update_card_back(note_id, new_back)
