@@ -1,4 +1,5 @@
-from anki_connector import AnkiConnector
+from .anki_connector import AnkiConnector
+import os
 
 
 class AnkiGetter:
@@ -9,12 +10,16 @@ class AnkiGetter:
         pass
 
     def get_all_cards(self):
-        card_ids = self.connector.post_request("findCards")
+        card_ids = self.connector.post_request(
+            "findCards", {"query": "deck:" + os.environ["ANKI_DECK_NAME"]}
+        )
         cards = self.connector.post_request("cardsInfo", {"cards": card_ids})
         return cards
 
     def get_all_notes(self):
-        ids = self.connector.post_request("findNotes")
+        ids = self.connector.post_request(
+            "findNotes", {"query": "deck:" + os.environ["ANKI_DECK_NAME"]}
+        )
         notes = self.get_notes(ids)
         return notes
 

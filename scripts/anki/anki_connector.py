@@ -32,7 +32,6 @@ class AnkiConnector:
 
     def post_request(self, action: str, params: dict = {}):
         self.open_anki_if_not_running()
-        params.setdefault("deck", os.environ["ANKI_DECK_NAME"])
         request_json = {
             "action": action,
             "version": 6,

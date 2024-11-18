@@ -1,6 +1,7 @@
 from scripts.youtube_scraper import YoutubeScraper
 from scripts.data_cleaner.data_cleaner import DataCleaner
 from scripts.progress_detector.progress_detector import ProgressDetector
+import dotenv
 
 
 class MainProgram:
@@ -10,6 +11,7 @@ class MainProgram:
     progress_detector: ProgressDetector
 
     def __init__(self):
+        dotenv.load_dotenv()  # TODO: remove this call from all other scripts
         self.data_cleaner = DataCleaner()
         self.youtube_scraper = YoutubeScraper()
         self.progress_detector = ProgressDetector()
