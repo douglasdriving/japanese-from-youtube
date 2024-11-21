@@ -68,8 +68,11 @@ class AnkiAdder:
 
     def add_word_note(self, word: JapaneseWord):
         note = AnkiNote(word.audio_file_path, word.definition, ["word"], word.db_id)
-        note_id = self.add_notes_to_anki_and_mark_in_db([note])[0]
-        return note_id
+        added_notes = self.add_notes_to_anki_and_mark_in_db([note])
+        if added_notes and len(added_notes) > 0:
+            return added_notes[0]
+        else:
+            return None
 
     def _get_card_options(self):
         options = (
