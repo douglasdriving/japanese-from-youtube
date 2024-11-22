@@ -7,6 +7,7 @@ class JapaneseWord:
     db_id: int | None
     anki_id: int | None
     romaji: str | None
+    practice_interval: int | None
 
     def __init__(
         self,
@@ -17,6 +18,7 @@ class JapaneseWord:
         database_id: int = None,
         anki_id: int = None,
         romaji: str = None,
+        practice_interval: int = None,
     ):
         self.word = word
         self.reading = reading
@@ -25,6 +27,7 @@ class JapaneseWord:
         self.db_id = database_id
         self.anki_id = anki_id
         self.romaji = romaji
+        self.practice_interval = practice_interval
 
     def is_same(self, other):
         is_same_word = self.word == other.word

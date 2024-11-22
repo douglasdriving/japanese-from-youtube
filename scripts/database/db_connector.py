@@ -159,7 +159,7 @@ class DbConnector:
         data = self.cursor.fetchall()
         words: list[JapaneseWord] = []
         for row in data:
-            word = JapaneseWord(row[1], row[2], row[3], row[4], row[0], row[5])
+            word = self.turn_word_data_into_word(row)
             words.append(word)
         return words
 
@@ -346,6 +346,21 @@ class DbConnector:
                 f"Updated practice interval for sentence {sentence.sentence} to {sentence.practice_interval}"
             )
 
+    def update_word_practice_intervals(self, words: list[JapaneseWord]):
+        for word in words:
+            self.cursor.execute(
+                """
+                UPDATE vocabulary
+                SET practice_interval = ?
+                WHERE id = ?
+                """,
+                (word.practice_interval, word.db_id),
+            )
+            self.connection.commit()
+            print(
+                f"Updated practice interval for word {word.word} to {word.practice_interval}"
+            )
+
     def get_word_if_exists(self, word_in_kana: str, reading: str):
         self.cursor.execute(
             """
@@ -360,14 +375,16 @@ class DbConnector:
             return self.turn_word_data_into_word(word_data)
 
     # TODO: make sure this function is used by all word extractions
-    def turn_word_data_into_word(self, word_data):
+    def turn_word_data_into_word(self, word_row):
         return JapaneseWord(
-            word_data[1],
-            word_data[2],
-            word_data[3],
-            word_data[4],
-            word_data[0],
-            word_data[5],
+            database_id=word_row[0],
+            word=word_row[1],
+            reading=word_row[2],
+            definition=word_row[3],
+            audio_file_path=word_row[4],
+            anki_id=word_row[5],
+            romaji=word_row[6],
+            practice_interval=word_row[7],
         )
 
     def change_word_definition(self, word_id: int, new_definition: str):
