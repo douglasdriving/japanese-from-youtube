@@ -5,6 +5,7 @@ from ..text_handling.word import JapaneseWord
 from ..anki.anki_connector import AnkiConnector
 from ..anki.anki_adder import AnkiAdder
 from ..anki.anki_updater import AnkiUpdater
+from ..anki.anki_deleter import AnkiDeleter
 
 
 class GPTSentenceReplacer:
@@ -14,6 +15,7 @@ class GPTSentenceReplacer:
     anki_connector = AnkiConnector()
     anki_adder = AnkiAdder()
     anki_updater = AnkiUpdater()
+    anki_deleter = AnkiDeleter()
 
     def __init__(self):
         pass
@@ -46,7 +48,7 @@ class GPTSentenceReplacer:
                 ")",
             )
             self.db_connector.delete_sentence(old_sentence.db_id)
-            self.anki_connector.delete_notes([old_sentence.anki_id])
+            self.anki_deleter.delete_notes([old_sentence.anki_id])
             return
         new_sentence.db_id = old_sentence.db_id
         new_sentence.anki_id = old_sentence.anki_id

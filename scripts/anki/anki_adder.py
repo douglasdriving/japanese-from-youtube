@@ -2,13 +2,11 @@ import os
 from .anki_note import AnkiNote
 from ..text_handling.sentence import JapaneseSentence
 from ..text_handling.word import JapaneseWord
-from ..text_handling.romaziner import Romanizer
 from .anki_connector import AnkiConnector
 from .anki_updater import AnkiUpdater
 from .anki_getter import AnkiGetter
 from .anki_note_maker import AnkiNoteMaker
 from ..database.db_connector import DbConnector
-from dotenv import load_dotenv
 
 
 class AnkiAdder:
@@ -23,7 +21,6 @@ class AnkiAdder:
     vocabulary_connector: DbConnector
 
     def __init__(self):
-        load_dotenv()
         self.deck_name = os.environ["ANKI_DECK_NAME"]
         self.anki_connect_url = os.environ["ANKI_CONNECT_URL"]
         self.anki_path = os.environ["ANKI_PATH"]

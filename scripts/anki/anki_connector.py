@@ -45,8 +45,3 @@ class AnkiConnector:
                 f"Failed to make Anki request. Action: {action}, Params: {params}, Error: {response_json['error']}"
             )
         return result
-
-    # TODO: create note deleter class
-    def delete_notes(self, note_ids: list[int]):
-        print("Deleting anki notes: ", len(note_ids), "...")
-        return self.post_request("deleteNotes", {"notes": note_ids})

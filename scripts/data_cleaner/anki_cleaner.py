@@ -8,6 +8,7 @@ from ..anki.anki_note import AnkiNote
 from ..anki.anki_getter import AnkiGetter
 from ..anki.anki_updater import AnkiUpdater
 from ..anki.anki_note_maker import AnkiNoteMaker
+from ..anki.anki_deleter import AnkiDeleter
 from ..text_handling.sentence_extractor import SentenceExtractor
 import re
 
@@ -20,6 +21,7 @@ class AnkiCleaner:
     anki_getter = AnkiGetter()
     anki_updater = AnkiUpdater()
     anki_note_maker = AnkiNoteMaker()
+    anki_deleter = AnkiDeleter()
     sentence_extractor: SentenceExtractor
 
     def __init__(self):
@@ -50,7 +52,7 @@ class AnkiCleaner:
             note["noteId"] for note in all_notes if note["noteId"] not in anki_ids_in_db
         ]
         print("notes to delete: ", len(ids_of_notes_to_delete))
-        self.anki_connector.delete_notes(ids_of_notes_to_delete)
+        self.anki_deleter.delete_notes(ids_of_notes_to_delete)
 
     def _add_missing_notes(self):
 
