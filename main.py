@@ -11,7 +11,7 @@ class MainProgram:
     progress_detector: ProgressDetector
 
     def __init__(self):
-        dotenv.load_dotenv()  # TODO: remove this call from all other scripts
+        dotenv.load_dotenv()
         input("Please open Anki! Then press enter to continue...")
         self.data_cleaner = DataCleaner()
         self.youtube_scraper = YoutubeScraper()

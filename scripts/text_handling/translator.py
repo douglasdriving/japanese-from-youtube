@@ -1,7 +1,6 @@
 from .word import JapaneseWord
 import deepl
 import os
-from dotenv import load_dotenv
 
 
 class Translator:
@@ -9,7 +8,6 @@ class Translator:
     deepl_translator: deepl.Translator
 
     def __init__(self):
-        load_dotenv()
         self.deepl_translator = deepl.Translator(os.getenv("DEEPL_API_KEY"))
 
     def translate_jp_to_en(self, text: str):

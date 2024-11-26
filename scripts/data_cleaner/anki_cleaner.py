@@ -31,7 +31,7 @@ class AnkiCleaner:
     def clean(self):
         print("Cleaning anki data...")
         self._delete_notes_not_in_db()
-        self._add_missing_cards()
+        self._add_missing_notes()
         self._correct_poor_card_backs()
         self._add_missing_card_tags()
         print("Anki cleaning finished")
@@ -52,7 +52,7 @@ class AnkiCleaner:
         print("notes to delete: ", len(ids_of_notes_to_delete))
         self.anki_connector.delete_notes(ids_of_notes_to_delete)
 
-    def _add_missing_cards(self):
+    def _add_missing_notes(self):
 
         print("checking if there are any missing cards...")
         cards = self.anki_getter.get_all_cards()
@@ -94,13 +94,6 @@ class AnkiCleaner:
             is_in_anki = definition_is_in_anki or audio_is_in_anki
             if not is_in_anki:
                 note = self.anki_note_maker.make_sentence_note(sentence)
-                # also, we cannot get the right words, since we havent cross-reffed that yet.
-                # so... should we simply solve it by starting to use cross refs?
-                # we will need that soon anyway.
-                # how to make this happen:
-
-                # TODO 4. on cleaning, check if words are missing for a given sentence. if yes, utilize gpt to generate the data again and make crossrefs
-
                 notes_to_add.append(note)
 
         print(
