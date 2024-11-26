@@ -19,7 +19,6 @@ class YoutubeScraper:
         self.anki_adder = AnkiAdder()
 
     def scrape_video(self):
-
         youtube_video_id = self._get_valid_youtube_id_from_user()
         print("extracting sentences and words from youtube video...")
         transcript: list[TranscriptLine] = self.youtube_transcriber.transcribe(
@@ -33,14 +32,13 @@ class YoutubeScraper:
             print("processing line ", i + 1, " of ", line_count)
             sentence = sentence_extractor.extract_sentence(line.text)
             if sentence.words is not None:
-                sentence.words = self._add_new_words(sentence.words)
+                sentence.words = self._add_new_words_and_attach_ids_to_old_ones(
+                    sentence.words
+                )
             added_sentence = self.db_connector.add_sentence_if_new(sentence)
             if added_sentence:
                 sentence.anki_id = self.anki_adder.add_sentence_note(added_sentence)
                 added_sentences.append(added_sentence)
-
-        # sentences: list[JapaneseSentence] = sentence_extractor.extract_sentences()
-        # sentences = self._add_new_words_and_sentences(sentences)
         self._add_video_to_db(youtube_video_id, added_sentences)
         print("finished adding vocab to anki deck")
 
@@ -62,23 +60,10 @@ class YoutubeScraper:
             video_id = input()
         return video_id
 
-    # def _add_new_words_and_sentences(self, sentences: list[JapaneseSentence]):
-    #     added_sentences: list[JapaneseSentence] = []
-    #     for sentence in sentences:
-    #         sentence.words = self._add_new_words(sentence.words)
-    #         added_sentence = self.db_connector.add_sentence_if_new(sentence)
-    #         if added_sentence:
-    #             anki_note_id = self.anki_adder.add_sentence_note(added_sentence)
-    #             added_sentence.anki_id = anki_note_id
-    #             added_sentences.append(added_sentence)
-    #    return added_sentences
-
-    def _add_new_words(self, words: list[JapaneseWord]):
+    def _add_new_words_and_attach_ids_to_old_ones(self, words: list[JapaneseWord]):
         added_words: list[JapaneseWord] = []
         for word in words:
-            word = self.db_connector.add_word_if_new_or_update_definition_if_existing(
-                word
-            )
+            word = self.db_connector.add_word_if_new(word)
             if word:
                 if word.anki_id is None:
                     anki_id = self.anki_adder.add_word_note(word)

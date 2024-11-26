@@ -12,7 +12,7 @@ class RomajiAdder:
     def __init__(self):
         pass
 
-    def add_missing_romaji(self):
+    def add_missing_sentence_romaji(self):
         print("Adding missing romaji...")
         sentences = self.db_connector.get_sentences_without_romaji()
         for sentence in sentences:

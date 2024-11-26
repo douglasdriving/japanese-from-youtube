@@ -140,10 +140,28 @@ class DbConnector:
             )
             id = self.cursor.lastrowid
             sentence.db_id = id
+            for word in sentence.words:
+                self.insert_word_sentence_relation(word.db_id, sentence.db_id)
             return sentence
         except sqlite3.Error as error:
             print("ERROR INSERTING SENTENCE: ", error)
             return None
+
+    def insert_word_sentence_relation(self, word_id: int, sentence_id: int):
+        try:
+            self.cursor.execute(
+                """
+                INSERT INTO words_sentences (word_id, sentence_id)
+                VALUES (?, ?)
+                """,
+                (word_id, sentence_id),
+            )
+            self.connection.commit()
+            print(
+                f"Added word-sentence relation to database with word_id {word_id} and sentence_id {sentence_id}"
+            )
+        except sqlite3.Error as error:
+            print("ERROR INSERTING WORD SENTENCE RELATION: ", error)
 
     def check_if_sentence_exists(self, sentence):
         self.cursor.execute(
@@ -255,6 +273,21 @@ class DbConnector:
             sentences.append(self._turn_sentence_data_into_sentence(row))
         return sentences
 
+    def get_sentences_without_word_crossrefs(self):
+        self.cursor.execute(
+            """
+            SELECT * FROM sentences
+            WHERE id NOT IN (
+                SELECT sentence_id FROM words_sentences
+            )
+            """
+        )
+        data = self.cursor.fetchall()
+        sentences: list[JapaneseSentence] = []
+        for row in data:
+            sentences.append(self._turn_sentence_data_into_sentence(row))
+        return sentences
+
     # TODO: make sure this function is used by all sentence extractions
     def _turn_sentence_data_into_sentence(self, sentence_data):
         sentence = JapaneseSentence(
@@ -266,8 +299,25 @@ class DbConnector:
             practice_interval=sentence_data[5],
             gpt_generated=sentence_data[6],
             romaji=sentence_data[7],
+            words=self.get_words_for_sentence(sentence_data[0]),
         )
         return sentence
+
+    def get_words_for_sentence(self, sentence_id: int):
+        self.cursor.execute(
+            """
+            SELECT * FROM vocabulary
+            JOIN words_sentences ON vocabulary.id = words_sentences.word_id
+            WHERE words_sentences.sentence_id = (?)
+            """,
+            (sentence_id,),
+        )
+        data = self.cursor.fetchall()
+        words: list[JapaneseWord] = []
+        for row in data:
+            word = self.turn_word_data_into_word(row)
+            words.append(word)
+        return words
 
     def get_sentences_without_anki_note_id(self):
         self.cursor.execute(
@@ -472,3 +522,19 @@ class DbConnector:
             print(f"Deleted sentence with id {sentence_id}")
         except sqlite3.Error as error:
             print("ERROR DELETING SENTENCE: ", error)
+
+    def add_crossref(self, word_id: int, sentence_id: int):
+        try:
+            self.cursor.execute(
+                """
+                INSERT INTO words_sentences (word_id, sentence_id)
+                VALUES (?, ?)
+                """,
+                (word_id, sentence_id),
+            )
+            self.connection.commit()
+            print(
+                f"Added crossref between word with id {word_id} and sentence with id {sentence_id}"
+            )
+        except sqlite3.Error as error:
+            print("ERROR ADDING CROSSREF: ", error)

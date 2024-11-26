@@ -99,9 +99,6 @@ class AnkiCleaner:
                 # we will need that soon anyway.
                 # how to make this happen:
 
-                # TODO 1. create a word sentence cross table
-                # TODO 2. on sentence creation, also add the cross refs to the table
-                # TODO 3. on sentence retrieval from db, utilize the cross refs to get the words as well
                 # TODO 4. on cleaning, check if words are missing for a given sentence. if yes, utilize gpt to generate the data again and make crossrefs
 
                 notes_to_add.append(note)
