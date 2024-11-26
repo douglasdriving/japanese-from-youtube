@@ -227,10 +227,7 @@ class DbConnector:
         if sentence_data is None:
             return None
         else:
-            sentence = JapaneseSentence(
-                sentence_data[1], sentence_data[2], sentence_data[3], sentence_data[0]
-            )
-            return sentence
+            return self._turn_sentence_data_into_sentence(sentence_data)
 
     def get_sentence_by_kana_text(self, kana_sentence: str):
         self.cursor.execute(
@@ -426,3 +423,17 @@ class DbConnector:
             )
         except sqlite3.Error as error:
             print("ERROR UPDATING SENTENCE: ", error)
+
+    def delete_sentence(self, sentence_id: int):
+        try:
+            self.cursor.execute(
+                """
+                DELETE FROM sentences
+                WHERE id = ?
+                """,
+                (sentence_id,),
+            )
+            self.connection.commit()
+            print(f"Deleted sentence with id {sentence_id}")
+        except sqlite3.Error as error:
+            print("ERROR DELETING SENTENCE: ", error)

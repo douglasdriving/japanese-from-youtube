@@ -63,6 +63,7 @@ class SentenceExtractor:
             )
             return created_sentence
 
+    # TODO: start storing word-sentence connections, so that this can extract the words as well
     def extract_sentence_from_db_by_definition(self, english_sentence: str):
         japanese_sentence = self.vocabulary_connector.get_sentence_by_definition(
             english_sentence
@@ -71,11 +72,6 @@ class SentenceExtractor:
             print("ERROR: Sentence not found in db: ", english_sentence)
             return None
         else:
-            # want a bulk version
-            # what i need is a cross ref table for words and sentences
-            japanese_sentence.words = self._add_audio_file_paths_to_words(
-                japanese_sentence
-            )
             return japanese_sentence
 
     def _clean_lines(self):

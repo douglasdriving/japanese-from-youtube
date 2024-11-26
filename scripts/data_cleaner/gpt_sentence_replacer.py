@@ -32,18 +32,21 @@ class GPTSentenceReplacer:
             )
             self._generate_new_sentence_and_update_old(sentence)
 
+    # TODO: break this down into smaller functions
     def _generate_new_sentence_and_update_old(self, old_sentence: JapaneseSentence):
         new_sentence = self.sentence_extractor.create_new_sentence(
             old_sentence.sentence
         )
         if new_sentence is None:
             print(
-                "ERROR: could not create sentence. Skipping: ",
+                "ERROR: could not create sentence. Deleting: ",
                 old_sentence.sentence,
                 "( ",
                 old_sentence.definition,
                 ")",
             )
+            self.db_connector.delete_sentence(old_sentence.db_id)
+            self.anki_connector.delete_notes([old_sentence.anki_id])
             return
         new_sentence.db_id = old_sentence.db_id
         new_sentence.anki_id = old_sentence.anki_id

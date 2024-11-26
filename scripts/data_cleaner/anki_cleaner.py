@@ -167,27 +167,26 @@ class AnkiCleaner:
         return is_sentence
 
     def _update_sentence_card_back(self, note):
-        # wish for a bulk update method
         back = note["fields"]["Back"]["value"]
         english_sentence = re.split(r"<br\s*/?>|\n", back)[0]
-        # requires bulk sentence extraction
         japanese_sentence = (
             self.sentence_extractor.extract_sentence_from_db_by_definition(
                 english_sentence
-            )
+            )  # this wont get the words, since we havent cross-reffed that yet.
+            # maybe just retrieve the kana for it
+            # and then re-create it using GPT
+            # and use the re-created sentence to create new card back
         )
         if japanese_sentence is None:
             print(
                 "ERROR: Could not extract data to update card back: ", english_sentence
             )
         else:
-            # bulk note maker
             anki_note: AnkiNote = self.anki_note_maker.make_sentence_note(
                 japanese_sentence
             )
             new_back = anki_note.back
             note_id = note["noteId"]
-            # and bulk card back updater
             self.anki_updater.update_card_back(note_id, new_back)
 
     def _add_missing_card_tags(self):
