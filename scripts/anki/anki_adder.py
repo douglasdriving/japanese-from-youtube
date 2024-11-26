@@ -107,7 +107,7 @@ class AnkiAdder:
         )
 
     # this is pretty long, might want to refactor
-    def _add_notes_to_anki(self, notes_to_add: list[AnkiNote]):
+    def _add_note_to_anki(self, notes_to_add: list[AnkiNote]):
         self.connector.open_anki_if_not_running()
 
         notes = []
@@ -142,34 +142,46 @@ class AnkiAdder:
             else:
                 valid_notes.append(note)
 
-        added_note_ids = self.connector.post_request("addNotes", {"notes": valid_notes})
-        if added_note_ids is None:
-            print(f"Failed to add card to Anki deck. Error: {response_json['error']}")
+        response = self.connector.post_request("addNotes", {"notes": valid_notes})
+        if response["error"]:
+            print(f"Failed to add note to Anki deck. Error: {response['error']}")
         else:
-            print(len(added_note_ids), " cards added to Anki deck")
-        return added_note_ids
+            print(len(response), " cards added to Anki deck")
+        return response
 
-    def _mark_notes_in_db(
-        self, notes_to_add: list[AnkiNote], added_note_ids: list[int]
-    ):
-        added_notes = self.getter.get_notes(added_note_ids)
-        for added_note in added_notes:
-            for note_to_add in notes_to_add:
-                if note_to_add.back == added_note["fields"]["Back"]["value"]:
-                    anki_id = added_note["noteId"]
-                    table_name = (
-                        "vocabulary" if "word" in note_to_add.tags else "sentences"
-                    )
-                    db_id = note_to_add.db_id
-                    self.vocabulary_connector.update_anki_note_id(
-                        table_name, db_id, anki_id
-                    )
-                    break
+    def _mark_note_in_db(self, db_id: int, anki_note_id: int, is_word: bool):
+        table_name = "vocabulary" if is_word else "sentences"
+        self.vocabulary_connector.update_anki_note_id(table_name, db_id, anki_note_id)
 
     def add_notes_to_anki_and_mark_in_db(self, notes_to_add: list[AnkiNote]):
-        added_note_ids = self._add_notes_to_anki(notes_to_add)
-        if added_note_ids is None:
-            print("Anki adder returned to note ids. Skipping marking in DB")
+        for note in notes_to_add:
+            if note.db_id is None:
+                print(
+                    f"Warning: Note {note.back} has no database ID. Skipping adding to Anki."
+                )
+                continue
+            anki_note_id = self._add_note_to_anki(note)
+            if anki_note_id:
+                is_word = note.tags and "word" in note.tags
+                self._mark_note_in_db(note.db_id, anki_note_id, is_word)
+            else:
+                print(
+                    "Failed to add note to Anki: ", note.back, ", will not mark in DB"
+                )
+
+    def _add_note_to_anki(self, note_to_add: AnkiNote):
+        self.connector.open_anki_if_not_running()
+        note = {
+            "deckName": self.deck_name,
+            "modelName": "Basic",
+            "fields": {"Front": "", "Back": note_to_add.back},
+            "tags": note_to_add.tags,
+            "options": self._get_card_options(),
+            "audio": self._create_anki_audio(note_to_add.audio_file_path),
+        }
+        anki_id = self.connector.post_request("addNote", {"note": note})
+        if anki_id is None:
+            print(f"Failed to add note to Anki deck: {note}")
         else:
-            self._mark_notes_in_db(notes_to_add, added_note_ids)
-            return added_note_ids
+            print("Anki note added with id: ", anki_id)
+        return anki_id

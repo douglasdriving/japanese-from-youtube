@@ -101,61 +101,37 @@ class OpenAiConnector:
                 raise ValueError("translation not found in word json")
         return True
 
-
-# {
-#     "text": "それを2時間見ました",
-#     "romaji": "Sore o ni-jikan mimashita",
-#     "translation": "I watched it for 2 hours.",
-#     "words": [
-#         {"text": "それ", "reading": "それ", "romaji": "sore", "translation": "that"},
-#         {
-#             "text": "を",
-#             "reading": "を",
-#             "romaji": "o",
-#             "translation": "(object marker)",
-#         },
-#         {"text": "2", "reading": "に", "romaji": "ni", "translation": "two"},
-#         {
-#             "text": "時間",
-#             "reading": "じかん",
-#             "romaji": "jikan",
-#             "translation": "hours",
-#         },
-#         {
-#             "text": "見ました",
-#             "reading": "みました",
-#             "romaji": "mimashita",
-#             "translation": "watched",
-#         },
-#     ],
-# }
-
-
-# {
-#     "id": "chatcmpl-123",
-#     "object": "chat.completion",
-#     "created": 1677652288,
-#     "model": "gpt-4o-mini",
-#     "system_fingerprint": "fp_44709d6fcb",
-#     "choices": [
-#         {
-#             "index": 0,
-#             "message": {
-#                 "role": "assistant",
-#                 "content": "\n\nHello there, how may I assist you today?",
-#             },
-#             "logprobs": null,
-#             "finish_reason": "stop",
-#         }
-#     ],
-#     "usage": {
-#         "prompt_tokens": 9,
-#         "completion_tokens": 12,
-#         "total_tokens": 21,
-#         "completion_tokens_details": {
-#             "reasoning_tokens": 0,
-#             "accepted_prediction_tokens": 0,
-#             "rejected_prediction_tokens": 0,
-#         },
-#     },
-# }
+    def convert_to_romaji(self, sentence_text: str):
+        try:
+            response = self.client.chat.completions.create(
+                model="gpt-4o-mini",
+                messages=[
+                    {
+                        "role": "system",
+                        "content": [
+                            {
+                                "type": "text",
+                                "text": "You are a Japanese romaji converter. You will give the user the romaji of a Japanese sentence. The user will provide you with a japanese sentence in kana, and you will return the romaji version of that sentence. Only provide the romaji text back, and nothing else",
+                            }
+                        ],
+                    },
+                    {
+                        "role": "user",
+                        "content": [{"type": "text", "text": sentence_text}],
+                    },
+                ],
+                temperature=0.18,
+                max_tokens=2048,
+                top_p=1,
+                frequency_penalty=0,
+                presence_penalty=0,
+            )
+            print(
+                "gpt processed romaji with total tokens: ",
+                response.usage.total_tokens,
+            )
+            romaji = response.choices[0].message.content
+        except Exception as e:
+            print("ERROR GETTING ROMAJI: ", e)
+            return None
+        return romaji

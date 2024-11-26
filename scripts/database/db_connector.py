@@ -1,6 +1,7 @@
 import sqlite3
 from ..text_handling.word import JapaneseWord
 from ..text_handling.sentence import JapaneseSentence
+from ..text_handling.romaziner import Romanizer
 
 # time to refactor
 
@@ -9,6 +10,7 @@ class DbConnector:
 
     connection: sqlite3.Connection
     cursor: sqlite3.Cursor
+    romanizer = Romanizer()
 
     def __init__(self):
         self.connection = sqlite3.connect("vocabulary.db")
@@ -109,6 +111,7 @@ class DbConnector:
                 sentence.definition,
                 sentence.audio_file_path,
                 sentence.words,
+                sentence.romaji,
             )
             return None
         if self.check_if_sentence_exists(sentence.sentence):
@@ -120,19 +123,20 @@ class DbConnector:
         try:
             self.cursor.execute(
                 """
-                INSERT INTO sentences (sentence, definition, audio_file_path, gpt_generated)
-                VALUES (?, ?, ?, ?)
+                INSERT INTO sentences (sentence, definition, audio_file_path, gpt_generated, romaji)
+                VALUES (?, ?, ?, ?, ?)
                 """,
                 (
                     sentence.sentence,
                     sentence.definition,
                     sentence.audio_file_path,
                     sentence.gpt_generated,
+                    sentence.romaji,
                 ),
             )
             self.connection.commit()
             print(
-                f"Added sentence '{sentence.sentence}' ({sentence.definition}) to database"
+                f"Added sentence '{sentence.romaji}' ({sentence.definition}) to database"
             )
             id = self.cursor.lastrowid
             sentence.db_id = id
@@ -185,10 +189,7 @@ class DbConnector:
         data = self.cursor.fetchall()
         sentences: list[JapaneseSentence] = []
         for row in data:
-            sentence = JapaneseSentence(row[1], row[2], row[3], row[0])
-            sentence.anki_id = row[4]
-            sentence.practice_interval = row[5]
-            sentences.append(sentence)
+            sentences.append(self._turn_sentence_data_into_sentence(row))
         return sentences
 
     def get_sentences_not_generated_by_gpt(self):
@@ -242,6 +243,18 @@ class DbConnector:
         else:
             return self._turn_sentence_data_into_sentence(sentence_data)
 
+    def get_sentences_without_romaji(self):
+        self.cursor.execute(
+            """
+            SELECT * FROM sentences WHERE romaji IS NULL
+            """
+        )
+        data = self.cursor.fetchall()
+        sentences: list[JapaneseSentence] = []
+        for row in data:
+            sentences.append(self._turn_sentence_data_into_sentence(row))
+        return sentences
+
     # TODO: make sure this function is used by all sentence extractions
     def _turn_sentence_data_into_sentence(self, sentence_data):
         sentence = JapaneseSentence(
@@ -252,6 +265,7 @@ class DbConnector:
             anki_id=sentence_data[4],
             practice_interval=sentence_data[5],
             gpt_generated=sentence_data[6],
+            romaji=sentence_data[7],
         )
         return sentence
 
@@ -269,6 +283,11 @@ class DbConnector:
         return sentences
 
     def update_anki_note_id(self, table_name: str, id: int, anki_id: int):
+        if id is None:
+            print(
+                f"Warning: Sentence has no database ID. Skipping changing the anki ID."
+            )
+            return
         self.cursor.execute(
             f"""
             UPDATE {table_name}
@@ -406,7 +425,7 @@ class DbConnector:
             self.cursor.execute(
                 """
                     UPDATE sentences
-                    SET sentence = ?, definition = ?, audio_file_path = ?, gpt_generated = ?
+                    SET sentence = ?, definition = ?, audio_file_path = ?, gpt_generated = ?, romaji = ?
                     WHERE id = ?
                     """,
                 (
@@ -415,6 +434,7 @@ class DbConnector:
                     sentence.audio_file_path,
                     sentence.gpt_generated,
                     sentence.db_id,
+                    sentence.romaji,
                 ),
             )
             self.connection.commit()
@@ -423,6 +443,21 @@ class DbConnector:
             )
         except sqlite3.Error as error:
             print("ERROR UPDATING SENTENCE: ", error)
+
+    def update_sentence_romaji(self, sentence_id: int, romaji: str):
+        try:
+            self.cursor.execute(
+                """
+                UPDATE sentences
+                SET romaji = ?
+                WHERE id = ?
+                """,
+                (romaji, sentence_id),
+            )
+            self.connection.commit()
+            print(f"Updated romaji for sentence with id {sentence_id} to '{romaji}'")
+        except sqlite3.Error as error:
+            print("ERROR UPDATING SENTENCE ROMAJI: ", error)
 
     def delete_sentence(self, sentence_id: int):
         try:

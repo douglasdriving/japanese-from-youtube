@@ -7,6 +7,7 @@ from ..database.db_connector import DbConnector
 from ..anki.anki_connector import AnkiConnector
 from ..anki.anki_getter import AnkiGetter
 from .gpt_sentence_replacer import GPTSentenceReplacer
+from .romaji_adder import RomajiAdder
 
 
 class DataCleaner:
@@ -16,6 +17,7 @@ class DataCleaner:
     vocabulary_connector: DbConnector
     anki_connector: AnkiConnector
     anki_getter = AnkiGetter()
+    romaji_adder = RomajiAdder()
 
     def __init__(self):
         self.connection = sqlite3.connect("vocabulary.db")
@@ -28,6 +30,7 @@ class DataCleaner:
         self._clean_audio_file_names()
         gpt_sentence_replacer = GPTSentenceReplacer()
         gpt_sentence_replacer.replace_sentences_not_genereated_with_gpt()
+        self.romaji_adder.add_missing_romaji()
         anki_cleaner = AnkiCleaner()
         anki_cleaner.clean()
         self._add_missing_anki_ids()

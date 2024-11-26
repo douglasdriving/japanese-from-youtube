@@ -40,4 +40,5 @@ class JapaneseSentence:
             self.definition is not None
             and self.audio_file_path is not None
             and self.words is not None
+            and self.romaji is not None
         )

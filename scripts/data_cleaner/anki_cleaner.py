@@ -37,15 +37,19 @@ class AnkiCleaner:
         print("Anki cleaning finished")
 
     def _delete_notes_not_in_db(self):
+        print("checking if there are any notes in anki that are not in the db...")
         sentences_in_db = self.vocab_connector.get_all_sentences()
         words_in_db = self.vocab_connector.get_all_words()
         anki_ids_in_db = [sentence.anki_id for sentence in sentences_in_db] + [
             word.anki_id for word in words_in_db
         ]
+        print("notes in db: ", len(anki_ids_in_db))
         all_notes = self.anki_getter.get_all_notes()
+        print("notes in anki: ", len(all_notes))
         ids_of_notes_to_delete = [
             note["noteId"] for note in all_notes if note["noteId"] not in anki_ids_in_db
         ]
+        print("notes to delete: ", len(ids_of_notes_to_delete))
         self.anki_connector.delete_notes(ids_of_notes_to_delete)
 
     def _add_missing_cards(self):
@@ -71,7 +75,14 @@ class AnkiCleaner:
             audio_is_in_anki = audio_file_name in anki_card_audio_file_names
             is_in_anki = word_definition_is_in_anki or audio_is_in_anki
             if not is_in_anki:
-                notes_to_add.append(AnkiNote(word.audio_file_path, word.definition))
+                notes_to_add.append(
+                    AnkiNote(
+                        audio_file_path=word.audio_file_path,
+                        back=word.definition,
+                        tags=["word"],
+                        db_id=word.db_id,
+                    )
+                )
 
         sentences_in_db: list[JapaneseSentence] = (
             self.vocab_connector.get_all_sentences()
@@ -82,9 +93,18 @@ class AnkiCleaner:
             audio_is_in_anki = audio_file_name in anki_card_audio_file_names
             is_in_anki = definition_is_in_anki or audio_is_in_anki
             if not is_in_anki:
-                notes_to_add.append(
-                    AnkiNote(sentence.audio_file_path, sentence.definition)
-                )
+                note = self.anki_note_maker.make_sentence_note(sentence)
+                # also, we cannot get the right words, since we havent cross-reffed that yet.
+                # so... should we simply solve it by starting to use cross refs?
+                # we will need that soon anyway.
+                # how to make this happen:
+
+                # TODO 1. create a word sentence cross table
+                # TODO 2. on sentence creation, also add the cross refs to the table
+                # TODO 3. on sentence retrieval from db, utilize the cross refs to get the words as well
+                # TODO 4. on cleaning, check if words are missing for a given sentence. if yes, utilize gpt to generate the data again and make crossrefs
+
+                notes_to_add.append(note)
 
         print(
             "words + sentences in db: ",
