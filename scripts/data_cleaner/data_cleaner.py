@@ -156,7 +156,9 @@ class DataCleaner:
 
         def update_sentences(all_anki_notes):
             print("Updating sentences...")
-            sentences_to_update = self.db_connector.get_sentences_without_anki_note_id()
+            sentences_to_update = (
+                self.db_connector.get_unlocked_sentences_without_anki_note_id()
+            )
             for sentence in sentences_to_update:
                 anki_note = next(
                     (

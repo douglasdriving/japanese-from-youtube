@@ -348,10 +348,10 @@ class DbConnector:
             words.append(word)
         return words
 
-    def get_sentences_without_anki_note_id(self):
+    def get_unlocked_sentences_without_anki_note_id(self):
         self.cursor.execute(
             """
-            SELECT * FROM sentences WHERE anki_note_id IS NULL
+            SELECT * FROM sentences WHERE anki_note_id IS NULL AND locked = 0
             """
         )
         data = self.cursor.fetchall()

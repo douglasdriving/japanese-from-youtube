@@ -58,11 +58,13 @@ class AnkiCleaner:
 
         def _delete_locked_sentences():
             locked_sentences = self.db_connector.get_locked_sentences()
+            anki_notes_to_delete: list[int] = []
             for sentence in locked_sentences:
                 if sentence.anki_id is not None:
-                    self.anki_deleter.delete_notes([sentence.anki_id])
+                    anki_notes_to_delete.append(sentence.anki_id)
                     self.db_connector.remove_anki_id_from_sentence(sentence.db_id)
                     print("deleted locked sentence from anki: ", sentence.romaji)
+            self.anki_deleter.delete_notes(anki_notes_to_delete)
 
         print("checking if there are any notes in anki to remove...")
         _delete_locked_sentences()
