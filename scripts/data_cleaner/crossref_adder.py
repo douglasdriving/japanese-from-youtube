@@ -16,8 +16,14 @@ class CrossrefAdder:
         print("sentences without crossrefs: ", len(sentences))
         for idx, sentence in enumerate(sentences):
             print(idx, " adding crossref to sentece: ", sentence.romaji)
-            words = self.open_ai_connector.get_sentence_data(sentence.sentence).words
-            for word in words:
+            gpt_sentence = self.open_ai_connector.get_sentence_data(sentence.sentence)
+            if gpt_sentence is None:
+                print(
+                    "GPT was unable to get data, so cant add crossrefs. Sentence: ",
+                    sentence.romaji,
+                )
+                continue
+            for word in gpt_sentence.words:
                 word_in_db = self.db_connector.get_word_if_exists(
                     word.word, word.reading
                 )
