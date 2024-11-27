@@ -3,17 +3,37 @@ from ..database.db_connector import DbConnector
 from ..text_handling.sentence import JapaneseSentence
 from ..text_handling.word import JapaneseWord
 from ..database.video_db_connector import VideoDbConnector
+from ..database.db_connector import DbConnector
 
 
 class ProgressDetector:
 
-    video_db_connector: VideoDbConnector
+    video_db_connector = VideoDbConnector()
+    db_connector = DbConnector()
 
     def __init__(self):
-        self.video_db_connector = VideoDbConnector()
+        pass
 
     def update_progress(self):
         self._update_card_progress()
+        self._unlock_sentences()
+        self._unlock_videos()
+
+    def _unlock_sentences(self):
+        lowest_word_progress_allowed_for_unlock = 4
+        locked_sentences = self.db_connector.get_locked_sentences()
+        ids_of_sentences_to_unlock: list[int] = []
+        for locked_sentence in locked_sentences:
+            can_unlock = True
+            for word in locked_sentence.words:
+                if word.practice_interval < lowest_word_progress_allowed_for_unlock:
+                    can_unlock = False
+                    break
+            if can_unlock:
+                ids_of_sentences_to_unlock.append(locked_sentence.db_id)
+        self.db_connector.unlock_sentences(ids_of_sentences_to_unlock)
+
+    def _unlock_videos(self):
         youtube_ids_of_videos_to_unlock = (
             self._get_youtube_ids_of_videos_that_can_be_unlocked()
         )

@@ -1,2 +1,2 @@
 -- SQLite
-DELETE * from words_sentences
+ALTER TABLE sentences ADD COLUMN locked DEFAULT 1 NOT NULL;

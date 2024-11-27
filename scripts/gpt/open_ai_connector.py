@@ -2,6 +2,7 @@ from openai import OpenAI
 from ..text_handling.sentence import JapaneseSentence
 from ..text_handling.word import JapaneseWord
 import json
+import dotenv
 
 
 class OpenAiConnector:
@@ -9,6 +10,7 @@ class OpenAiConnector:
     client: OpenAI
 
     def __init__(self):
+        dotenv.load_dotenv()
         self.client = OpenAI()
 
     def get_sentence_data(self, sentence_text: str):

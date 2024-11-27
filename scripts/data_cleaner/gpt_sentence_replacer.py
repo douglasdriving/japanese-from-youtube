@@ -40,15 +40,8 @@ class GPTSentenceReplacer:
             old_sentence.sentence
         )
         if new_sentence is None:
-            print(
-                "ERROR: could not create sentence. Deleting: ",
-                old_sentence.sentence,
-                "( ",
-                old_sentence.definition,
-                ")",
-            )
-            self.db_connector.delete_sentence(old_sentence.db_id)
-            self.anki_deleter.delete_notes([old_sentence.anki_id])
+            print("Couldn't generate new sentence for: ", old_sentence.sentence)
+            self._delete_sentence(old_sentence)
             return
         new_sentence.db_id = old_sentence.db_id
         new_sentence.anki_id = old_sentence.anki_id
@@ -62,6 +55,17 @@ class GPTSentenceReplacer:
                 self._add_new_word(new_word)
         self.db_connector.update_sentence(new_sentence)
         self.anki_updater.update_sentence(new_sentence)
+
+    def _delete_sentence(self, sentence: JapaneseSentence):
+        print(
+            "Deleting sentence: ",
+            sentence.sentence,
+            "( ",
+            sentence.definition,
+            ")",
+        )
+        self.db_connector.delete_sentence(sentence.db_id)
+        self.anki_deleter.delete_notes([sentence.anki_id])
 
     def _add_new_word(self, new_word: JapaneseWord):
         if new_word.is_fully_defined():

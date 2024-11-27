@@ -288,6 +288,18 @@ class DbConnector:
             sentences.append(self._turn_sentence_data_into_sentence(row))
         return sentences
 
+    def get_locked_sentences(self):
+        self.cursor.execute(
+            """
+            SELECT * FROM sentences WHERE locked IS 1
+            """
+        )
+        data = self.cursor.fetchall()
+        sentences: list[JapaneseSentence] = []
+        for row in data:
+            sentences.append(self._turn_sentence_data_into_sentence(row))
+        return sentences
+
     # TODO: make sure this function is used by all sentence extractions
     def _turn_sentence_data_into_sentence(self, sentence_data):
         sentence = JapaneseSentence(
@@ -301,6 +313,7 @@ class DbConnector:
             romaji=sentence_data[7],
             words=self.get_words_for_sentence(sentence_data[0]),
         )
+        # TODO: when this is iterated over every sentence in th db, that leads to a lot of requests. instead, get all words from db and match them to the sentence
         return sentence
 
     def get_words_for_sentence(self, sentence_id: int):
@@ -538,3 +551,19 @@ class DbConnector:
             )
         except sqlite3.Error as error:
             print("ERROR ADDING CROSSREF: ", error)
+
+    def unlock_sentences(self, sentence_ids: list[int]):
+        try:
+            for sentence_id in sentence_ids:
+                self.cursor.execute(
+                    """
+                    UPDATE sentences
+                    SET locked = 0
+                    WHERE id = ?
+                    """,
+                    (sentence_id,),
+                )
+            self.connection.commit()
+            print(f"unlocked sentences with ids: {sentence_ids}")
+        except sqlite3.Error as error:
+            print("ERROR UNLOCKING SENTENCES: ", error)
