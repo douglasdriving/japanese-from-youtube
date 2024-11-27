@@ -6,6 +6,7 @@ from .anki_cleaner import AnkiCleaner
 from ..database.db_connector import DbConnector
 from ..anki.anki_connector import AnkiConnector
 from ..anki.anki_getter import AnkiGetter
+from ..anki.anki_deleter import AnkiDeleter
 from .gpt_sentence_replacer import GPTSentenceReplacer
 from .romaji_adder import RomajiAdder
 from .crossref_adder import CrossrefAdder
@@ -15,16 +16,17 @@ class DataCleaner:
 
     connection: sqlite3.Connection
     cursor: sqlite3.Cursor
-    vocabulary_connector: DbConnector
+    db_connector: DbConnector
     anki_connector: AnkiConnector
     anki_getter = AnkiGetter()
+    anki_deleter = AnkiDeleter()
     romaji_adder = RomajiAdder()
     crossref_adder = CrossrefAdder()
 
     def __init__(self):
         self.connection = sqlite3.connect("vocabulary.db")
         self.cursor = self.connection.cursor()
-        self.vocabulary_connector = DbConnector()
+        self.db_connector = DbConnector()
         self.anki_connector = AnkiConnector()
 
     def clean_data(self):
@@ -34,6 +36,7 @@ class DataCleaner:
         gpt_sentence_replacer.replace_sentences_not_genereated_with_gpt()
         self.romaji_adder.add_missing_sentence_romaji()
         self.crossref_adder.add_missing_crossrefs()
+        self.delete_words_with_no_sentence_connection()
         anki_cleaner = AnkiCleaner()
         anki_cleaner.clean()
         self._add_missing_anki_ids()
@@ -120,11 +123,18 @@ class DataCleaner:
         )
         return self.cursor.fetchall()
 
+    def delete_words_with_no_sentence_connection(self):
+        words_without_crossrefs = self.db_connector.get_words_with_no_crossrefs()
+        db_ids = [word.db_id for word in words_without_crossrefs]
+        self.db_connector.delete_words(db_ids)
+        anki_ids = [word.anki_id for word in words_without_crossrefs]
+        self.anki_deleter.delete_notes(anki_ids)
+
     def _add_missing_anki_ids(self):
 
         def update_words(all_anki_notes):
             print("Updating words...")
-            words_to_update = self.vocabulary_connector.get_words_without_anki_note_id()
+            words_to_update = self.db_connector.get_words_without_anki_note_id()
             for word in words_to_update:
                 anki_note = next(
                     (
@@ -140,15 +150,13 @@ class DataCleaner:
                     )
                 else:
                     anki_id = anki_note["noteId"]
-                    self.vocabulary_connector.update_anki_note_id(
+                    self.db_connector.update_anki_note_id(
                         "vocabulary", word.db_id, anki_id
                     )
 
         def update_sentences(all_anki_notes):
             print("Updating sentences...")
-            sentences_to_update = (
-                self.vocabulary_connector.get_sentences_without_anki_note_id()
-            )
+            sentences_to_update = self.db_connector.get_sentences_without_anki_note_id()
             for sentence in sentences_to_update:
                 anki_note = next(
                     (
@@ -167,7 +175,7 @@ class DataCleaner:
                     )
                 else:
                     anki_id = anki_note["noteId"]
-                    self.vocabulary_connector.update_anki_note_id(
+                    self.db_connector.update_anki_note_id(
                         "sentences", sentence.db_id, anki_id
                     )
 

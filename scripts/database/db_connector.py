@@ -198,6 +198,21 @@ class DbConnector:
             words.append(word)
         return words
 
+    def get_words_with_no_crossrefs(self):
+        self.cursor.execute(
+            """
+            SELECT * FROM vocabulary
+            WHERE id NOT IN (
+                SELECT word_id FROM words_sentences
+            )
+            """
+        )
+        data = self.cursor.fetchall()
+        words: list[JapaneseWord] = []
+        for row in data:
+            words.append(self.turn_word_data_into_word(row))
+        return words
+
     def get_all_sentences(self):
         self.cursor.execute(
             """
@@ -536,6 +551,20 @@ class DbConnector:
             print(f"Deleted sentence with id {sentence_id}")
         except sqlite3.Error as error:
             print("ERROR DELETING SENTENCE: ", error)
+
+    def delete_words(self, ids: list[int]):
+        try:
+            self.cursor.executemany(
+                """
+            DELETE FROM vocabulary
+            WHERE id = ?
+            """,
+                [(id,) for id in ids],
+            )
+            self.connection.commit()
+            print(f"Deleted words with ids: {ids}")
+        except sqlite3.Error as error:
+            print("ERROR DELETING WORDS: ", error)
 
     def add_crossref(self, word_id: int, sentence_id: int):
         try:
