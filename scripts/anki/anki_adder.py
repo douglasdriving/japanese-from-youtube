@@ -11,7 +11,9 @@ from ..database.db_connector import DbConnector
 
 class AnkiAdder:
 
-    deck_name: str
+    base_deck_name: str
+    word_deck_name: str
+    sentence_deck_name: str
     anki_connect_url: str
     anki_path: str
     connector: AnkiConnector
@@ -21,7 +23,9 @@ class AnkiAdder:
     vocabulary_connector: DbConnector
 
     def __init__(self):
-        self.deck_name = os.environ["ANKI_DECK_NAME"]
+        self.base_deck_name = os.environ["ANKI_DECK_NAME"]
+        self.word_deck_name = os.environ["ANKI_WORD_DECK_NAME"]
+        self.sentence_deck_name = os.environ["ANKI_SENTENCE_DECK_NAME"]
         self.anki_connect_url = os.environ["ANKI_CONNECT_URL"]
         self.anki_path = os.environ["ANKI_PATH"]
         self.connector = AnkiConnector()
@@ -77,7 +81,7 @@ class AnkiAdder:
                 "allowDuplicate": False,
                 "duplicateScope": "deck",
                 "duplicateScopeOptions": {
-                    "deckName": self.deck_name,
+                    "deckName": self.base_deck_name,
                     "checkChildren": False,
                     "checkAllModels": False,
                 },
@@ -110,7 +114,7 @@ class AnkiAdder:
         notes = []
         for note_to_add in notes_to_add:
             note = {
-                "deckName": self.deck_name,
+                "deckName": self.base_deck_name,
                 "modelName": "Basic",
                 "fields": {"Front": "", "Back": note_to_add.back},
                 "tags": note_to_add.tags,
@@ -168,8 +172,11 @@ class AnkiAdder:
 
     def _add_note_to_anki(self, note_to_add: AnkiNote):
         self.connector.open_anki_if_not_running()
+        deck = self.word_deck_name
+        if "sentence" in note_to_add.tags:
+            deck = self.sentence_deck_name
         note = {
-            "deckName": self.deck_name,
+            "deckName": deck,
             "modelName": "Basic",
             "fields": {"Front": "", "Back": note_to_add.back},
             "tags": note_to_add.tags,

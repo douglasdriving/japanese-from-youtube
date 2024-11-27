@@ -552,18 +552,17 @@ class DbConnector:
         except sqlite3.Error as error:
             print("ERROR ADDING CROSSREF: ", error)
 
-    def unlock_sentences(self, sentence_ids: list[int]):
+    def unlock_sentence(self, sentence_id: int):
         try:
-            for sentence_id in sentence_ids:
-                self.cursor.execute(
-                    """
-                    UPDATE sentences
-                    SET locked = 0
-                    WHERE id = ?
-                    """,
-                    (sentence_id,),
-                )
+            self.cursor.execute(
+                """
+                UPDATE sentences
+                SET locked = 0
+                WHERE id = ?
+                """,
+                (sentence_id,),
+            )
             self.connection.commit()
-            print(f"unlocked sentences with ids: {sentence_ids}")
+            print(f"unlocked sentence with ids: {sentence_id}")
         except sqlite3.Error as error:
-            print("ERROR UNLOCKING SENTENCES: ", error)
+            print("ERROR UNLOCKING SENTENCE: ", error)

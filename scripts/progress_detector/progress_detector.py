@@ -4,12 +4,14 @@ from ..text_handling.sentence import JapaneseSentence
 from ..text_handling.word import JapaneseWord
 from ..database.video_db_connector import VideoDbConnector
 from ..database.db_connector import DbConnector
+from ..anki.anki_adder import AnkiAdder
 
 
 class ProgressDetector:
 
     video_db_connector = VideoDbConnector()
     db_connector = DbConnector()
+    anki_adder = AnkiAdder()
 
     def __init__(self):
         pass
@@ -22,7 +24,6 @@ class ProgressDetector:
     def _unlock_sentences(self):
         lowest_word_progress_allowed_for_unlock = 4
         locked_sentences = self.db_connector.get_locked_sentences()
-        ids_of_sentences_to_unlock: list[int] = []
         for locked_sentence in locked_sentences:
             can_unlock = True
             for word in locked_sentence.words:
@@ -30,8 +31,11 @@ class ProgressDetector:
                     can_unlock = False
                     break
             if can_unlock:
-                ids_of_sentences_to_unlock.append(locked_sentence.db_id)
-        self.db_connector.unlock_sentences(ids_of_sentences_to_unlock)
+                _unlock_sentence(locked_sentence)
+
+        def _unlock_sentence(sentence: JapaneseSentence):
+            self.db_connector.unlock_sentence(sentence.db_id)
+            self.anki_adder.add_sentence_note(sentence)
 
     def _unlock_videos(self):
         youtube_ids_of_videos_to_unlock = (

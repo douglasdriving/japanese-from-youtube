@@ -4,7 +4,6 @@ from scripts.progress_detector.progress_detector import ProgressDetector
 import dotenv
 
 # CURRENTLY IMPLEMENTING: SENTENCE UNLOCKS
-# TODO make sure sentences are in anki only after then have been unlocked (top of stack)
 # TODO cleaner removes all sentences from ANKI that are not unlocked yet.
 
 
