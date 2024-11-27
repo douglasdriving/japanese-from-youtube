@@ -39,35 +39,34 @@ class AnkiCleaner:
         print("Anki cleaning finished")
 
     def _remove_incorrect_notes(self):
+
+        def _remove_notes_missing_from_db():
+            words_in_db = self.db_connector.get_all_words()
+            anki_ids_in_db = [
+                sentence.anki_id for sentence in self.db_connector.get_all_sentences()
+            ] + [word.anki_id for word in words_in_db]
+            print("notes in db: ", len(anki_ids_in_db))
+            all_notes = self.anki_getter.get_all_notes()
+            print("notes in anki: ", len(all_notes))
+            ids_of_notes_to_delete = [
+                note["noteId"]
+                for note in all_notes
+                if (note["noteId"] not in anki_ids_in_db)
+            ]
+            print("notes to delete: ", len(ids_of_notes_to_delete))
+            self.anki_deleter.delete_notes(ids_of_notes_to_delete)
+
+        def _delete_locked_sentences():
+            locked_sentences = self.db_connector.get_locked_sentences()
+            for sentence in locked_sentences:
+                if sentence.anki_id is not None:
+                    self.anki_deleter.delete_notes([sentence.anki_id])
+                    self.db_connector.remove_anki_id_from_sentence(sentence.db_id)
+                    print("deleted locked sentence from anki: ", sentence.romaji)
+
         print("checking if there are any notes in anki to remove...")
-        sentences_in_db = self.db_connector.get_all_sentences()
-
-        # remove locked sentences from anki
-        for idx, sentence in enumerate(sentences_in_db):
-            if sentence.locked == False:
-                continue
-            if sentence.anki_id is None:
-                continue
-            self.anki_deleter.delete_notes([sentence.anki_id])
-            self.db_connector.remove_anki_id_from_sentence(sentence.db_id)
-            sentences_in_db.pop(idx)
-            print("deleted locked sentence from anki: ", sentence.romaji)
-
-        # remove notes in anki that are not in db
-        words_in_db = self.db_connector.get_all_words()
-        anki_ids_in_db = [sentence.anki_id for sentence in sentences_in_db] + [
-            word.anki_id for word in words_in_db
-        ]
-        print("notes in db: ", len(anki_ids_in_db))
-        all_notes = self.anki_getter.get_all_notes()
-        print("notes in anki: ", len(all_notes))
-        ids_of_notes_to_delete = [
-            note["noteId"]
-            for note in all_notes
-            if (note["noteId"] not in anki_ids_in_db)
-        ]
-        print("notes to delete: ", len(ids_of_notes_to_delete))
-        self.anki_deleter.delete_notes(ids_of_notes_to_delete)
+        _delete_locked_sentences()
+        _remove_notes_missing_from_db()
 
     def _add_missing_notes(self):
 

@@ -22,7 +22,7 @@ class ProgressDetector:
         self._unlock_videos()
 
     def _unlock_sentences(self):
-        lowest_word_progress_allowed_for_unlock = 4
+        lowest_word_progress_allowed_for_unlock = 2
         locked_sentences = self.db_connector.get_locked_sentences()
         for locked_sentence in locked_sentences:
             can_unlock = True
