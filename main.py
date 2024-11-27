@@ -3,8 +3,6 @@ from scripts.data_cleaner.data_cleaner import DataCleaner
 from scripts.progress_detector.progress_detector import ProgressDetector
 import dotenv
 
-# CURRENTLY IMPLEMENTING: SENTENCE UNLOCKS
-
 
 class MainProgram:
 

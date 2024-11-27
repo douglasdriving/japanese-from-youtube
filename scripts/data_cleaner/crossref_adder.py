@@ -19,9 +19,10 @@ class CrossrefAdder:
             gpt_sentence = self.open_ai_connector.get_sentence_data(sentence.sentence)
             if gpt_sentence is None:
                 print(
-                    "GPT was unable to get data, so cant add crossrefs. Sentence: ",
+                    "GPT was unable to get data, so cant add crossrefs. deleting sentence from db: ",
                     sentence.romaji,
                 )
+                self.db_connector.delete_sentence(sentence_id=sentence.db_id)
                 continue
             for word in gpt_sentence.words:
                 word_in_db = self.db_connector.get_word_if_exists(
