@@ -312,6 +312,7 @@ class DbConnector:
             gpt_generated=sentence_data[6],
             romaji=sentence_data[7],
             words=self.get_words_for_sentence(sentence_data[0]),
+            locked=(sentence_data[8] == 1),
         )
         # TODO: when this is iterated over every sentence in th db, that leads to a lot of requests. instead, get all words from db and match them to the sentence
         return sentence
@@ -566,3 +567,18 @@ class DbConnector:
             print(f"unlocked sentence with ids: {sentence_id}")
         except sqlite3.Error as error:
             print("ERROR UNLOCKING SENTENCE: ", error)
+
+    def remove_anki_id_from_sentence(self, sentence_id: int):
+        try:
+            self.cursor.execute(
+                """
+                UPDATE sentences
+                SET anki_note_id = NULL
+                WHERE id = ?
+                """,
+                (sentence_id,),
+            )
+            self.connection.commit()
+            print(f"removed anki id from sentence with db id: ", sentence_id)
+        except sqlite3.Error as error:
+            print("ERROR REMOVE ANKI ID FROM SENTENCE: ", error)

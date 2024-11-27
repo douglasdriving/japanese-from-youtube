@@ -16,7 +16,7 @@ import re
 class AnkiCleaner:
 
     anki_connector: AnkiConnector
-    vocab_connector: DbConnector
+    db_connector: DbConnector
     anki_word_adder: AnkiAdder
     anki_getter = AnkiGetter()
     anki_updater = AnkiUpdater()
@@ -26,22 +26,35 @@ class AnkiCleaner:
 
     def __init__(self):
         self.anki_connector = AnkiConnector()
-        self.vocab_connector = DbConnector()
+        self.db_connector = DbConnector()
         self.anki_word_adder = AnkiAdder()
         self.sentence_extractor = SentenceExtractor(None)
 
     def clean(self):
         print("Cleaning anki data...")
-        self._delete_notes_not_in_db()
+        self._remove_incorrect_notes()
         self._add_missing_notes()
         self._correct_poor_card_backs()
         self._add_missing_card_tags()
         print("Anki cleaning finished")
 
-    def _delete_notes_not_in_db(self):
-        print("checking if there are any notes in anki that are not in the db...")
-        sentences_in_db = self.vocab_connector.get_all_sentences()
-        words_in_db = self.vocab_connector.get_all_words()
+    def _remove_incorrect_notes(self):
+        print("checking if there are any notes in anki to remove...")
+        sentences_in_db = self.db_connector.get_all_sentences()
+
+        # remove locked sentences from anki
+        for idx, sentence in enumerate(sentences_in_db):
+            if sentence.locked == False:
+                continue
+            if sentence.anki_id is None:
+                continue
+            self.anki_deleter.delete_notes([sentence.anki_id])
+            self.db_connector.remove_anki_id_from_sentence(sentence.db_id)
+            sentences_in_db.pop(idx)
+            print("deleted locked sentence from anki: ", sentence.romaji)
+
+        # remove notes in anki that are not in db
+        words_in_db = self.db_connector.get_all_words()
         anki_ids_in_db = [sentence.anki_id for sentence in sentences_in_db] + [
             word.anki_id for word in words_in_db
         ]
@@ -49,7 +62,9 @@ class AnkiCleaner:
         all_notes = self.anki_getter.get_all_notes()
         print("notes in anki: ", len(all_notes))
         ids_of_notes_to_delete = [
-            note["noteId"] for note in all_notes if note["noteId"] not in anki_ids_in_db
+            note["noteId"]
+            for note in all_notes
+            if (note["noteId"] not in anki_ids_in_db)
         ]
         print("notes to delete: ", len(ids_of_notes_to_delete))
         self.anki_deleter.delete_notes(ids_of_notes_to_delete)
@@ -70,7 +85,7 @@ class AnkiCleaner:
         print("cards in anki: ", len(anki_card_definitions))
         notes_to_add: list[AnkiNote] = []
 
-        words_in_db: list[JapaneseWord] = self.vocab_connector.get_all_words()
+        words_in_db: list[JapaneseWord] = self.db_connector.get_all_words()
         for word in words_in_db:
             word_definition_is_in_anki = word.definition in anki_card_definitions
             audio_file_name = word.audio_file_path.split("/")[-1]
@@ -86,9 +101,7 @@ class AnkiCleaner:
                     )
                 )
 
-        sentences_in_db: list[JapaneseSentence] = (
-            self.vocab_connector.get_all_sentences()
-        )
+        sentences_in_db: list[JapaneseSentence] = self.db_connector.get_all_sentences()
         for sentence in sentences_in_db:
             definition_is_in_anki = sentence.definition in anki_card_definitions
             audio_file_name = sentence.audio_file_path.split("/")[-1]

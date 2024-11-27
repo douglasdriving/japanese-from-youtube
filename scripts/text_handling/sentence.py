@@ -12,6 +12,7 @@ class JapaneseSentence:
     practice_interval: int
     anki_id: int
     gpt_generated: bool
+    locked: bool
 
     def __init__(
         self,
@@ -24,6 +25,7 @@ class JapaneseSentence:
         anki_id: int = None,
         practice_interval: int = 0,
         gpt_generated: bool = False,
+        locked=True,
     ):
         self.sentence = sentence
         self.definition = definition
@@ -34,6 +36,7 @@ class JapaneseSentence:
         self.anki_id = anki_id
         self.romaji = romaji
         self.gpt_generated = gpt_generated
+        self.locked = locked
 
     def is_fully_defined(self):
         return (
