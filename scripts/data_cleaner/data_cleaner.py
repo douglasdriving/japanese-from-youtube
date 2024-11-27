@@ -10,8 +10,6 @@ from .gpt_sentence_replacer import GPTSentenceReplacer
 from .romaji_adder import RomajiAdder
 from .crossref_adder import CrossrefAdder
 
-# TODO also, make sure cleaner does not add sentences in db that are not in anki, unless they are unlocked.
-
 
 class DataCleaner:
 

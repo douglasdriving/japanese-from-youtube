@@ -103,6 +103,8 @@ class AnkiCleaner:
 
         sentences_in_db: list[JapaneseSentence] = self.db_connector.get_all_sentences()
         for sentence in sentences_in_db:
+            if sentence.locked:
+                continue
             definition_is_in_anki = sentence.definition in anki_card_definitions
             audio_file_name = sentence.audio_file_path.split("/")[-1]
             audio_is_in_anki = audio_file_name in anki_card_audio_file_names
