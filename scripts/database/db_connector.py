@@ -3,7 +3,7 @@ from ..text_handling.word import JapaneseWord
 from ..text_handling.sentence import JapaneseSentence
 from ..text_handling.romaziner import Romanizer
 
-# time to refactor
+# TODO: refactor this, break into more classes
 
 
 class DbConnector:
@@ -212,6 +212,38 @@ class DbConnector:
         for row in data:
             words.append(self.turn_word_data_into_word(row))
         return words
+
+    def get_words_without_progress(self):
+        try:
+            self.cursor.execute(
+                """
+                SELECT * FROM vocabulary WHERE practice_interval = 0
+                """
+            )
+            data = self.cursor.fetchall()
+            words: list[JapaneseWord] = []
+            for row in data:
+                words.append(self.turn_word_data_into_word(row))
+            return words
+        except sqlite3.Error as error:
+            print("ERROR GETTING WORDS WITHOUT PROGRESS: ", error)
+            return []
+
+    def get_words_popilarity(self, words: list[JapaneseWord]):
+        word_popularity = {}
+        for word in words:
+            word_popularity[word] = self.get_word_popularity(word)
+        return word_popularity
+
+    def get_word_popularity(self, word: JapaneseWord):
+        self.cursor.execute(
+            """
+            SELECT * FROM words_sentences WHERE word_id = ?
+            """,
+            (word.db_id,),
+        )
+        data = self.cursor.fetchall()
+        return len(data)
 
     def get_all_sentences(self):
         self.cursor.execute(

@@ -1,4 +1,5 @@
 from ..text_handling.sentence import JapaneseSentence
+from ..text_handling.word import JapaneseWord
 from .anki_note import AnkiNote
 
 
@@ -22,5 +23,20 @@ class AnkiNoteMaker:
             back=note_back,
             tags=["sentence"],
             db_id=sentence.db_id,
+        )
+        return note
+
+    def make_word_note(self, word: JapaneseWord):
+
+        def make_back_text(word: JapaneseWord):
+            if word.romaji is not None:
+                return word.romaji + " - " + word.definition
+            return word.word + " - " + word.definition
+
+        note = AnkiNote(
+            audio_file_path=word.audio_file_path,
+            back=make_back_text(word),
+            tags=["word"],
+            db_id=word.db_id,
         )
         return note

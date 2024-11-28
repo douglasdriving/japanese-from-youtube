@@ -41,18 +41,7 @@ class AnkiAdder:
                         f"Warning: Word {word.word} has no database ID. Skipping adding to Anki."
                     )
                     continue
-                notes.append(
-                    AnkiNote(
-                        word.audio_file_path, word.definition, ["word"], word.db_id
-                    )
-                )
-                # this is gonna contain a lot of duplicates
-                # what we could do is: when retrieving words, get their anki ID if there is one
-                # if there is an ID here, it means the word is already in anki, so we dont add it
-                # hmm... well the problem is probably that when we get the word, we dont get it from anki, we get it from the db
-                # and we havent stored the anki ID in the db yet
-                # so we kinda need to do that first
-                # that is up to the cleaner to do though! grab all anki ids and store them in the DB for crossref
+                notes.append(self.note_maker.make_word_note(word))
             if sentence.db_id is None:
                 print(
                     f"Warning: Sentence {sentence.sentence} has no database ID. Skipping adding to Anki."
@@ -68,12 +57,24 @@ class AnkiAdder:
         return note_id
 
     def add_word_note(self, word: JapaneseWord):
-        note = AnkiNote(word.audio_file_path, word.definition, ["word"], word.db_id)
+        note = self.note_maker.make_word_note(word)
         added_notes = self.add_notes_to_anki_and_mark_in_db([note])
         if added_notes and len(added_notes) > 0:
             return added_notes[0]
         else:
             return None
+
+    def add_words_and_mark_in_db(self, words: list[JapaneseWord]):
+        notes = []
+        for word in words:
+            if word.db_id is None:
+                print(
+                    f"Warning: Word {word.word} has no database ID. Skipping adding to Anki."
+                )
+                continue
+            note = self.note_maker.make_word_note(word)
+            notes.append(note)
+        self.add_notes_to_anki_and_mark_in_db(notes)
 
     def _get_card_options(self):
         options = (
@@ -155,20 +156,32 @@ class AnkiAdder:
         self.vocabulary_connector.update_anki_note_id(table_name, db_id, anki_note_id)
 
     def add_notes_to_anki_and_mark_in_db(self, notes_to_add: list[AnkiNote]):
-        for note in notes_to_add:
-            if note.db_id is None:
-                print(
-                    f"Warning: Note {note.back} has no database ID. Skipping adding to Anki."
-                )
-                continue
-            anki_note_id = self._add_note_to_anki(note)
-            if anki_note_id:
-                is_word = note.tags and "word" in note.tags
-                self._mark_note_in_db(note.db_id, anki_note_id, is_word)
-            else:
-                print(
-                    "Failed to add note to Anki: ", note.back, ", will not mark in DB"
-                )
+        self._add_notes(notes_to_add)
+        anki_back_db_ids = {note.back: note.db_id for note in notes_to_add}
+        all_notes = self.getter.get_all_notes()
+        for note in all_notes:
+            back = note["fields"]["Back"]["value"]
+            db_id = anki_back_db_ids.get(back)
+            if db_id is not None:
+                is_word = note["tags"] and "word" in note["tags"]
+                self._mark_note_in_db(db_id, note["noteId"], is_word)
+
+    def _add_notes(self, notes_to_add: list[AnkiNote]):
+        notes = []
+        for note_to_add in notes_to_add:
+            deck = self.word_deck_name
+            if "sentence" in note_to_add.tags:
+                deck = self.sentence_deck_name
+            note = {
+                "deckName": deck,
+                "modelName": "Basic",
+                "fields": {"Front": "", "Back": note_to_add.back},
+                "tags": note_to_add.tags,
+                "options": self._get_card_options(),
+                "audio": self._create_anki_audio(note_to_add.audio_file_path),
+            }
+            notes.append(note)
+        self.connector.post_request("addNotes", {"notes": notes})
 
     def _add_note_to_anki(self, note_to_add: AnkiNote):
         self.connector.open_anki_if_not_running()
