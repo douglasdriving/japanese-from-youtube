@@ -53,18 +53,25 @@ class AnkiCleaner:
                 for note in all_notes
                 if (note["noteId"] not in anki_ids_in_db)
             ]
-            print("notes to delete: ", len(ids_of_notes_to_delete))
-            self.anki_deleter.delete_notes(ids_of_notes_to_delete)
+            if len(ids_of_notes_to_delete) > 0:
+                print(
+                    len(ids_of_notes_to_delete),
+                    "anki notes missing from db, so deleting from anki...",
+                )
+                self.anki_deleter.delete_notes(ids_of_notes_to_delete)
 
         def _delete_locked_sentences():
             locked_sentences = self.db_connector.get_locked_sentences()
+            if len(locked_sentences) == 0:
+                return
             anki_notes_to_delete: list[int] = []
             for sentence in locked_sentences:
                 if sentence.anki_id is not None:
                     anki_notes_to_delete.append(sentence.anki_id)
                     self.db_connector.remove_anki_id_from_sentence(sentence.db_id)
                     print("deleted locked sentence from anki: ", sentence.romaji)
-            self.anki_deleter.delete_notes(anki_notes_to_delete)
+            if len(anki_notes_to_delete) > 0:
+                self.anki_deleter.delete_notes(anki_notes_to_delete)
 
         print("checking if there are any notes in anki to remove...")
         _delete_locked_sentences()
@@ -242,9 +249,3 @@ class AnkiCleaner:
         if len(if_of_notes_to_tag_as_sentence) > 0:
             print("Adding sentence tag to notes: ", len(if_of_notes_to_tag_as_sentence))
             self.anki_updater.tag_notes(if_of_notes_to_tag_as_sentence, "sentence")
-        if (
-            len(id_of_notes_to_tag_as_word) == 0
-            and len(if_of_notes_to_tag_as_sentence) == 0
-        ):
-            print("No missing tags found")
-        print("All missing tags added")

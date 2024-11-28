@@ -13,8 +13,10 @@ class RomajiAdder:
         pass
 
     def add_missing_sentence_romaji(self):
-        print("Adding missing romaji...")
         sentences = self.db_connector.get_sentences_without_romaji()
+        if len(sentences) == 0:
+            return
+        print("Adding missing romaji to", len(sentences), "sentences")
         for sentence in sentences:
             romaji = self.open_ai_connector.convert_to_romaji(sentence.sentence)
             self.db_connector.update_sentence_romaji(sentence.db_id, romaji)

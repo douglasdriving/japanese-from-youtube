@@ -125,6 +125,13 @@ class DataCleaner:
 
     def delete_words_with_no_sentence_connection(self):
         words_without_crossrefs = self.db_connector.get_words_with_no_crossrefs()
+        if len(words_without_crossrefs) == 0:
+            return
+        print(
+            "Deleting",
+            len(words_without_crossrefs),
+            " words without sentence connection...",
+        )
         db_ids = [word.db_id for word in words_without_crossrefs]
         self.db_connector.delete_words(db_ids)
         anki_ids = [word.anki_id for word in words_without_crossrefs]

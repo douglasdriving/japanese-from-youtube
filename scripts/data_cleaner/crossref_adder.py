@@ -11,9 +11,10 @@ class CrossrefAdder:
         pass
 
     def add_missing_crossrefs(self):
-        print("adding missing crossrefs...")
         sentences = self.db_connector.get_sentences_without_word_crossrefs()
-        print("sentences without crossrefs: ", len(sentences))
+        if len(sentences) == 0:
+            return
+        print("adding crossrefs to ", len(sentences), " sentences")
         for idx, sentence in enumerate(sentences):
             print(idx, " adding crossref to sentece: ", sentence.romaji)
             gpt_sentence = self.open_ai_connector.get_sentence_data(sentence.sentence)
