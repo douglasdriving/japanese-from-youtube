@@ -123,3 +123,36 @@ class DbSentenceGetter:
         )
         data = self.connector.cursor.fetchall()
         return self._turn_sentences_data_into_objects(data)
+
+    def get_sentences_for_video(self, id: int):
+        self.connector.cursor.execute(
+            """
+            SELECT sentence_id FROM videos_sentences WHERE video_id = ?
+            """,
+            (id,),
+        )
+        sentence_ids = [row[0] for row in self.connector.cursor.fetchall()]
+
+        if not sentence_ids:
+            return []
+
+        self.connector.cursor.execute(
+            f"""
+            SELECT * FROM sentences WHERE id IN ({','.join('?' for _ in sentence_ids)})
+            """,
+            sentence_ids,
+        )
+        data = self.connector.cursor.fetchall()
+        # would be useful with a function that transforms the db data into a list of JapaneseSentence objects
+        sentences: list[JapaneseSentence] = []
+        for sentence_data in data:
+            sentence = JapaneseSentence(
+                sentence_data[1],
+                sentence_data[2],
+                sentence_data[3],
+                sentence_data[0],
+            )
+            sentence.anki_id = sentence_data[4]
+            sentence.practice_interval = sentence_data[5]
+            sentences.append(sentence)
+        return sentences

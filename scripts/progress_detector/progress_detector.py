@@ -5,7 +5,8 @@ from ..database.sentence.db_sentence_updater import DbSentenceUpdater
 from ..database.word.db_word_updater import DbWordUpdater
 from ..text_handling.sentence import JapaneseSentence
 from ..text_handling.word import JapaneseWord
-from ..database.video.video_db_connector import VideoDbConnector
+from ..database.video.db_video_getter import VideoDbGetter
+from ..database.video.db_video_updater import DbVideoUpdater
 from ..database.db_connector import DbConnector
 from ..database.sentence.db_sentence_getter import DbSentenceGetter
 from ..anki.anki_adder import AnkiAdder
@@ -13,7 +14,8 @@ from ..anki.anki_adder import AnkiAdder
 
 class ProgressDetector:
 
-    video_db_connector = VideoDbConnector()
+    db_video_getter = VideoDbGetter()
+    db_video_updater = DbVideoUpdater()
     db_connector = DbConnector()
     db_word_updater = DbWordUpdater()
     db_word_getter = DbWordGetter()
@@ -50,7 +52,7 @@ class ProgressDetector:
             self._get_youtube_ids_of_videos_that_can_be_unlocked()
         )
         for youtube_video_id in youtube_ids_of_videos_to_unlock:
-            self.video_db_connector.unlock_video(youtube_video_id)
+            self.db_video_updater.unlock_video(youtube_video_id)
 
     def _update_card_progress(self):
 
@@ -89,13 +91,13 @@ class ProgressDetector:
     def _get_youtube_ids_of_videos_that_can_be_unlocked(self):
 
         # get all locked videos
-        locked_videos = self.video_db_connector.get_locked_videos()
+        locked_videos = self.db_video_getter.get_locked_videos()
 
         # for all locked videos, get all sentences
         youtube_ids_of_videos_to_unlock = []
         for video in locked_videos:
             sentences_in_video: list[JapaneseSentence] = (
-                self.video_db_connector.get_sentences_for_video(video[0])
+                self.db_sentence_getter.get_sentences_for_video(video[0])
             )
             all_sentences_have_interval_of_4_or_more = True
             for sentence in sentences_in_video:
