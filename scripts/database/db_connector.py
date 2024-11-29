@@ -45,67 +45,7 @@ class DbConnector:
             practice_interval=word_row[7],
         )
 
-    # sentence adder
-    def add_sentence_if_new(self, sentence: JapaneseSentence):
-        if not sentence.is_fully_defined():
-            print(
-                "ERROR: Sentence is not fully defined. Not adding to database: ",
-                sentence.sentence,
-                sentence.definition,
-                sentence.audio_file_path,
-                sentence.words,
-                sentence.romaji,
-            )
-            return None
-        if self.check_if_sentence_exists(sentence.sentence):
-            return None
-        added_sentence = self._insert_sentence_in_db(sentence)
-        return added_sentence
-
-    def _insert_sentence_in_db(self, sentence: JapaneseSentence):
-        try:
-            self.cursor.execute(
-                """
-                INSERT INTO sentences (sentence, definition, audio_file_path, gpt_generated, romaji)
-                VALUES (?, ?, ?, ?, ?)
-                """,
-                (
-                    sentence.sentence,
-                    sentence.definition,
-                    sentence.audio_file_path,
-                    sentence.gpt_generated,
-                    sentence.romaji,
-                ),
-            )
-            self.connection.commit()
-            print(
-                f"Added sentence '{sentence.romaji}' ({sentence.definition}) to database"
-            )
-            id = self.cursor.lastrowid
-            sentence.db_id = id
-            for word in sentence.words:
-                self.insert_word_sentence_relation(word.db_id, sentence.db_id)
-            return sentence
-        except sqlite3.Error as error:
-            print("ERROR INSERTING SENTENCE: ", error)
-            return None
-
-    def insert_word_sentence_relation(self, word_id: int, sentence_id: int):
-        try:
-            self.cursor.execute(
-                """
-                INSERT INTO words_sentences (word_id, sentence_id)
-                VALUES (?, ?)
-                """,
-                (word_id, sentence_id),
-            )
-            self.connection.commit()
-            print(
-                f"Added word-sentence relation to database with word_id {word_id} and sentence_id {sentence_id}"
-            )
-        except sqlite3.Error as error:
-            print("ERROR INSERTING WORD SENTENCE RELATION: ", error)
-
+    #   sentence getter
     def check_if_sentence_exists(self, sentence):
         self.cursor.execute(
             """
@@ -203,22 +143,6 @@ class DbConnector:
         for row in data:
             sentences.append(self._turn_sentence_data_into_sentence(row))
         return sentences
-
-    def add_crossref(self, word_id: int, sentence_id: int):
-        try:
-            self.cursor.execute(
-                """
-                INSERT INTO words_sentences (word_id, sentence_id)
-                VALUES (?, ?)
-                """,
-                (word_id, sentence_id),
-            )
-            self.connection.commit()
-            print(
-                f"Added crossref between word with id {word_id} and sentence with id {sentence_id}"
-            )
-        except sqlite3.Error as error:
-            print("ERROR ADDING CROSSREF: ", error)
 
     # TODO: make sure this function is used by all sentence extractions
     def _turn_sentence_data_into_sentence(self, sentence_data):
