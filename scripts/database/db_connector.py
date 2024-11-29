@@ -224,32 +224,3 @@ class DbConnector:
             )
         except sqlite3.Error as error:
             print("ERROR INSERTING VIDEO SENTENCE CROSSREF: ", error)
-
-    # deleter
-    def delete_sentence(self, sentence_id: int):
-        try:
-            self.cursor.execute(
-                """
-                DELETE FROM sentences
-                WHERE id = ?
-                """,
-                (sentence_id,),
-            )
-            self.connection.commit()
-            print(f"Deleted sentence with id {sentence_id}")
-        except sqlite3.Error as error:
-            print("ERROR DELETING SENTENCE: ", error)
-
-    def delete_words(self, ids: list[int]):
-        try:
-            self.cursor.executemany(
-                """
-            DELETE FROM vocabulary
-            WHERE id = ?
-            """,
-                [(id,) for id in ids],
-            )
-            self.connection.commit()
-            print(f"Deleted words with ids: {ids}")
-        except sqlite3.Error as error:
-            print("ERROR DELETING WORDS: ", error)

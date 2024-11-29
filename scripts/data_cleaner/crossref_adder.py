@@ -1,6 +1,7 @@
 from ..database.db_connector import DbConnector
 from ..database.word.db_word_getter import DbWordGetter
 from ..database.sentence.db_sentence_adder import DbSentenceAdder
+from ..database.sentence.db_sentence_deleter import DbSentenceDeleter
 from ..gpt.open_ai_connector import OpenAiConnector
 
 
@@ -9,6 +10,7 @@ class CrossrefAdder:
     db_connector = DbConnector()
     db_word_getter = DbWordGetter()
     db_sentence_adder = DbSentenceAdder()
+    db_sentence_deleter = DbSentenceDeleter()
     open_ai_connector = OpenAiConnector()
 
     def __init__(self):
@@ -27,7 +29,7 @@ class CrossrefAdder:
                     "GPT was unable to get data, so cant add crossrefs. deleting sentence from db: ",
                     sentence.romaji,
                 )
-                self.db_connector.delete_sentence(sentence_id=sentence.db_id)
+                self.db_sentence_deleter.delete_sentence(sentence_id=sentence.db_id)
                 continue
             for word in gpt_sentence.words:
                 word_in_db = self.db_word_getter.get_word_if_exists(

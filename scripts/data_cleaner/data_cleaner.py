@@ -6,6 +6,7 @@ from .anki_cleaner import AnkiCleaner
 from ..database.db_connector import DbConnector
 from ..database.word.db_word_updater import DbWordUpdater
 from ..database.word.db_word_getter import DbWordGetter
+from ..database.word.db_word_deleter import DbWordDeleter
 from ..anki.anki_connector import AnkiConnector
 from ..anki.anki_getter import AnkiGetter
 from ..anki.anki_deleter import AnkiDeleter
@@ -26,6 +27,7 @@ class DataCleaner:
     crossref_adder = CrossrefAdder()
     db_word_updater = DbWordUpdater()
     db_word_getter = DbWordGetter()
+    db_word_deleter = DbWordDeleter()
 
     def __init__(self):
         self.connection = sqlite3.connect("vocabulary.db")
@@ -137,7 +139,7 @@ class DataCleaner:
             " words without sentence connection...",
         )
         db_ids = [word.db_id for word in words_without_crossrefs]
-        self.db_connector.delete_words(db_ids)
+        self.db_word_deleter.delete_words(db_ids)
         anki_ids = [word.anki_id for word in words_without_crossrefs]
         self.anki_deleter.delete_notes(anki_ids)
 
