@@ -2,6 +2,7 @@
 from ..anki.anki_connector import AnkiConnector
 from ..database.db_connector import DbConnector
 from ..database.word.db_word_getter import DbWordGetter
+from ..database.sentence.db_sentence_updater import DbSentenceUpdater
 from ..text_handling.word import JapaneseWord
 from ..text_handling.sentence import JapaneseSentence
 from ..anki.anki_adder import AnkiAdder
@@ -19,6 +20,7 @@ class AnkiCleaner:
     anki_connector: AnkiConnector
     db_connector: DbConnector
     db_word_getter = DbWordGetter()
+    db_sentence_updater = DbSentenceUpdater()
     anki_word_adder: AnkiAdder
     anki_getter = AnkiGetter()
     anki_updater = AnkiUpdater()
@@ -70,7 +72,9 @@ class AnkiCleaner:
             for sentence in locked_sentences:
                 if sentence.anki_id is not None:
                     anki_notes_to_delete.append(sentence.anki_id)
-                    self.db_connector.remove_anki_id_from_sentence(sentence.db_id)
+                    self.db_sentence_updater.remove_anki_id_from_sentence(
+                        sentence.db_id
+                    )
                     print("deleted locked sentence from anki: ", sentence.romaji)
             if len(anki_notes_to_delete) > 0:
                 self.anki_deleter.delete_notes(anki_notes_to_delete)

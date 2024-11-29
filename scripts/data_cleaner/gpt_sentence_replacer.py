@@ -1,5 +1,5 @@
 from ..database.db_connector import DbConnector
-from ..database.sentence_db_updater import SentenceDbUpdater
+from ..database.sentence.db_sentence_updater import DbSentenceUpdater
 from ..database.word.db_word_adder import DbWordAdder
 from ..database.word.db_word_updater import DbWordUpdater
 from ..database.word.db_word_getter import DbWordGetter
@@ -16,7 +16,7 @@ class GPTSentenceReplacer:
 
     sentence_extractor = SentenceExtractor()
     db_connector = DbConnector()
-    sentence_db_updater = SentenceDbUpdater()
+    sentence_db_updater = DbSentenceUpdater()
     db_word_adder = DbWordAdder()
     db_word_updater = DbWordUpdater()
     db_word_getter = DbWordGetter()

@@ -253,34 +253,3 @@ class DbConnector:
             print(f"Deleted words with ids: {ids}")
         except sqlite3.Error as error:
             print("ERROR DELETING WORDS: ", error)
-
-    # sentence updater
-    def unlock_sentence(self, sentence_id: int):
-        try:
-            self.cursor.execute(
-                """
-                UPDATE sentences
-                SET locked = 0
-                WHERE id = ?
-                """,
-                (sentence_id,),
-            )
-            self.connection.commit()
-            print(f"unlocked sentence with ids: {sentence_id}")
-        except sqlite3.Error as error:
-            print("ERROR UNLOCKING SENTENCE: ", error)
-
-    def remove_anki_id_from_sentence(self, sentence_id: int):
-        try:
-            self.cursor.execute(
-                """
-                UPDATE sentences
-                SET anki_note_id = NULL
-                WHERE id = ?
-                """,
-                (sentence_id,),
-            )
-            self.connection.commit()
-            print(f"removed anki id from sentence with db id: ", sentence_id)
-        except sqlite3.Error as error:
-            print("ERROR REMOVE ANKI ID FROM SENTENCE: ", error)

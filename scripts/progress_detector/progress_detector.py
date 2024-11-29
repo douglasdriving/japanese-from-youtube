@@ -1,7 +1,7 @@
 from ..anki.anki_getter import AnkiGetter
 from ..database.db_connector import DbConnector
 from ..database.word.db_word_getter import DbWordGetter
-from ..database.sentence_db_updater import SentenceDbUpdater
+from ..database.sentence.db_sentence_updater import DbSentenceUpdater
 from ..database.word.db_word_updater import DbWordUpdater
 from ..text_handling.sentence import JapaneseSentence
 from ..text_handling.word import JapaneseWord
@@ -16,7 +16,7 @@ class ProgressDetector:
     db_connector = DbConnector()
     db_word_updater = DbWordUpdater()
     db_word_getter = DbWordGetter()
-    sentence_db_updater = SentenceDbUpdater()
+    db_sentence_updater = DbSentenceUpdater()
     anki_adder = AnkiAdder()
 
     def __init__(self):
@@ -40,7 +40,7 @@ class ProgressDetector:
                 _unlock_sentence(locked_sentence)
 
         def _unlock_sentence(sentence: JapaneseSentence):
-            self.db_connector.unlock_sentence(sentence.db_id)
+            self.db_sentence_updater.unlock_sentence(sentence.db_id)
             self.anki_adder.add_sentence_note(sentence)
 
     def _unlock_videos(self):
@@ -80,7 +80,7 @@ class ProgressDetector:
                 if sentence.practice_interval != true_interval:
                     sentence.practice_interval = true_interval
                     sentences_with_updated_practice_intervals.append(sentence)
-        self.sentence_db_updater.update_sentence_practice_intervals(
+        self.db_sentence_updater.update_sentence_practice_intervals(
             sentences_with_updated_practice_intervals
         )
 

@@ -1,9 +1,9 @@
-from .db_connector import DbConnector
+from ..db_connector import DbConnector
 import sqlite3
-from ..text_handling.sentence import JapaneseSentence
+from ...text_handling.sentence import JapaneseSentence
 
 
-class SentenceDbUpdater:
+class DbSentenceUpdater:
     connector = DbConnector()
 
     def __init__(self):
@@ -62,3 +62,33 @@ class SentenceDbUpdater:
             print(
                 f"Updated practice interval for sentence {sentence.sentence} to {sentence.practice_interval}"
             )
+
+    def unlock_sentence(self, sentence_id: int):
+        try:
+            self.connector.cursor.execute(
+                """
+                UPDATE sentences
+                SET locked = 0
+                WHERE id = ?
+                """,
+                (sentence_id,),
+            )
+            self.connector.connection.commit()
+            print(f"unlocked sentence with ids: {sentence_id}")
+        except sqlite3.Error as error:
+            print("ERROR UNLOCKING SENTENCE: ", error)
+
+    def remove_anki_id_from_sentence(self, sentence_id: int):
+        try:
+            self.connector.cursor.execute(
+                """
+                UPDATE sentences
+                SET anki_note_id = NULL
+                WHERE id = ?
+                """,
+                (sentence_id,),
+            )
+            self.connector.connection.commit()
+            print(f"removed anki id from sentence with db id: ", sentence_id)
+        except sqlite3.Error as error:
+            print("ERROR REMOVE ANKI ID FROM SENTENCE: ", error)
