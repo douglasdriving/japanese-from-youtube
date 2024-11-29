@@ -1,5 +1,6 @@
 from .anki.anki_adder import AnkiAdder
 from .database.db_connector import DbConnector
+from .database.word.db_word_adder import DbWordAdder
 from .text_handling.sentence_extractor import SentenceExtractor
 from .text_handling.youtube_transcriber import YoutubeTranscriber
 from .text_handling.sentence import JapaneseSentence
@@ -12,6 +13,7 @@ class YoutubeScraper:
     db_connector: DbConnector
     youtube_transcriber: YoutubeTranscriber
     anki_adder: AnkiAdder
+    word_adder = DbWordAdder()
 
     def __init__(self):
         self.db_connector = DbConnector()
@@ -63,7 +65,7 @@ class YoutubeScraper:
     def _add_new_words_and_attach_ids_to_old_ones(self, words: list[JapaneseWord]):
         added_words: list[JapaneseWord] = []
         for word in words:
-            word = self.db_connector.add_word_if_new(word)
+            word = self.word_adder.add_word_if_new(word)
             if word:
                 if word.anki_id is None:
                     anki_id = self.anki_adder.add_word_note(word)

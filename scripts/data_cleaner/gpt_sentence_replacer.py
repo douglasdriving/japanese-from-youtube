@@ -1,5 +1,6 @@
 from ..database.db_connector import DbConnector
 from ..database.sentence_db_updater import SentenceDbUpdater
+from ..database.word.db_word_adder import DbWordAdder
 from ..text_handling.sentence_extractor import SentenceExtractor
 from ..text_handling.sentence import JapaneseSentence
 from ..text_handling.word import JapaneseWord
@@ -14,6 +15,7 @@ class GPTSentenceReplacer:
     sentence_extractor = SentenceExtractor()
     db_connector = DbConnector()
     sentence_db_updater = SentenceDbUpdater()
+    db_word_adder = DbWordAdder()
     anki_connector = AnkiConnector()
     anki_adder = AnkiAdder()
     anki_updater = AnkiUpdater()
@@ -73,7 +75,7 @@ class GPTSentenceReplacer:
 
     def _add_new_word(self, new_word: JapaneseWord):
         if new_word.is_fully_defined():
-            added_word = self.db_connector.add_word_if_new(new_word)
+            added_word = self.db_word_adder.add_word_if_new(new_word)
             self.anki_adder.add_word_note(added_word)
         else:
             print(
