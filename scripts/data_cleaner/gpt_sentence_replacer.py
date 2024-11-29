@@ -2,6 +2,7 @@ from ..database.db_connector import DbConnector
 from ..database.sentence_db_updater import SentenceDbUpdater
 from ..database.word.db_word_adder import DbWordAdder
 from ..database.word.db_word_updater import DbWordUpdater
+from ..database.word.db_word_getter import DbWordGetter
 from ..text_handling.sentence_extractor import SentenceExtractor
 from ..text_handling.sentence import JapaneseSentence
 from ..text_handling.word import JapaneseWord
@@ -18,6 +19,7 @@ class GPTSentenceReplacer:
     sentence_db_updater = SentenceDbUpdater()
     db_word_adder = DbWordAdder()
     db_word_updater = DbWordUpdater()
+    db_word_getter = DbWordGetter()
     anki_connector = AnkiConnector()
     anki_adder = AnkiAdder()
     anki_updater = AnkiUpdater()
@@ -54,7 +56,7 @@ class GPTSentenceReplacer:
         new_sentence.db_id = old_sentence.db_id
         new_sentence.anki_id = old_sentence.anki_id
         for new_word in new_sentence.words:
-            word_in_db = self.db_connector.get_word_if_exists(
+            word_in_db = self.db_word_getter.get_word_if_exists(
                 word_in_kana=new_word.word, reading=new_word.reading
             )
             if word_in_db:

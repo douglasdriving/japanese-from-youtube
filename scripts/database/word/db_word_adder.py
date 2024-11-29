@@ -1,5 +1,6 @@
 from ..db_connector import DbConnector
 from .db_word_updater import DbWordUpdater
+from .db_word_getter import DbWordGetter
 from ...text_handling.word import JapaneseWord
 import sqlite3
 
@@ -8,6 +9,7 @@ class DbWordAdder:
 
     connector = DbConnector()
     updater = DbWordUpdater()
+    getter = DbWordGetter()
 
     def __init__(self):
         pass
@@ -27,7 +29,7 @@ class DbWordAdder:
             )
             return word
 
-        word_in_db = self.connector.get_word_if_exists(word.word, word.reading)
+        word_in_db = self.getter.get_word_if_exists(word.word, word.reading)
         if word_in_db is not None:
             updated_definition = self.updater.add_definition_to_word_if_new(
                 word_id=word.db_id, new_definition=word.definition

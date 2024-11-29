@@ -2,6 +2,7 @@ from .word import JapaneseWord
 from jisho_api.tokenize import Tokens
 from jisho_api.word import Word
 from ..database.db_connector import DbConnector
+from ..database.word.db_word_getter import DbWordGetter
 from .speech_synthesizer import SpeechSynthesizer
 import re
 import warnings
@@ -9,11 +10,12 @@ import warnings
 
 class WordExtractor:
 
-    vocabulary_connector: DbConnector
+    db_connector: DbConnector
     speech_synthesizer: SpeechSynthesizer
+    db_word_getter = DbWordGetter()
 
     def __init__(self):
-        self.vocabulary_connector = DbConnector()
+        self.db_connector = DbConnector()
         self.speech_synthesizer = SpeechSynthesizer()
 
     def extract_words_from_text(self, text: str):
@@ -74,7 +76,7 @@ class WordExtractor:
         return cleaned_up_list
 
     def _get_japanese_word(self, kana_word: str):
-        japanese_word = self.vocabulary_connector.get_word_if_exists(kana_word)
+        japanese_word = self.db_word_getter.get_word_if_exists(kana_word)
         if japanese_word == None:
             japanese_word = self._make_new_japanese_word(kana_word)
         return japanese_word

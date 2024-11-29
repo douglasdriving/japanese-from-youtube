@@ -16,103 +16,7 @@ class DbConnector:
         self.connection = sqlite3.connect("vocabulary.db")
         self.cursor = self.connection.cursor()
 
-    # word getter
-    def _check_if_word_exists(self, word_in_kanji: str):
-        self.cursor.execute(
-            """
-            SELECT * FROM vocabulary WHERE word = (?)
-            """,
-            (word_in_kanji,),
-        )
-        word_exists = self.cursor.fetchone() is not None
-        return word_exists
-
-    def get_all_words(self):
-        self.cursor.execute(
-            """
-            SELECT * FROM vocabulary
-            """
-        )
-        data = self.cursor.fetchall()
-        words: list[JapaneseWord] = []
-        for row in data:
-            word = self.turn_word_data_into_word(row)
-            words.append(word)
-        return words
-
-    def get_words_without_anki_note_id(self):
-        self.cursor.execute(
-            """
-            SELECT * FROM vocabulary WHERE anki_note_id IS NULL
-            """
-        )
-        data = self.cursor.fetchall()
-        words: list[JapaneseWord] = []
-        for row in data:
-            word = JapaneseWord(row[1], row[2], row[3], row[4], row[0])
-            words.append(word)
-        return words
-
-    def get_words_with_no_crossrefs(self):
-        self.cursor.execute(
-            """
-            SELECT * FROM vocabulary
-            WHERE id NOT IN (
-                SELECT word_id FROM words_sentences
-            )
-            """
-        )
-        data = self.cursor.fetchall()
-        words: list[JapaneseWord] = []
-        for row in data:
-            words.append(self.turn_word_data_into_word(row))
-        return words
-
-    def get_words_without_progress(self):
-        try:
-            self.cursor.execute(
-                """
-                SELECT * FROM vocabulary WHERE practice_interval = 0
-                """
-            )
-            data = self.cursor.fetchall()
-            words: list[JapaneseWord] = []
-            for row in data:
-                words.append(self.turn_word_data_into_word(row))
-            return words
-        except sqlite3.Error as error:
-            print("ERROR GETTING WORDS WITHOUT PROGRESS: ", error)
-            return []
-
-    def get_words_popilarity(self, words: list[JapaneseWord]):
-        word_popularity = {}
-        for word in words:
-            word_popularity[word] = self.get_word_popularity(word)
-        return word_popularity
-
-    def get_word_popularity(self, word: JapaneseWord):
-        self.cursor.execute(
-            """
-            SELECT * FROM words_sentences WHERE word_id = ?
-            """,
-            (word.db_id,),
-        )
-        data = self.cursor.fetchall()
-        return len(data)
-
-    def get_word_if_exists(self, word_in_kana: str):
-        self.cursor.execute(
-            """
-                SELECT * FROM vocabulary WHERE word = (?)
-            """,
-            (word_in_kana,),
-        )
-        word_data = self.cursor.fetchone()
-        if word_data is None:
-            return None
-        else:
-            return self.turn_word_data_into_word(word_data)
-
+    # TODO: remove word getter functions
     def get_words_for_sentence(self, sentence_id: int):
         self.cursor.execute(
             """
@@ -129,20 +33,6 @@ class DbConnector:
             words.append(word)
         return words
 
-    def get_word_if_exists(self, word_in_kana: str, reading: str):
-        self.cursor.execute(
-            """
-                SELECT * FROM vocabulary WHERE word = (?) AND reading = (?)
-            """,
-            (word_in_kana, reading),
-        )
-        word_data = self.cursor.fetchone()
-        if word_data is None:
-            return None
-        else:
-            return self.turn_word_data_into_word(word_data)
-
-    # TODO: make sure this function is used by all word extractions
     def turn_word_data_into_word(self, word_row):
         return JapaneseWord(
             database_id=word_row[0],
@@ -341,7 +231,9 @@ class DbConnector:
             practice_interval=sentence_data[5],
             gpt_generated=sentence_data[6],
             romaji=sentence_data[7],
-            words=self.get_words_for_sentence(sentence_data[0]),
+            words=self.get_words_for_sentence(
+                sentence_data[0]
+            ),  # TODO: replace with getter class function
             locked=(sentence_data[8] == 1),
         )
         # TODO: when this is iterated over every sentence in th db, that leads to a lot of requests. instead, get all words from db and match them to the sentence

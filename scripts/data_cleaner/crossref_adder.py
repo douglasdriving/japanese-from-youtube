@@ -1,10 +1,12 @@
 from ..database.db_connector import DbConnector
+from ..database.word.db_word_getter import DbWordGetter
 from ..gpt.open_ai_connector import OpenAiConnector
 
 
 class CrossrefAdder:
 
     db_connector = DbConnector()
+    db_word_getter = DbWordGetter()
     open_ai_connector = OpenAiConnector()
 
     def __init__(self):
@@ -26,7 +28,7 @@ class CrossrefAdder:
                 self.db_connector.delete_sentence(sentence_id=sentence.db_id)
                 continue
             for word in gpt_sentence.words:
-                word_in_db = self.db_connector.get_word_if_exists(
+                word_in_db = self.db_word_getter.get_word_if_exists(
                     word.word, word.reading
                 )
                 if word_in_db:

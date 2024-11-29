@@ -5,6 +5,7 @@ from scripts.text_handling.speech_synthesizer import SpeechSynthesizer
 from .anki_cleaner import AnkiCleaner
 from ..database.db_connector import DbConnector
 from ..database.word.db_word_updater import DbWordUpdater
+from ..database.word.db_word_getter import DbWordGetter
 from ..anki.anki_connector import AnkiConnector
 from ..anki.anki_getter import AnkiGetter
 from ..anki.anki_deleter import AnkiDeleter
@@ -24,6 +25,7 @@ class DataCleaner:
     romaji_adder = RomajiAdder()
     crossref_adder = CrossrefAdder()
     db_word_updater = DbWordUpdater()
+    db_word_getter = DbWordGetter()
 
     def __init__(self):
         self.connection = sqlite3.connect("vocabulary.db")
@@ -126,7 +128,7 @@ class DataCleaner:
         return self.cursor.fetchall()
 
     def delete_words_with_no_sentence_connection(self):
-        words_without_crossrefs = self.db_connector.get_words_with_no_crossrefs()
+        words_without_crossrefs = self.db_word_getter.get_words_with_no_crossrefs()
         if len(words_without_crossrefs) == 0:
             return
         print(
@@ -143,7 +145,7 @@ class DataCleaner:
 
         def update_words(all_anki_notes):
             print("Updating words...")
-            words_to_update = self.db_connector.get_words_without_anki_note_id()
+            words_to_update = self.db_word_getter.get_words_without_anki_note_id()
             for word in words_to_update:
                 anki_note = next(
                     (

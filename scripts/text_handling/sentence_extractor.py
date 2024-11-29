@@ -1,8 +1,8 @@
 # extracts sentence data from a given japanese text
 from .sentence import JapaneseSentence
-from .word import JapaneseWord
 from .speech_synthesizer import SpeechSynthesizer
 from ..database.db_connector import DbConnector
+from ..database.word.db_word_getter import DbWordGetter
 from ..gpt.open_ai_connector import OpenAiConnector
 from .word_extractor import WordExtractor
 from .transcript_line import TranscriptLine
@@ -16,6 +16,7 @@ class SentenceExtractor:
     word_extractor: WordExtractor
     speech_synthesizer: SpeechSynthesizer
     open_ai_connector: OpenAiConnector
+    db_word_getter = DbWordGetter()
 
     def __init__(self, transcript: list[TranscriptLine] = None):
         self.transcript = transcript
@@ -139,7 +140,7 @@ class SentenceExtractor:
             return None
         self._create_audio_for_sentence(sentence_obj)
         for word in sentence_obj.words:
-            word_in_db = self.vocabulary_connector.get_word_if_exists(
+            word_in_db = self.db_word_getter.get_word_if_exists(
                 word_in_kana=word.word, reading=word.reading
             )
             if word_in_db is not None:

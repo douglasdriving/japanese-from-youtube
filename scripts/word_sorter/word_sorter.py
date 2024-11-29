@@ -1,4 +1,5 @@
 from ..database.db_connector import DbConnector
+from ..database.word.db_word_getter import DbWordGetter
 from ..anki.anki_deleter import AnkiDeleter
 from ..anki.anki_adder import AnkiAdder
 from ..text_handling.word import JapaneseWord
@@ -7,6 +8,7 @@ from ..text_handling.word import JapaneseWord
 class WordSorter:
 
     db_connector = DbConnector()
+    db_word_getter = DbWordGetter()
     anki_deleter = AnkiDeleter()
     anki_adder = AnkiAdder()
 
@@ -15,8 +17,10 @@ class WordSorter:
 
     def sort_words(self):
         print("Sorting words in Anki by popularity...")
-        words_without_progress = self.db_connector.get_words_without_progress()
-        word_popularity = self.db_connector.get_words_popilarity(words_without_progress)
+        words_without_progress = self.db_word_getter.get_words_without_progress()
+        word_popularity = self.db_word_getter.get_words_popilarity(
+            words_without_progress
+        )
         sorted_words_popularity = sorted(
             word_popularity.items(), key=lambda x: x[1], reverse=True
         )

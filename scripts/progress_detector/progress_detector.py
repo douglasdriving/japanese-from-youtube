@@ -1,5 +1,6 @@
 from ..anki.anki_getter import AnkiGetter
 from ..database.db_connector import DbConnector
+from ..database.word.db_word_getter import DbWordGetter
 from ..database.sentence_db_updater import SentenceDbUpdater
 from ..database.word.db_word_updater import DbWordUpdater
 from ..text_handling.sentence import JapaneseSentence
@@ -14,6 +15,7 @@ class ProgressDetector:
     video_db_connector = VideoDbConnector()
     db_connector = DbConnector()
     db_word_updater = DbWordUpdater()
+    db_word_getter = DbWordGetter()
     sentence_db_updater = SentenceDbUpdater()
     anki_adder = AnkiAdder()
 
@@ -57,7 +59,7 @@ class ProgressDetector:
         anki_card_dict = {anki_card["note"]: anki_card for anki_card in anki_cards}
 
         # words
-        words = self.db_connector.get_all_words()
+        words = self.db_word_getter.get_all_words()
         words_with_updated_practice_intervals: list[JapaneseWord] = []
         for word in words:
             if word.anki_id in anki_card_dict:
