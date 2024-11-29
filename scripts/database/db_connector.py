@@ -16,6 +16,7 @@ class DbConnector:
         self.connection = sqlite3.connect("vocabulary.db")
         self.cursor = self.connection.cursor()
 
+    # word adder
     def add_word_if_new(self, word: JapaneseWord):
 
         if not word.is_fully_defined():
@@ -62,6 +63,7 @@ class DbConnector:
             print("ERROR INSERTING WORD: ", error)
             return None
 
+    # word updater
     def _add_definition_to_word_if_new(self, word_id, new_definition: str):
         self.cursor.execute(
             """
@@ -93,6 +95,7 @@ class DbConnector:
         print(f"Added definition '{new_definition}' to word with id {word_id}")
         return updated_definition
 
+    # word getter
     def _check_if_word_exists(self, word_in_kanji: str):
         self.cursor.execute(
             """
@@ -103,6 +106,7 @@ class DbConnector:
         word_exists = self.cursor.fetchone() is not None
         return word_exists
 
+    # sentence adder
     def add_sentence_if_new(self, sentence: JapaneseSentence):
         if not sentence.is_fully_defined():
             print(
@@ -119,6 +123,7 @@ class DbConnector:
         added_sentence = self._insert_sentence_in_db(sentence)
         return added_sentence
 
+    # sentence adder
     def _insert_sentence_in_db(self, sentence: JapaneseSentence):
         try:
             self.cursor.execute(
@@ -147,6 +152,7 @@ class DbConnector:
             print("ERROR INSERTING SENTENCE: ", error)
             return None
 
+    # sentence adder
     def insert_word_sentence_relation(self, word_id: int, sentence_id: int):
         try:
             self.cursor.execute(
@@ -163,6 +169,7 @@ class DbConnector:
         except sqlite3.Error as error:
             print("ERROR INSERTING WORD SENTENCE RELATION: ", error)
 
+    # sentence getter
     def check_if_sentence_exists(self, sentence):
         self.cursor.execute(
             """
@@ -172,6 +179,7 @@ class DbConnector:
         )
         return self.cursor.fetchone() is not None
 
+    # word getter
     def get_all_words(self):
         self.cursor.execute(
             """
@@ -185,6 +193,7 @@ class DbConnector:
             words.append(word)
         return words
 
+    # word getter
     def get_words_without_anki_note_id(self):
         self.cursor.execute(
             """
@@ -198,6 +207,7 @@ class DbConnector:
             words.append(word)
         return words
 
+    # word getter
     def get_words_with_no_crossrefs(self):
         self.cursor.execute(
             """
@@ -213,6 +223,7 @@ class DbConnector:
             words.append(self.turn_word_data_into_word(row))
         return words
 
+    # word getter
     def get_words_without_progress(self):
         try:
             self.cursor.execute(
@@ -229,12 +240,14 @@ class DbConnector:
             print("ERROR GETTING WORDS WITHOUT PROGRESS: ", error)
             return []
 
+    # word getter
     def get_words_popilarity(self, words: list[JapaneseWord]):
         word_popularity = {}
         for word in words:
             word_popularity[word] = self.get_word_popularity(word)
         return word_popularity
 
+    # word getter
     def get_word_popularity(self, word: JapaneseWord):
         self.cursor.execute(
             """
@@ -245,6 +258,7 @@ class DbConnector:
         data = self.cursor.fetchall()
         return len(data)
 
+    # sentence getter
     def get_all_sentences(self):
         self.cursor.execute(
             """
@@ -257,6 +271,7 @@ class DbConnector:
             sentences.append(self._turn_sentence_data_into_sentence(row))
         return sentences
 
+    # sentence getter
     def get_sentences_not_generated_by_gpt(self):
         self.cursor.execute(
             """
@@ -269,6 +284,7 @@ class DbConnector:
             sentences.append(self._turn_sentence_data_into_sentence(row))
         return sentences
 
+    # word getter
     def get_word_if_exists(self, word_in_kana: str):
         self.cursor.execute(
             """
@@ -282,6 +298,7 @@ class DbConnector:
         else:
             return self.turn_word_data_into_word(word_data)
 
+    # sentence getter
     def get_sentence_by_definition(self, english_sentence: str):
         self.cursor.execute(
             """
@@ -295,6 +312,7 @@ class DbConnector:
         else:
             return self._turn_sentence_data_into_sentence(sentence_data)
 
+    # sentence getter
     def get_sentence_by_kana_text(self, kana_sentence: str):
         self.cursor.execute(
             """
@@ -308,6 +326,7 @@ class DbConnector:
         else:
             return self._turn_sentence_data_into_sentence(sentence_data)
 
+    # sentence getter
     def get_sentences_without_romaji(self):
         self.cursor.execute(
             """
@@ -320,6 +339,7 @@ class DbConnector:
             sentences.append(self._turn_sentence_data_into_sentence(row))
         return sentences
 
+    # sentence getter
     def get_sentences_without_word_crossrefs(self):
         self.cursor.execute(
             """
@@ -335,6 +355,7 @@ class DbConnector:
             sentences.append(self._turn_sentence_data_into_sentence(row))
         return sentences
 
+    # sentence getter
     def get_locked_sentences(self):
         self.cursor.execute(
             """
@@ -348,6 +369,7 @@ class DbConnector:
         return sentences
 
     # TODO: make sure this function is used by all sentence extractions
+    # sentence getter
     def _turn_sentence_data_into_sentence(self, sentence_data):
         sentence = JapaneseSentence(
             database_id=sentence_data[0],
@@ -364,6 +386,7 @@ class DbConnector:
         # TODO: when this is iterated over every sentence in th db, that leads to a lot of requests. instead, get all words from db and match them to the sentence
         return sentence
 
+    # word getter
     def get_words_for_sentence(self, sentence_id: int):
         self.cursor.execute(
             """
@@ -380,6 +403,7 @@ class DbConnector:
             words.append(word)
         return words
 
+    # sentence getter
     def get_unlocked_sentences_without_anki_note_id(self):
         self.cursor.execute(
             """
@@ -410,6 +434,7 @@ class DbConnector:
         self.connection.commit()
         print(f"Updated anki_note_id for {id} to {anki_id} in {table_name}")
 
+    # video adder
     def add_video(self, youtube_id: str, title: str):
         try:
             # check if video already exists
@@ -442,6 +467,7 @@ class DbConnector:
         except sqlite3.Error as error:
             print("ERROR INSERTING VIDEO: ", error)
 
+    # video adder
     def add_video_sentences_crossref(self, video_id: int, sentence_id: int):
         try:
             self.cursor.execute(
@@ -458,6 +484,7 @@ class DbConnector:
         except sqlite3.Error as error:
             print("ERROR INSERTING VIDEO SENTENCE CROSSREF: ", error)
 
+    # word updater
     def update_word_practice_intervals(self, words: list[JapaneseWord]):
         for word in words:
             self.cursor.execute(
@@ -473,6 +500,7 @@ class DbConnector:
                 f"Updated practice interval for word {word.word} to {word.practice_interval}"
             )
 
+    # word getter
     def get_word_if_exists(self, word_in_kana: str, reading: str):
         self.cursor.execute(
             """
@@ -499,6 +527,7 @@ class DbConnector:
             practice_interval=word_row[7],
         )
 
+    # word updater
     def change_word_definition(self, word_id: int, new_definition: str):
         try:
             self.cursor.execute(
@@ -516,6 +545,7 @@ class DbConnector:
         except sqlite3.Error as error:
             print("ERROR UPDATING WORD DEFINITION: ", error)
 
+    # deleter
     def delete_sentence(self, sentence_id: int):
         try:
             self.cursor.execute(
@@ -530,6 +560,7 @@ class DbConnector:
         except sqlite3.Error as error:
             print("ERROR DELETING SENTENCE: ", error)
 
+    # deleter
     def delete_words(self, ids: list[int]):
         try:
             self.cursor.executemany(
@@ -544,6 +575,7 @@ class DbConnector:
         except sqlite3.Error as error:
             print("ERROR DELETING WORDS: ", error)
 
+    # sentence adder
     def add_crossref(self, word_id: int, sentence_id: int):
         try:
             self.cursor.execute(
@@ -560,6 +592,7 @@ class DbConnector:
         except sqlite3.Error as error:
             print("ERROR ADDING CROSSREF: ", error)
 
+    # sentence updater
     def unlock_sentence(self, sentence_id: int):
         try:
             self.cursor.execute(
@@ -575,6 +608,7 @@ class DbConnector:
         except sqlite3.Error as error:
             print("ERROR UNLOCKING SENTENCE: ", error)
 
+    # sentence updater
     def remove_anki_id_from_sentence(self, sentence_id: int):
         try:
             self.cursor.execute(
