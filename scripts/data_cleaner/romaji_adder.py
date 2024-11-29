@@ -2,20 +2,21 @@
 from ..database.db_connector import DbConnector
 from ..database.sentence.db_sentence_updater import DbSentenceUpdater
 from ..gpt.open_ai_connector import OpenAiConnector
-from ..text_handling.sentence import JapaneseSentence
+from ..database.sentence.db_sentence_getter import DbSentenceGetter
 
 
 class RomajiAdder:
 
     db_connector = DbConnector()
     sentence_db_updater = DbSentenceUpdater()
+    db_sentence_getter = DbSentenceGetter()
     open_ai_connector = OpenAiConnector()
 
     def __init__(self):
         pass
 
     def add_missing_sentence_romaji(self):
-        sentences = self.db_connector.get_sentences_without_romaji()
+        sentences = self.db_sentence_getter.get_sentences_without_romaji()
         if len(sentences) == 0:
             return
         print("Adding missing romaji to", len(sentences), "sentences")

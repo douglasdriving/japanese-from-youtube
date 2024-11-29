@@ -1,10 +1,12 @@
 from ..db_connector import DbConnector
+from .db_sentence_getter import DbSentenceGetter
 from ...text_handling.sentence import JapaneseSentence
 import sqlite3
 
 
 class DbSentenceAdder:
     connector = DbConnector()
+    getter = DbSentenceGetter()
 
     def __init__(self):
         pass
@@ -20,7 +22,7 @@ class DbSentenceAdder:
                 sentence.romaji,
             )
             return None
-        if self.connector.check_if_sentence_exists(sentence.sentence):
+        if self.getter.check_if_sentence_exists(sentence.sentence):
             return None
         added_sentence = self._insert_sentence_in_db(sentence)
         return added_sentence

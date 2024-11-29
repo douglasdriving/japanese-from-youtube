@@ -2,6 +2,7 @@ from ..database.db_connector import DbConnector
 from ..database.word.db_word_getter import DbWordGetter
 from ..database.sentence.db_sentence_adder import DbSentenceAdder
 from ..database.sentence.db_sentence_deleter import DbSentenceDeleter
+from ..database.sentence.db_sentence_getter import DbSentenceGetter
 from ..gpt.open_ai_connector import OpenAiConnector
 
 
@@ -11,13 +12,14 @@ class CrossrefAdder:
     db_word_getter = DbWordGetter()
     db_sentence_adder = DbSentenceAdder()
     db_sentence_deleter = DbSentenceDeleter()
+    db_sentence_getter = DbSentenceGetter()
     open_ai_connector = OpenAiConnector()
 
     def __init__(self):
         pass
 
     def add_missing_crossrefs(self):
-        sentences = self.db_connector.get_sentences_without_word_crossrefs()
+        sentences = self.db_sentence_getter.get_sentences_without_word_crossrefs()
         if len(sentences) == 0:
             return
         print("adding crossrefs to ", len(sentences), " sentences")

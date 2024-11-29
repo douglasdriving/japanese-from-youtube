@@ -7,6 +7,7 @@ from ..text_handling.sentence import JapaneseSentence
 from ..text_handling.word import JapaneseWord
 from ..database.video.video_db_connector import VideoDbConnector
 from ..database.db_connector import DbConnector
+from ..database.sentence.db_sentence_getter import DbSentenceGetter
 from ..anki.anki_adder import AnkiAdder
 
 
@@ -17,6 +18,7 @@ class ProgressDetector:
     db_word_updater = DbWordUpdater()
     db_word_getter = DbWordGetter()
     db_sentence_updater = DbSentenceUpdater()
+    db_sentence_getter = DbSentenceGetter()
     anki_adder = AnkiAdder()
 
     def __init__(self):
@@ -29,7 +31,7 @@ class ProgressDetector:
 
     def _unlock_sentences(self):
         lowest_word_progress_allowed_for_unlock = 4
-        locked_sentences = self.db_connector.get_locked_sentences()
+        locked_sentences = self.db_sentence_getter.get_locked_sentences()
         for locked_sentence in locked_sentences:
             can_unlock = True
             for word in locked_sentence.words:
@@ -72,7 +74,7 @@ class ProgressDetector:
         )
 
         # update the practice intervals sentences where it differs from anki
-        sentences = self.db_connector.get_all_sentences()
+        sentences = self.db_sentence_getter.get_all_sentences()
         sentences_with_updated_practice_intervals: list[JapaneseSentence] = []
         for sentence in sentences:
             if sentence.anki_id in anki_card_dict:

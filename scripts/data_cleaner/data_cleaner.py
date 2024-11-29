@@ -7,6 +7,7 @@ from ..database.db_connector import DbConnector
 from ..database.word.db_word_updater import DbWordUpdater
 from ..database.word.db_word_getter import DbWordGetter
 from ..database.word.db_word_deleter import DbWordDeleter
+from ..database.sentence.db_sentence_getter import DbSentenceGetter
 from ..anki.anki_connector import AnkiConnector
 from ..anki.anki_getter import AnkiGetter
 from ..anki.anki_deleter import AnkiDeleter
@@ -28,6 +29,7 @@ class DataCleaner:
     db_word_updater = DbWordUpdater()
     db_word_getter = DbWordGetter()
     db_word_deleter = DbWordDeleter()
+    db_sentence_getter = DbSentenceGetter()
 
     def __init__(self):
         self.connection = sqlite3.connect("vocabulary.db")
@@ -170,7 +172,7 @@ class DataCleaner:
         def update_sentences(all_anki_notes):
             print("Updating sentences...")
             sentences_to_update = (
-                self.db_connector.get_unlocked_sentences_without_anki_note_id()
+                self.db_sentence_getter.get_unlocked_sentences_without_anki_note_id()
             )
             for sentence in sentences_to_update:
                 anki_note = next(

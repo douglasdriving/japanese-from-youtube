@@ -3,6 +3,7 @@ from ..anki.anki_connector import AnkiConnector
 from ..database.db_connector import DbConnector
 from ..database.word.db_word_getter import DbWordGetter
 from ..database.sentence.db_sentence_updater import DbSentenceUpdater
+from ..database.sentence.db_sentence_getter import DbSentenceGetter
 from ..text_handling.word import JapaneseWord
 from ..text_handling.sentence import JapaneseSentence
 from ..anki.anki_adder import AnkiAdder
@@ -21,6 +22,7 @@ class AnkiCleaner:
     db_connector: DbConnector
     db_word_getter = DbWordGetter()
     db_sentence_updater = DbSentenceUpdater()
+    db_sentence_getter = DbSentenceGetter()
     anki_word_adder: AnkiAdder
     anki_getter = AnkiGetter()
     anki_updater = AnkiUpdater()
@@ -47,7 +49,8 @@ class AnkiCleaner:
         def _remove_notes_missing_from_db():
             words_in_db = self.db_word_getter.get_all_words()
             anki_ids_in_db = [
-                sentence.anki_id for sentence in self.db_connector.get_all_sentences()
+                sentence.anki_id
+                for sentence in self.db_sentence_getter.get_all_sentences()
             ] + [word.anki_id for word in words_in_db]
             print("notes in db: ", len(anki_ids_in_db))
             all_notes = self.anki_getter.get_all_notes()
@@ -65,7 +68,7 @@ class AnkiCleaner:
                 self.anki_deleter.delete_notes(ids_of_notes_to_delete)
 
         def _delete_locked_sentences():
-            locked_sentences = self.db_connector.get_locked_sentences()
+            locked_sentences = self.db_sentence_getter.get_locked_sentences()
             if len(locked_sentences) == 0:
                 return
             anki_notes_to_delete: list[int] = []
@@ -115,7 +118,9 @@ class AnkiCleaner:
                     )
                 )
 
-        sentences_in_db: list[JapaneseSentence] = self.db_connector.get_all_sentences()
+        sentences_in_db: list[JapaneseSentence] = (
+            self.db_sentence_getter.get_all_sentences()
+        )
         for sentence in sentences_in_db:
             if sentence.locked:
                 continue
