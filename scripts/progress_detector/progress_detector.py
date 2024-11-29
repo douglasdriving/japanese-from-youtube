@@ -1,6 +1,7 @@
 from ..anki.anki_getter import AnkiGetter
 from ..database.db_connector import DbConnector
 from ..database.sentence_db_updater import SentenceDbUpdater
+from ..database.word.db_word_updater import DbWordUpdater
 from ..text_handling.sentence import JapaneseSentence
 from ..text_handling.word import JapaneseWord
 from ..database.video_db_connector import VideoDbConnector
@@ -12,6 +13,7 @@ class ProgressDetector:
 
     video_db_connector = VideoDbConnector()
     db_connector = DbConnector()
+    db_word_updater = DbWordUpdater()
     sentence_db_updater = SentenceDbUpdater()
     anki_adder = AnkiAdder()
 
@@ -63,7 +65,7 @@ class ProgressDetector:
                 if word.practice_interval != true_interval:
                     word.practice_interval = true_interval
                     words_with_updated_practice_intervals.append(word)
-        self.db_connector.update_word_practice_intervals(
+        self.db_word_updater.update_word_practice_intervals(
             words_with_updated_practice_intervals
         )
 

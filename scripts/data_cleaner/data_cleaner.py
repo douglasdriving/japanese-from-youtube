@@ -4,6 +4,7 @@ import os
 from scripts.text_handling.speech_synthesizer import SpeechSynthesizer
 from .anki_cleaner import AnkiCleaner
 from ..database.db_connector import DbConnector
+from ..database.word.db_word_updater import DbWordUpdater
 from ..anki.anki_connector import AnkiConnector
 from ..anki.anki_getter import AnkiGetter
 from ..anki.anki_deleter import AnkiDeleter
@@ -22,6 +23,7 @@ class DataCleaner:
     anki_deleter = AnkiDeleter()
     romaji_adder = RomajiAdder()
     crossref_adder = CrossrefAdder()
+    db_word_updater = DbWordUpdater()
 
     def __init__(self):
         self.connection = sqlite3.connect("vocabulary.db")
@@ -157,7 +159,7 @@ class DataCleaner:
                     )
                 else:
                     anki_id = anki_note["noteId"]
-                    self.db_connector.update_anki_note_id(
+                    self.db_word_updater.update_anki_note_id(
                         "vocabulary", word.db_id, anki_id
                     )
 
@@ -184,7 +186,7 @@ class DataCleaner:
                     )
                 else:
                     anki_id = anki_note["noteId"]
-                    self.db_connector.update_anki_note_id(
+                    self.db_word_updater.update_anki_note_id(
                         "sentences", sentence.db_id, anki_id
                     )
 

@@ -7,6 +7,7 @@ from .anki_updater import AnkiUpdater
 from .anki_getter import AnkiGetter
 from .anki_note_maker import AnkiNoteMaker
 from ..database.db_connector import DbConnector
+from ..database.word.db_word_updater import DbWordUpdater
 
 
 class AnkiAdder:
@@ -21,6 +22,7 @@ class AnkiAdder:
     updater = AnkiUpdater()
     note_maker = AnkiNoteMaker()
     vocabulary_connector: DbConnector
+    db_word_updater = DbWordUpdater()
 
     def __init__(self):
         self.base_deck_name = os.environ["ANKI_DECK_NAME"]
@@ -153,7 +155,7 @@ class AnkiAdder:
 
     def _mark_note_in_db(self, db_id: int, anki_note_id: int, is_word: bool):
         table_name = "vocabulary" if is_word else "sentences"
-        self.vocabulary_connector.update_anki_note_id(table_name, db_id, anki_note_id)
+        self.db_word_updater.update_anki_note_id(table_name, db_id, anki_note_id)
 
     def add_notes_to_anki_and_mark_in_db(self, notes_to_add: list[AnkiNote]):
         self._add_notes(notes_to_add)
