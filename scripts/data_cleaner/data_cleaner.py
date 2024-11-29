@@ -58,9 +58,9 @@ class DataCleaner:
     def _clean_audio_file_names_in_table(self, table="vocabulary"):
 
         data = (
-            self._get_all_words_from_db()
+            self.db_word_getter.get_all_words()
             if table == "vocabulary"
-            else self._get_all_sentences_from_db()
+            else self.db_sentence_getter.get_all_sentences()
         )
 
         corrent_audio_file_patter = (
@@ -69,10 +69,14 @@ class DataCleaner:
             else re.compile(r"./audios/s\d+\.wav")
         )
 
-        for entry in data:
-            id = entry[0]
-            text = entry[1]
-            audio_file_path = entry[4] if table == "vocabulary" else entry[3]
+        for word_or_sentence in data:
+            id = word_or_sentence.db_id
+            text = (
+                word_or_sentence.word
+                if table == "vocabulary"
+                else word_or_sentence.sentence
+            )
+            audio_file_path = word_or_sentence.audio_file_path
             if not os.path.exists(audio_file_path):
                 synthesizer = SpeechSynthesizer()
                 new_audio_file = synthesizer.save_jp_text_as_audio(
