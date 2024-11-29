@@ -2,6 +2,7 @@ from .anki.anki_adder import AnkiAdder
 from .database.db_connector import DbConnector
 from .database.word.db_word_adder import DbWordAdder
 from .database.sentence.db_sentence_adder import DbSentenceAdder
+from .database.video.db_video_adder import DbVideoAdder
 from .text_handling.sentence_extractor import SentenceExtractor
 from .text_handling.youtube_transcriber import YoutubeTranscriber
 from .text_handling.sentence import JapaneseSentence
@@ -16,6 +17,7 @@ class YoutubeScraper:
     anki_adder: AnkiAdder
     word_adder = DbWordAdder()
     db_sentence_adder = DbSentenceAdder()
+    db_video_adder = DbVideoAdder()
 
     def __init__(self):
         self.db_connector = DbConnector()
@@ -50,9 +52,11 @@ class YoutubeScraper:
         self, youtube_video_id: str, sentences_in_video: list[JapaneseSentence]
     ):
         video_title = self.youtube_transcriber.get_video_title(youtube_video_id)
-        video_db_id = self.db_connector.add_video(youtube_video_id, video_title)
+        video_db_id = self.db_video_adder.add_video(youtube_video_id, video_title)
         for sentence in sentences_in_video:
-            self.db_connector.add_video_sentences_crossref(video_db_id, sentence.db_id)
+            self.db_video_adder.add_video_sentences_crossref(
+                video_db_id, sentence.db_id
+            )
 
     def _get_valid_youtube_id_from_user(self):
         print("enter a youtube video id")

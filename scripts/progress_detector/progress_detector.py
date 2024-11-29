@@ -5,7 +5,7 @@ from ..database.sentence.db_sentence_updater import DbSentenceUpdater
 from ..database.word.db_word_updater import DbWordUpdater
 from ..text_handling.sentence import JapaneseSentence
 from ..text_handling.word import JapaneseWord
-from ..database.video_db_connector import VideoDbConnector
+from ..database.video.video_db_connector import VideoDbConnector
 from ..database.db_connector import DbConnector
 from ..anki.anki_adder import AnkiAdder
 

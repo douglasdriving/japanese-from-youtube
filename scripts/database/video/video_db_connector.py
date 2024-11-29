@@ -1,5 +1,5 @@
-from .db_connector import DbConnector
-from ..text_handling.sentence import JapaneseSentence
+from ..db_connector import DbConnector
+from ...text_handling.sentence import JapaneseSentence
 
 
 class VideoDbConnector:
