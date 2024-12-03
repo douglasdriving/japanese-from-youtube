@@ -74,7 +74,6 @@ class DbSentenceUpdater:
                 (sentence_id,),
             )
             self.connector.connection.commit()
-            print(f"unlocked sentence with ids: {sentence_id}")
         except sqlite3.Error as error:
             print("ERROR UNLOCKING SENTENCE: ", error)
 

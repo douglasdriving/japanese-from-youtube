@@ -43,6 +43,9 @@ class ProgressDetector:
             if can_unlock:
                 self.db_sentence_updater.unlock_sentence(locked_sentence.db_id)
                 self.anki_adder.add_sentence_note(locked_sentence)
+                print(
+                    f"NEW SENTENCE UNLOCKED: {locked_sentence.romaji} ({locked_sentence.definition})"
+                )
 
     def _unlock_videos(self):
         youtube_ids_of_videos_to_unlock = (
