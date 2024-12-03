@@ -43,7 +43,7 @@ class YoutubeScraper:
                 )
             added_sentence = self.db_sentence_adder.add_sentence_if_new(sentence)
             if added_sentence:
-                sentence.anki_id = self.anki_adder.add_sentence_note(added_sentence)
+                self.anki_adder.add_sentence_note(added_sentence)
                 added_sentences.append(added_sentence)
         self._add_video_to_db(youtube_video_id, added_sentences)
         print("finished adding vocab to anki deck")

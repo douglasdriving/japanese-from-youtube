@@ -55,8 +55,7 @@ class AnkiAdder:
 
     def add_sentence_note(self, sentence: JapaneseSentence):
         note = self.note_maker.make_sentence_note(sentence)
-        note_id = self.add_notes_to_anki_and_mark_in_db([note])[0]
-        return note_id
+        self.add_notes_to_anki_and_mark_in_db([note])
 
     def add_word_note(self, word: JapaneseWord):
         note = self.note_maker.make_word_note(word)

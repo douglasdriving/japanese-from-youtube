@@ -41,11 +41,8 @@ class ProgressDetector:
                     can_unlock = False
                     break
             if can_unlock:
-                _unlock_sentence(locked_sentence)
-
-        def _unlock_sentence(sentence: JapaneseSentence):
-            self.db_sentence_updater.unlock_sentence(sentence.db_id)
-            self.anki_adder.add_sentence_note(sentence)
+                self.db_sentence_updater.unlock_sentence(locked_sentence.db_id)
+                self.anki_adder.add_sentence_note(locked_sentence)
 
     def _unlock_videos(self):
         youtube_ids_of_videos_to_unlock = (
