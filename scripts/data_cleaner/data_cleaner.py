@@ -14,6 +14,7 @@ from ..anki.anki_deleter import AnkiDeleter
 from .gpt_sentence_replacer import GPTSentenceReplacer
 from .romaji_adder import RomajiAdder
 from .crossref_adder import CrossrefAdder
+from ..word_sorter.word_sorter import WordSorter
 
 
 class DataCleaner:
@@ -30,6 +31,7 @@ class DataCleaner:
     db_word_getter = DbWordGetter()
     db_word_deleter = DbWordDeleter()
     db_sentence_getter = DbSentenceGetter()
+    word_sorter = WordSorter()
 
     def __init__(self):
         self.connection = sqlite3.connect("vocabulary.db")
@@ -48,6 +50,7 @@ class DataCleaner:
         anki_cleaner = AnkiCleaner()
         anki_cleaner.clean()
         self._add_missing_anki_ids()
+        self.word_sorter.sort_words()
 
     def _clean_audio_file_names(self):
         print("Cleaning audio file names...")
