@@ -31,3 +31,11 @@ class DbConnector:
             print("ERROR FETCHING ONE DATA: ", error)
             print("QUERY TRIED: ", query)
             return None
+
+    def execute(self, query: str, values: tuple = ()):
+        try:
+            self.cursor.execute(query, values)
+            self.connection.commit()
+        except sqlite3.Error as error:
+            print("ERROR EXECUTING QUERY: ", error)
+            print("QUERY TRIED: ", query)

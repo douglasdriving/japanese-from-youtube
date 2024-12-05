@@ -21,6 +21,9 @@ class DbWordGetter:
     def get_words_without_progress(self):
         return self._get_words("WHERE practice_interval IS NULL")
 
+    def get_words_without_romaji(self):
+        return self._get_words("WHERE romaji IS NULL")
+
     def _get_words(self, condition: str = "", values: tuple = ()):
         query = "SELECT * FROM vocabulary"
         if condition != "":

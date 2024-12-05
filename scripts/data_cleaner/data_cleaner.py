@@ -44,7 +44,7 @@ class DataCleaner:
         self._clean_audio_file_names()
         gpt_sentence_replacer = GPTSentenceReplacer()
         gpt_sentence_replacer.replace_sentences_not_genereated_with_gpt()
-        self.romaji_adder.add_missing_sentence_romaji()
+        self.romaji_adder.add_missing_romaji()
         self.crossref_adder.add_missing_crossrefs()
         self.delete_words_with_no_sentence_connection()
         anki_cleaner = AnkiCleaner()

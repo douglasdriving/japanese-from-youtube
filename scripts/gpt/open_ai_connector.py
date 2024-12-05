@@ -100,7 +100,7 @@ class OpenAiConnector:
                 raise ValueError("translation not found in word json")
         return True
 
-    def convert_to_romaji(self, sentence_text: str):
+    def get_romaji(self, sentence_text: str):
         try:
             response = self.client.chat.completions.create(
                 model="gpt-4o-mini",
@@ -110,7 +110,7 @@ class OpenAiConnector:
                         "content": [
                             {
                                 "type": "text",
-                                "text": "You are a Japanese romaji converter. You will give the user the romaji of a Japanese sentence. The user will provide you with a japanese sentence in kana, and you will return the romaji version of that sentence. Only provide the romaji text back, and nothing else",
+                                "text": "You are a Japanese romaji converter. You will give the user the romaji of a Japanese sentence or word. The user will provide you with a japanese sentence in kana, and you will return the romaji version of that sentence. Only provide the romaji text back, and nothing else",
                             }
                         ],
                     },

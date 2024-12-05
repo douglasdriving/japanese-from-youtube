@@ -89,3 +89,14 @@ class DbWordUpdater:
         )
         self.connector.connection.commit()
         print(f"Updated anki_note_id for {id} to {anki_id} in {table_name}")
+
+    def update_word_romaji(self, word_id: int, romaji: str):
+        self.connector.execute(
+            query=f"""
+            UPDATE vocabulary
+            SET romaji = ?
+            WHERE id = ?
+            """,
+            values=(romaji, word_id),
+        )
+        print(f"Updated romaji for word with id {word_id} to '{romaji}'")
