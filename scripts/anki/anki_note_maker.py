@@ -12,12 +12,19 @@ class AnkiNoteMaker:
             sentence.definition + "<br><br>" + sentence.romaji + "<br><br>Words:"
         )
         for word in sentence.words:
-            if word.reading is not None:
+            if word.romaji is not None:
                 note_back += f"<br>{word.romaji} - {word.definition}"
             else:
                 print(
-                    f"Warning: Word {word.word} has no reading. This will be skipped in the Anki note."
+                    f"Warning: Word {word.word} has no romaji. Trying to use reading instead."
                 )
+                if word.reading is not None:
+                    note_back += f"<br>{word.reading} - {word.definition}"
+                else:
+                    print(
+                        f"Warning: Word {word.word} has no reading. Using word instead."
+                    )
+                    note_back += f"<br>{word.word} - {word.definition}"
         note = AnkiNote(
             audio_file_path=sentence.audio_file_path,
             back=note_back,
