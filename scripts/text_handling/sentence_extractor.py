@@ -59,7 +59,7 @@ class SentenceExtractor:
             created_sentence = self.create_new_sentence(sentence_text)
             print(
                 "made new sentence: ",
-                sentence_text,
+                created_sentence.romaji,
                 " (",
                 created_sentence.definition,
                 ")",
@@ -123,7 +123,7 @@ class SentenceExtractor:
                 print(
                     idx + 1,
                     ". made new sentence: ",
-                    line.text,
+                    created_sentence.romaji,
                     " (",
                     created_sentence.definition,
                     ")",
