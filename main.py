@@ -19,7 +19,7 @@ class MainProgram:
         input("Please open Anki! Then press enter to continue...")
 
     def run(self):
-        self.data_cleaner.clean_data()
+        self.data_cleaner.clean_data_if_needed()
         self.progress_detector.update_progress()
         while True:
             user_input = input(

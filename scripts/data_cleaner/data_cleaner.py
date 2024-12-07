@@ -15,6 +15,7 @@ from .gpt_sentence_replacer import GPTSentenceReplacer
 from .romaji_adder import RomajiAdder
 from .crossref_adder import CrossrefAdder
 from ..word_sorter.word_sorter import WordSorter
+from datetime import datetime
 
 
 class DataCleaner:
@@ -39,7 +40,30 @@ class DataCleaner:
         self.db_connector = DbConnector()
         self.anki_connector = AnkiConnector()
 
-    def clean_data(self):
+    def clean_data_if_needed(self):
+        last_clean_file = os.path.join(os.path.dirname(__file__), "last_clean.txt")
+
+        def get_last_clean_date():
+            if os.path.exists(last_clean_file):
+                with open(last_clean_file, "r") as file:
+                    date_str = file.read().strip()
+                    try:
+                        return datetime.strptime(date_str, "%Y-%m-%d")
+                    except ValueError:
+                        print("Could not parse last clean date from file")
+                        return None
+            return None
+
+        def set_last_clean_date():
+            with open(last_clean_file, "w") as file:
+                file.write(datetime.now().strftime("%Y-%m-%d"))
+
+        last_clean_date = get_last_clean_date()
+        print("Last clean date:", last_clean_date)
+        if last_clean_date and (datetime.now() - last_clean_date).days < 7:
+            print("Data clean not needed. Last clean was within 7 days.")
+            return
+
         print("Cleaning data...")
         self._clean_audio_file_names()
         gpt_sentence_replacer = GPTSentenceReplacer()
@@ -51,6 +75,7 @@ class DataCleaner:
         anki_cleaner.clean()
         self._add_missing_anki_ids()
         self.word_sorter.sort_words()
+        set_last_clean_date()
 
     def _clean_audio_file_names(self):
         print("Cleaning audio file names...")
