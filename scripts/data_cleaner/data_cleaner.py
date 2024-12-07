@@ -41,41 +41,59 @@ class DataCleaner:
         self.anki_connector = AnkiConnector()
 
     def clean_data_if_needed(self):
-        last_clean_file = os.path.join(os.path.dirname(__file__), "last_clean.txt")
-
-        def get_last_clean_date():
-            if os.path.exists(last_clean_file):
-                with open(last_clean_file, "r") as file:
-                    date_str = file.read().strip()
-                    try:
-                        return datetime.strptime(date_str, "%Y-%m-%d")
-                    except ValueError:
-                        print("Could not parse last clean date from file")
-                        return None
-            return None
-
-        def set_last_clean_date():
-            with open(last_clean_file, "w") as file:
-                file.write(datetime.now().strftime("%Y-%m-%d"))
-
-        last_clean_date = get_last_clean_date()
+        last_clean_date = self._get_last_clean_date()
         print("Last clean date:", last_clean_date)
         if last_clean_date and (datetime.now() - last_clean_date).days < 7:
             print("Data clean not needed. Last clean was within 7 days.")
             return
 
         print("Cleaning data...")
+        self._perform_data_cleaning()
+        self._set_last_clean_date()
+
+    def _get_last_clean_date(self):
+        last_clean_file = os.path.join(os.path.dirname(__file__), "last_clean.txt")
+        if os.path.exists(last_clean_file):
+            with open(last_clean_file, "r") as file:
+                date_str = file.read().strip()
+                try:
+                    return datetime.strptime(date_str, "%Y-%m-%d")
+                except ValueError:
+                    print("Could not parse last clean date from file")
+                    return None
+        return None
+
+    def _set_last_clean_date(self):
+        last_clean_file = os.path.join(os.path.dirname(__file__), "last_clean.txt")
+        with open(last_clean_file, "w") as file:
+            file.write(datetime.now().strftime("%Y-%m-%d"))
+
+    def _perform_data_cleaning(self):
         self._clean_audio_file_names()
+        self._replace_sentences_with_gpt()
+        self._add_missing_romaji()
+        self._add_missing_crossrefs()
+        self.delete_words_with_no_sentence_connection()
+        self._clean_anki()
+        self._add_missing_anki_ids()
+        self._sort_words()
+
+    def _replace_sentences_with_gpt(self):
         gpt_sentence_replacer = GPTSentenceReplacer()
         gpt_sentence_replacer.replace_sentences_not_genereated_with_gpt()
+
+    def _add_missing_romaji(self):
         self.romaji_adder.add_missing_romaji()
+
+    def _add_missing_crossrefs(self):
         self.crossref_adder.add_missing_crossrefs()
-        self.delete_words_with_no_sentence_connection()
+
+    def _clean_anki(self):
         anki_cleaner = AnkiCleaner()
         anki_cleaner.clean()
-        self._add_missing_anki_ids()
+
+    def _sort_words(self):
         self.word_sorter.sort_words()
-        set_last_clean_date()
 
     def _clean_audio_file_names(self):
         print("Cleaning audio file names...")
